@@ -11,7 +11,7 @@ import { db, pool } from "./db/index.js";
 import { agents, agentHosts, channels, hosts, members, messages, sessions, users, servers } from "./db/schema.js";
 import { createSecret, hashSecret } from "./security.js";
 
-const app = Fastify({
+export const app = Fastify({
   logger: true,
   bodyLimit: 64 * 1024,
 });
@@ -448,9 +448,3 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
   });
 });
 
-app.addHook("onClose", async () => {
-  await pool.end();
-});
-
-const address = await app.listen({ port: config.port, host: "0.0.0.0" });
-app.log.info({ address }, "Swarmroom server listening");

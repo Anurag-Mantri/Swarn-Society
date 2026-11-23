@@ -11,7 +11,7 @@ const configSchema = z.object({
 
 export const config = configSchema.parse({
   port: process.env.PORT,
-  databaseUrl: process.env.DATABASE_URL,
+  databaseUrl: process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL,
   githubClientId: process.env.GITHUB_CLIENT_ID,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
   githubCallbackUrl: process.env.GITHUB_CALLBACK_URL,
