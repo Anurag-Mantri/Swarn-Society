@@ -45,5 +45,7 @@ jobs:
         run: pnpm typecheck
       - name: Test
         run: pnpm test
+      - name: Postgres integration tests
+        run: pnpm --filter @swarmroom/server test:integration
       - name: Build
         run: pnpm build
