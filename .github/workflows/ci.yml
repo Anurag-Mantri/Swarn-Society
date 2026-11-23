@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/**]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: swarmroom_test
+          POSTGRES_USER: swarmroom
+          POSTGRES_PASSWORD: swarmroom
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U swarmroom -d swarmroom_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://swarmroom:swarmroom@localhost:5432/swarmroom_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.21.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --allow-build esbuild
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build

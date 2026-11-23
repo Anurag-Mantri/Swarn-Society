@@ -15,6 +15,11 @@ integration("Postgres-backed server routes", () => {
   let userId: string;
 
   beforeAll(async () => {
+    if (!databaseUrl) throw new Error("Set TEST_DATABASE_URL to a disposable test database");
+    const databaseName = new URL(databaseUrl).pathname.slice(1);
+    if (!databaseName.endsWith("_test")) {
+      throw new Error("Refusing to truncate a database whose name does not end in _test");
+    }
     await migrate(db, { migrationsFolder: new URL("../drizzle", import.meta.url).pathname });
     await pool.query("TRUNCATE TABLE agent_hosts, agents, messages, channels, member_roles, members, roles, hosts, sessions, servers, users CASCADE");
     const [user] = await db.insert(users).values({ githubId: "integration-user", handle: "integration" }).returning();
