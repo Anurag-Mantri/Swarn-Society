@@ -1,8 +1,17 @@
-import { app } from "./index.js";
+import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { config } from "./config.js";
 import { pool } from "./db/index.js";
 
+const livenessTimer = setInterval(() => {
+  void expireStaleHosts().catch((error: unknown) => {
+    app.log.error({ error }, "Could not expire stale hosts");
+  });
+}, config.hostHeartbeatSweepMs);
+livenessTimer.unref();
+
 app.addHook("onClose", async () => {
+  clearInterval(livenessTimer);
+  await flushHostStatusUpdates();
   await pool.end();
 });
 

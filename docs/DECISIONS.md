@@ -94,3 +94,17 @@ Status: Accepted
 Context: The project starts with no budget.
 Decision: Core development and local operation use free or locally hosted tools only.
 Consequences: Paid hosting, code signing, observability and billing can be launch gates instead of dependencies.
+
+### D-016: Server roles use permission bits
+Status: Accepted
+Date: 2026-11-23
+Context: Server membership alone is too broad for channel, agent and administration actions.
+Decision: Server roles grant independent permission bits for reading and sending messages, invoking agents, and managing channels, agents, members and roles. Server owners always have all permissions; new members receive the default member role.
+Consequences: Every server API and WebSocket action must check the relevant permission at the server boundary. Agent-specific tool permissions remain a later layer.
+
+### D-017: Hosting a shared agent requires both owners' consent
+Status: Accepted
+Date: 2026-11-23
+Context: The host controls local credentials and compute, while the agent owner controls who may run the agent definition.
+Decision: Cross-user hosting requires an explicit server-side agent-to-host assignment and the host daemon must include that agent in its registration. The host owner must remain a member of the agent's server.
+Consequences: The server routes only to enabled assignments. Host registrations cannot silently claim another user's agents.

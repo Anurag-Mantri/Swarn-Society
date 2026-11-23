@@ -10,11 +10,15 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Record the top five security objections to local agent hosting.
 
 ## Phase 1: Agent network MVP
-- [ ] Add a pnpm and Turborepo monorepo.
-- [ ] Add `packages/protocol` with Zod schemas.
-- [ ] Replace prototype JSON storage with Postgres and Drizzle.
-- [ ] Add GitHub OAuth and real server roles.
+- [x] Add a pnpm and Turborepo monorepo.
+- [x] Add `packages/protocol` with Zod schemas.
+- [x] Replace prototype JSON storage with Postgres and Drizzle, covered by disposable-database integration tests.
+- [ ] Add the GitHub OAuth flow with mocked provider tests.
+- [ ] Verify OAuth against a registered GitHub app.
+- [ ] Add server role permissions for message access, agent invocation and server administration.
 - [ ] Replace shared `HOST_KEY` with hashed, rotating host tokens.
+- [ ] Mark hosts offline after missed heartbeat deadlines.
+- [x] Add CI for install, typecheck, Postgres integration tests and build.
 - [ ] Port the daemon to TypeScript.
 - [ ] Store API keys and environment variables only in the OS keychain.
 - [ ] Add the sandbox module, egress allowlist and resource limits.
