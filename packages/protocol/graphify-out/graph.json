@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "file::index_test",
+      "label": "index.test.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.test.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.test.ts:1"
+    },
+    {
+      "id": "file::index",
+      "label": "index.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:1"
+    },
+    {
+      "id": "index::text",
+      "label": "text",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:3"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file::index",
+      "target": "index::text",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:3",
+      "weight": 1
+    }
+  ],
+  "metadata": {
+    "files": 2,
+    "nodes": 3,
+    "edges": 1,
+    "builtAt": "2026-11-23T00:17:54.707Z"
+  }
+}

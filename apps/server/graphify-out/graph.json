@@ -1,0 +1,173 @@
+{
+  "nodes": [
+    {
+      "id": "file::drizzle_config",
+      "label": "drizzle.config.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/drizzle.config.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/drizzle.config.ts:1"
+    },
+    {
+      "id": "file::auth",
+      "label": "auth.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts:1"
+    },
+    {
+      "id": "auth::getsessionuser",
+      "label": "getSessionUser",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts:7"
+    },
+    {
+      "id": "auth::requireuser",
+      "label": "requireUser",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts:25"
+    },
+    {
+      "id": "file::config",
+      "label": "config.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/config.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/config.ts:1"
+    },
+    {
+      "id": "file::index",
+      "label": "index.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts:1"
+    },
+    {
+      "id": "file::schema",
+      "label": "schema.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/db/schema.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/db/schema.ts:1"
+    },
+    {
+      "id": "index::broadcastchannel",
+      "label": "broadcastChannel",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts:41"
+    },
+    {
+      "id": "index::close",
+      "label": "close",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts:290"
+    },
+    {
+      "id": "file::security_test",
+      "label": "security.test.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.test.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.test.ts:1"
+    },
+    {
+      "id": "file::security",
+      "label": "security.ts",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:1"
+    },
+    {
+      "id": "security::hashsecret",
+      "label": "hashSecret",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:3"
+    },
+    {
+      "id": "security::createsecret",
+      "label": "createSecret",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:7"
+    },
+    {
+      "id": "security::secretsequal",
+      "label": "secretsEqual",
+      "fileType": "code",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:11"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file::auth",
+      "target": "auth::getsessionuser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts:7",
+      "weight": 1
+    },
+    {
+      "source": "file::auth",
+      "target": "auth::requireuser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/auth.ts:25",
+      "weight": 1
+    },
+    {
+      "source": "file::index",
+      "target": "index::broadcastchannel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts:41",
+      "weight": 1
+    },
+    {
+      "source": "file::index",
+      "target": "index::close",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/index.ts:290",
+      "weight": 1
+    },
+    {
+      "source": "file::security",
+      "target": "security::hashsecret",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:3",
+      "weight": 1
+    },
+    {
+      "source": "file::security",
+      "target": "security::createsecret",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:7",
+      "weight": 1
+    },
+    {
+      "source": "file::security",
+      "target": "security::secretsequal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts",
+      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/apps/server/src/security.ts:11",
+      "weight": 1
+    }
+  ],
+  "metadata": {
+    "files": 8,
+    "nodes": 14,
+    "edges": 7,
+    "builtAt": "2026-11-23T00:17:54.611Z"
+  }
+}
