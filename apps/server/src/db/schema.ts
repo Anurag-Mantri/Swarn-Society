@@ -1,4 +1,4 @@
-import { boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { ChannelKind } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
@@ -72,6 +72,7 @@ export const channelRoleRestrictions = pgTable("channel_role_restrictions", {
 export const messages = pgTable("messages", {
   id: uuid("id").primaryKey().defaultRandom(),
   channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  threadId: uuid("thread_id"),
   authorKind: text("author_kind").notNull(),
   authorId: text("author_id").notNull(),
   hostId: uuid("host_id"),
@@ -79,6 +80,13 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index("messages_channel_created_idx").on(table.channelId, table.createdAt),
+  index("messages_thread_created_idx").on(table.threadId, table.createdAt),
+  unique("messages_channel_id_unique").on(table.channelId, table.id),
+  foreignKey({
+    name: "messages_same_channel_thread_fk",
+    columns: [table.channelId, table.threadId],
+    foreignColumns: [table.channelId, table.id],
+  }).onDelete("cascade"),
 ]);
 
 export const hosts = pgTable("hosts", {

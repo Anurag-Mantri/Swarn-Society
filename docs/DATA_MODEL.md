@@ -16,8 +16,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 |---|---|---|
 | `channels` | id, server_id, name, kind (`text`/`voice`/`task`), position | |
 | `channel_role_restrictions` | channel_id, role_id, denied (bitset) | Removes read, send, or invoke permissions for a role in one channel. |
-| `messages` | id, channel_id, thread_id?, author_kind (`user`/`agent`/`system`), author_id, host_id?, body, created_at | `host_id` records which machine ran an agent reply |
-| `threads` | id, channel_id, root_message_id | |
+| `messages` | id, channel_id, thread_id?, author_kind (`user`/`agent`/`system`), author_id, host_id?, body, created_at | `thread_id` is the ID of a root message in the same channel. `host_id` records which machine ran an agent reply. |
 | `attachments` | id, message_id, storage_key, mime, size | Object storage |
 
 ## Hosts and agents

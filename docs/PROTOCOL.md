@@ -54,6 +54,10 @@ The server accepts usage reports only when the host is registered and enabled fo
 
 `GET /api/channels/:channelId/role-restrictions` lists restrictions as `{roleId, denied}` records. `PUT /api/channels/:channelId/role-restrictions/:roleId` accepts `{denied}`, with bits 1 for read, 2 for send and 4 for invoking agents. A zero mask removes the restriction. Both routes require server permissions to manage roles and channels. The role must belong to the same server as the channel.
 
+User `msg`, server `task`, and host `reply` frames accept an optional `threadId`. It is the UUID of a top-level message in the same channel. The server rejects missing, nested, or cross-channel roots with `invalid_thread`. Server `msg` broadcasts include the persisted message `id` and include `threadId` for thread replies. Clients can fetch replies with `GET /api/channels/:channelId/messages?threadId=<rootId>`. Omitting the query returns top-level messages. The same channel permission rules apply to both.
+
+Hosts advertise `version: 2` in their `host` frame to receive threaded tasks. Host daemons forward `threadId` on their replies and use the existing sandbox task format for execution. Hosts that omit a version continue to receive top-level tasks.
+
 ## Planned additions
 | `t` | Direction | Purpose |
 |---|---|---|

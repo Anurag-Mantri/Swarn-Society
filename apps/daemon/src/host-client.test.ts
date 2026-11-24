@@ -18,6 +18,7 @@ describe("host client", () => {
     if (!address || typeof address === "string") throw new Error("Test server did not bind a TCP port.");
 
     const hostFrames: unknown[] = [];
+    const threadId = "00000000-0000-4000-8000-000000000002";
     const reply = new Promise<unknown>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error("Timed out waiting for host reply.")), 5_000);
       server.once("connection", (socket) => {
@@ -28,6 +29,7 @@ describe("host client", () => {
             socket.send(JSON.stringify({ t: "host.registered", hostId: "host-1" }));
             socket.send(JSON.stringify({
               t: "task", channelId: "channel-1", from: "00000000-0000-4000-8000-000000000001", agent: "scout", text: "inspect this",
+              threadId,
             }));
           } else if (typeof frame === "object" && frame !== null && "t" in frame && frame.t === "reply") {
             clearTimeout(timeout);
@@ -53,7 +55,7 @@ describe("host client", () => {
 
     try {
       await expect(reply).resolves.toEqual({
-        t: "reply", channelId: "channel-1", agent: "scout", text: "sandbox result",
+        t: "reply", channelId: "channel-1", agent: "scout", text: "sandbox result", threadId,
       });
       expect(hostFrames[0]).toMatchObject({ t: "host", token: "host-token", machine: "test machine", agents: ["scout"] });
       expect(run).toHaveBeenCalledWith(
