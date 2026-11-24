@@ -76,9 +76,10 @@ Deterministic edges require no model call and must include an attributable sourc
 |---|---|---|
 | `extension_manifests` | id, server_id, slug, version, manifest, registered_by, created_at | Immutable version registered with server agent-management permission. |
 | `host_extension_approvals` | host_id, manifest_id, capabilities, approved_by, approved_at | Version-specific consent and capability subset from the registered host owner. |
-| `extension_adapters` | id, extension_id, host_id, protocol_version, capabilities_json, status | Host-provided adapter instance |
-| `extension_sessions` | id, adapter_id, channel_id, task_id?, external_app, external_resource, status | One active collaboration session |
-| `extension_snapshots` | id, session_id, snapshot_key, source_uri, hash, created_at | Captures work outside the code workspace |
+| `extension_adapters` | id, manifest_id, host_id, registered_at | Adapter identity bound to one host and manifest. |
+| `extension_sessions` | id, adapter_id, channel_id, connection_id, started_at, stopped_at? | Session scoped to the authenticated host socket. |
+| `extension_resources` | id, session_id, resource_type, extension, byte_length, reported_at | Descriptor for a resource declared by the approved manifest. |
+| `extension_snapshots` | id, session_id, resource_id, format, sha256, byte_length, created_at | Snapshot metadata and provenance. |
 
 ## Indexes to add early
 `messages (channel_id, created_at desc)`, `agent_hosts (agent_id, priority)`, `usage (requester_id, at)`, `tasks (server_id, status)`.

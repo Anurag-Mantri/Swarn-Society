@@ -107,3 +107,16 @@ Claims and bid approvals both reject assignments when the channel already has an
 ## Knowledge overview
 
 `GET /api/servers/:serverId/knowledge` returns `{sources, nodes, edges}` for the latest 20 visible sources. An optional `channelId` limits the view to one readable channel. Edges expose the IDs of their visible supporting sources. The automatic view includes only deterministic edges with confidence of at least 90 and no recorded conflict. The route does not return original message text, task results, or file contents.
+
+## Host-owned adapter sessions
+
+| Frame | Fields |
+|---|---|
+| `adapter.register` | `adapterId`, `manifestId`, `protocolVersion` (1) |
+| `adapter.session.start` | `adapterId`, `sessionId`, `channelId` |
+| `adapter.resource` | `sessionId`, `resourceId`, declared `resourceType`, declared `extension`, `byteLength` |
+| `adapter.snapshot` | `sessionId`, `resourceId`, `snapshotId`, declared `format`, `sha256`, `byteLength` |
+| `adapter.session.stop` | `sessionId` |
+| `adapter.ack` | Server reply with `action` and the corresponding record `id` |
+
+Only a registered host connection can send adapter frames. Sessions are pinned to the host connection and require channel send access in the manifest's workspace. Resource and snapshot metadata are validated against the manifest and current host approval. The reported byte length is capped at 32 MiB. These frames carry identifiers and metadata, with no paths, embedded content, credentials, or executable commands.

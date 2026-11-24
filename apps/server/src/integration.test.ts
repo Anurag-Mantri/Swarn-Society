@@ -1,5 +1,5 @@
 import type { InjectOptions } from "fastify";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { and, eq } from "drizzle-orm";
@@ -565,6 +565,53 @@ integration("Postgres-backed server routes", () => {
       expect(threadHistory.json<Array<{ body: string }>>().map(({ body }) => body))
         .toEqual(["@routing-agent follow up", "thread complete"]);
 
+      const extension = await inject({
+        method: "POST", url: `/api/servers/${server.id}/extensions`, headers: { cookie },
+        payload: {
+          slug: "notes-adapter", name: "Notes Adapter", version: "1.0.0", protocolVersion: 1,
+          operatingSystems: ["linux"], capabilities: ["resource.read", "snapshot.create"],
+          resources: [{ type: "document", extensions: [".txt"] }], snapshotFormat: "metadata-json",
+        },
+      });
+      expect(extension.statusCode).toBe(201);
+      const manifestId = extension.json<{ id: string }>().id;
+      const adapterId = randomUUID();
+      const sessionId = randomUUID();
+      const resourceId = randomUUID();
+      const snapshotId = randomUUID();
+      const approvalUrl = `/api/hosts/${host.id}/extensions/${manifestId}/approval`;
+      const sendAdapter = async (socket: WebSocket, frame: object) => {
+        const response = nextWebSocketFrame(socket, "adapter response", (value) =>
+          typeof value === "object" && value !== null && "t" in value && (value.t === "adapter.ack" || value.t === "error"));
+        socket.send(JSON.stringify(frame));
+        return response;
+      };
+
+      const adapterRegistration = { t: "adapter.register", adapterId, manifestId, protocolVersion: 1 };
+      expect(await sendAdapter(hostSocket, adapterRegistration)).toMatchObject({ code: "adapter_denied" });
+      expect((await inject({
+        method: "PUT", url: approvalUrl, headers: { cookie }, payload: { capabilities: ["resource.read"] },
+      })).statusCode).toBe(200);
+      expect(await sendAdapter(hostSocket, adapterRegistration)).toMatchObject({ action: "register", id: adapterId });
+      expect(await sendAdapter(hostSocket, { t: "adapter.session.start", adapterId, sessionId, channelId: channel.id }))
+        .toMatchObject({ action: "session.start", id: sessionId });
+
+      const resourceFrame = { t: "adapter.resource", sessionId, resourceId, resourceType: "document", extension: ".txt", byteLength: 42 };
+      expect(await sendAdapter(hostSocket, { ...resourceFrame, extension: ".exe" })).toMatchObject({ code: "adapter_denied" });
+      expect(await sendAdapter(hostSocket, resourceFrame)).toMatchObject({ action: "resource", id: resourceId });
+      const snapshotFrame = {
+        t: "adapter.snapshot", sessionId, resourceId, snapshotId, format: "metadata-json",
+        sha256: "a".repeat(64), byteLength: 42,
+      };
+      expect(await sendAdapter(hostSocket, snapshotFrame)).toMatchObject({ code: "adapter_denied" });
+      expect((await inject({
+        method: "PUT", url: approvalUrl, headers: { cookie }, payload: { capabilities: ["resource.read", "snapshot.create"] },
+      })).statusCode).toBe(200);
+      expect(await sendAdapter(hostSocket, snapshotFrame)).toMatchObject({ action: "snapshot", id: snapshotId });
+      expect(await sendAdapter(hostSocket, { ...snapshotFrame, sha256: "b".repeat(64) })).toMatchObject({ code: "adapter_conflict" });
+      expect((await inject({ method: "DELETE", url: approvalUrl, headers: { cookie } })).statusCode).toBe(204);
+      expect(await sendAdapter(hostSocket, resourceFrame)).toMatchObject({ code: "adapter_denied" });
+
       const oldHostClosed = new Promise<number>((resolve) => {
         hostSocket.once("close", (code) => resolve(code));
       });
@@ -588,6 +635,10 @@ integration("Postgres-backed server routes", () => {
         agents: ["routing-agent"],
       }));
       expect(await replacementRegistered).toMatchObject({ t: "host.registered", hostId: host.id });
+      expect((await inject({
+        method: "PUT", url: approvalUrl, headers: { cookie }, payload: { capabilities: ["resource.read"] },
+      })).statusCode).toBe(200);
+      expect(await sendAdapter(replacementSocket, resourceFrame)).toMatchObject({ code: "adapter_denied" });
     } finally {
       for (const socket of hostSockets) socket.terminate();
       userSocket.terminate();
