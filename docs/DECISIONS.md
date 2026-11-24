@@ -157,3 +157,10 @@ Date: 2026-11-24
 Context: Human and agent replies need a shared thread identity and the same access rules as their channel.
 Decision: Store a nullable thread ID on every message. Replies point to a top-level message in the same channel. Channel permissions apply to both roots and replies.
 Consequences: Existing messages remain top-level. The daemon keeps the thread ID for routing replies while sending the existing task format to sandbox images.
+
+### D-025: Workspace files use database-backed Yjs documents
+Status: Accepted
+Date: 2026-11-24
+Context: Teams need shared text files and concurrent editing before GitHub snapshot sync.
+Decision: Store metadata and Yjs state in PostgreSQL, and use a file UUID as the Hocuspocus document name. The control plane authenticates collaboration under the same origin as chat. Workspace read and send permissions control file reads and edits.
+Consequences: Paths are logical repository paths. Presence stays in memory. Run one control-plane instance for live collaboration until cross-instance document and awareness synchronization is added.

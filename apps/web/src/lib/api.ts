@@ -3,6 +3,7 @@ import type { ChannelKind } from '@swarmroom/protocol';
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
 export type Channel = { id: string; name: string; kind: ChannelKind; serverId?: string };
+export type WorkspaceFile = { id: string; path: string };
 export type Message = {
   id: string;
   channelId: string;
@@ -47,5 +48,8 @@ export const api = {
   messages: (channelId: string, threadId?: string) => request<Message[]>(
     `/api/channels/${encodeURIComponent(channelId)}/messages${threadId ? `?threadId=${encodeURIComponent(threadId)}` : ''}`
   ),
+  files: (workspaceId: string) => request<WorkspaceFile[]>(`/api/servers/${encodeURIComponent(workspaceId)}/files`),
+  createFile: (workspaceId: string, path: string) =>
+    post<WorkspaceFile>(`/api/servers/${encodeURIComponent(workspaceId)}/files`, { path }),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

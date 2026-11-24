@@ -11,6 +11,12 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `members` | server_id, user_id | PK (server_id, user_id) |
 | `member_roles` | server_id, user_id, role_id | |
 
+## Workspace files
+
+| Table | Key fields | Notes |
+|---|---|---|
+| `workspace_files` | id, server_id, path, document | Repository-relative path and nullable binary Yjs state. Document IDs are independent of paths. |
+
 ## Messaging
 | Table | Key fields | Notes |
 |---|---|---|

@@ -38,8 +38,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add text, voice and task channel types.
 - [x] Add role-based channel permissions.
 - [x] Add message threads.
-- [ ] Replace the textarea with Monaco and Yjs.
-- [ ] Add presence cursors and conflict-free file editing.
+- [x] Replace the textarea with Monaco and Yjs.
+- [x] Add presence cursors and conflict-free file editing.
 - [ ] Add GitHub App integration.
 - [ ] Push workspace snapshots only to `swarmroom/<server>-live`.
 - [ ] Compare local and remote branch heads for fetch/pull state.

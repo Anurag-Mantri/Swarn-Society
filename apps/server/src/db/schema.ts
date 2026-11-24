@@ -1,4 +1,4 @@
-import { boolean, check, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, customType, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { ChannelKind } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
@@ -26,6 +26,18 @@ export const servers = pgTable("servers", {
   ownerId: uuid("owner_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => "bytea" });
+
+export const workspaceFiles = pgTable("workspace_files", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),
+  path: text("path").notNull(),
+  document: bytea("document"),
+}, (table) => [
+  unique("workspace_files_server_path_unique").on(table.serverId, table.path),
+]);
 
 export const roles = pgTable("roles", {
   id: uuid("id").primaryKey().defaultRandom(),

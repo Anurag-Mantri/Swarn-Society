@@ -12,7 +12,8 @@ export default defineConfig({
     proxy: {
       '/api': backend,
       '/auth': backend,
-      '/ws': { target: backend, ws: true }
+      '/ws': { target: backend, ws: true },
+      '/collaboration': { target: backend, ws: true }
     }
   }
 });
