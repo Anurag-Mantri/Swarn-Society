@@ -7,6 +7,7 @@ import type { Task } from "@swarmroom/protocol";
 import type { SandboxConfig } from "../config.js";
 import type { SandboxBackend } from "./runner.js";
 import type { ProviderEgressBroker, ProviderBrokerLease } from "../provider-broker.js";
+import { BudgetExceededError } from "../budget-ledger.js";
 
 const CONTAINER_COMMAND = ["/usr/local/bin/swarmroom-agent"] as const;
 const MAX_WALL_TIME_MS = 120_000;
@@ -169,7 +170,7 @@ class PodmanSandboxBackend implements SandboxBackend {
     if (!workspace) throw new Error("No workspace is configured for this agent.");
     this.busy = true;
     try {
-      const brokerLease = await this.broker.openForAgent(task.agent);
+      const brokerLease = await this.broker.openForTask(task);
       try {
         if (signal.aborted) throw new Error("Sandbox task was cancelled.");
         const child = this.launch("podman", buildRunArguments(this.image, workspace, brokerLease.socketPath), spawnOptions());
@@ -179,9 +180,13 @@ class PodmanSandboxBackend implements SandboxBackend {
           child.stdin.on("error", () => undefined);
           child.stdin.end(JSON.stringify(task));
           const output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS);
+          if (brokerLease.budgetExceeded()) throw new BudgetExceededError();
           const text = output.toString("utf8").trim();
           if (!text) throw new Error("Sandbox returned an empty response.");
           return text.slice(0, 8_000);
+        } catch (error) {
+          if (brokerLease.budgetExceeded()) throw new BudgetExceededError();
+          throw error;
         } finally {
           signal.removeEventListener("abort", abort);
         }

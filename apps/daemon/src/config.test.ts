@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadDaemonConfig, loadSandboxConfig } from "./config.js";
+import { loadAgentBudgetPolicies, loadDaemonConfig, loadSandboxConfig } from "./config.js";
 
 describe("daemon configuration", () => {
   it("parses a secure websocket URL and unique agent names", () => {
@@ -60,6 +60,32 @@ describe("sandbox configuration", () => {
     expect(() => loadSandboxConfig({
       SWARMROOM_SANDBOX_IMAGE: `registry.example/agent@sha256:${"a".repeat(64)}`,
       SWARMROOM_AGENT_WORKSPACES: JSON.stringify({ scout: "/tmp/scout-workspace", other: "/tmp/other" }),
+    }, ["scout"])).toThrow();
+  });
+});
+
+describe("agent budget configuration", () => {
+  it("loads one ordered owner and token budget policy per configured agent", () => {
+    const policies = loadAgentBudgetPolicies({
+      SWARMROOM_AGENT_BUDGETS: JSON.stringify({
+        scout: { ownerId: "owner-1", taskTokens: 10_000, hourTokens: 30_000, dayTokens: 100_000 },
+      }),
+    }, ["scout"]);
+    expect(policies.get("scout")).toEqual({
+      ownerId: "owner-1", taskTokens: 10_000, hourTokens: 30_000, dayTokens: 100_000,
+    });
+  });
+
+  it("rejects missing agent policies, unknown agents, and inconsistent limits", () => {
+    expect(() => loadAgentBudgetPolicies({
+      SWARMROOM_AGENT_BUDGETS: JSON.stringify({
+        scout: { ownerId: "owner-1", taskTokens: 10, hourTokens: 20, dayTokens: 30 },
+      }),
+    }, ["scout", "reviewer"])).toThrow();
+    expect(() => loadAgentBudgetPolicies({
+      SWARMROOM_AGENT_BUDGETS: JSON.stringify({
+        scout: { ownerId: "owner-1", taskTokens: 30, hourTokens: 20, dayTokens: 40 },
+      }),
     }, ["scout"])).toThrow();
   });
 });

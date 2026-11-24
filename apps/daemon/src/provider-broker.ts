@@ -3,6 +3,8 @@ import { chmod, mkdtemp, rmdir, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
+import type { Task } from "@swarmroom/protocol";
+import { BudgetExceededError, LocalBudgetLedger, type ProviderBudgetSession } from "./budget-ledger.js";
 import type { AgentSecretKeychain } from "./keychain.js";
 
 const MAX_REQUEST_BYTES = 512 * 1024;
@@ -10,6 +12,7 @@ const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const MAX_REQUESTS_PER_TASK = 20;
 const MAX_OUTPUT_TOKENS = 4_096;
 const DEFAULT_OUTPUT_TOKENS = 2_048;
+const PROVIDER_FRAMING_RESERVE_TOKENS = 256;
 const REQUEST_TIMEOUT_MS = 45_000;
 
 const brokerRequestSchema = z.object({
@@ -54,11 +57,12 @@ const providerRoutes: Record<string, ProviderRoute> = {
 
 export interface ProviderBrokerLease {
   socketPath: string;
+  budgetExceeded(): boolean;
   close(): Promise<void>;
 }
 
 export interface ProviderEgressBroker {
-  openForAgent(agent: string): Promise<ProviderBrokerLease>;
+  openForTask(task: Task): Promise<ProviderBrokerLease>;
 }
 
 type FetchFunction = typeof globalThis.fetch;
@@ -127,19 +131,42 @@ function prepareProviderBody(route: ProviderRoute, value: Record<string, unknown
   return JSON.stringify(body);
 }
 
+function providerUsage(route: string, body: Buffer): number | undefined {
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(body.toString("utf8")) as unknown;
+  } catch {
+    return undefined;
+  }
+  if (typeof decoded !== "object" || decoded === null || !("usage" in decoded) ||
+      typeof decoded.usage !== "object" || decoded.usage === null) return undefined;
+  const usage = decoded.usage as Record<string, unknown>;
+  const inputField = route === "/openai/chat/completions" ? "prompt_tokens" : "input_tokens";
+  const outputField = route === "/openai/chat/completions" ? "completion_tokens" : "output_tokens";
+  if (!(inputField in usage) || !(outputField in usage)) return undefined;
+  const input = usage[inputField];
+  const output = usage[outputField];
+  if (typeof input !== "number" || !Number.isSafeInteger(input) || input < 0 ||
+      typeof output !== "number" || !Number.isSafeInteger(output) || output < 0) return undefined;
+  return input + output;
+}
+
 export class LocalProviderEgressBroker implements ProviderEgressBroker {
   constructor(
     private readonly secrets: AgentSecretKeychain,
     private readonly fetcher: FetchFunction = globalThis.fetch,
+    private readonly budgets = new LocalBudgetLedger(new Map()),
   ) {}
 
-  async openForAgent(agent: string): Promise<ProviderBrokerLease> {
+  async openForTask(task: Task): Promise<ProviderBrokerLease> {
+    const budget = this.budgets.forTask(task);
     const directory = await mkdtemp(join(tmpdir(), "swarmroom-egress-"));
     const socketPath = join(directory, "provider.sock");
     let requestCount = 0;
     let busy = false;
+    let budgetExceeded = false;
     const server = createServer((request, response) => {
-      void this.handleRequest(agent, request, response, () => {
+      void this.handleRequest(task.agent, budget, request, response, () => { budgetExceeded = true; }, () => {
         requestCount += 1;
         return requestCount;
       }, () => {
@@ -176,6 +203,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
 
     return {
       socketPath,
+      budgetExceeded: () => budgetExceeded,
       close: async () => {
         await new Promise<void>((resolve, reject) => {
           server.close((error) => error ? reject(error) : resolve());
@@ -189,8 +217,10 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
 
   private async handleRequest(
     agent: string,
+    budget: ProviderBudgetSession,
     request: IncomingMessage,
     response: ServerResponse,
+    markBudgetExceeded: () => void,
     countRequest: () => number,
     beginRequest: () => boolean,
     endRequest: () => void,
@@ -226,29 +256,40 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
       const key = this.secrets.load(agent, route.credentialName);
       if (!key) throw new BrokerError(503, "No provider credential is stored for this agent.");
       const body = prepareProviderBody(route, parsed.data.body);
+      const prepared = JSON.parse(body) as Record<string, unknown>;
+      const outputCap = prepared[route.tokenField];
+      if (typeof outputCap !== "number") throw new BrokerError(400, "Provider output token limit is invalid.");
       const headers = new Headers({
         "content-type": "application/json",
         accept: "application/json",
         ...route.fixedHeaders,
         [route.authHeader]: `${route.authPrefix}${key}`,
       });
-      const upstream = await this.fetcher(route.endpoint, {
-        method: "POST",
-        headers,
-        body,
-        redirect: "error",
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      const result = await budget.runRequest(Buffer.byteLength(body) + outputCap + PROVIDER_FRAMING_RESERVE_TOKENS, async () => {
+        const upstream = await this.fetcher(route.endpoint, {
+          method: "POST",
+          headers,
+          body,
+          redirect: "error",
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+        if (!upstream.ok) {
+          await upstream.body?.cancel();
+          throw new BrokerError(502, "Provider request failed.");
+        }
+        const output = await readResponseBody(upstream);
+        return {
+          value: { status: upstream.status, output },
+          actualTokens: providerUsage(request.url ?? "", output),
+        };
       });
-      if (!upstream.ok) {
-        await upstream.body?.cancel();
-        sendJson(response, 502, { error: "Provider request failed." });
-        return;
-      }
-      const output = await readResponseBody(upstream);
-      response.writeHead(upstream.status, { "content-type": "application/json", connection: "close" });
-      response.end(output);
+      response.writeHead(result.status, { "content-type": "application/json", connection: "close" });
+      response.end(result.output);
     } catch (error) {
-      if (error instanceof BrokerError) {
+      if (error instanceof BudgetExceededError) {
+        markBudgetExceeded();
+        sendJson(response, 429, { error: "Requester token budget exceeded." });
+      } else if (error instanceof BrokerError) {
         sendJson(response, error.status, { error: error.message });
       } else {
         sendJson(response, 502, { error: "Provider request failed." });

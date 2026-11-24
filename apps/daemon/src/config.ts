@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isAbsolute } from "node:path";
+import type { AgentBudgetPolicy } from "./budget-ledger.js";
 
 const environmentSchema = z.object({
   SWARMROOM_CONTROL_PLANE_URL: z.string().url(),
@@ -16,6 +17,31 @@ export interface DaemonConfig {
 export interface SandboxConfig {
   image: string;
   workspaces: Map<string, string>;
+}
+
+const budgetPolicySchema = z.object({
+  ownerId: z.string().trim().min(1).max(100),
+  taskTokens: z.number().int().positive().max(10_000_000),
+  hourTokens: z.number().int().positive().max(10_000_000),
+  dayTokens: z.number().int().positive().max(10_000_000),
+}).strict().refine((policy) => policy.taskTokens <= policy.hourTokens && policy.hourTokens <= policy.dayTokens);
+
+export function loadAgentBudgetPolicies(env: NodeJS.ProcessEnv, agents: string[]): Map<string, AgentBudgetPolicy> {
+  const value = env.SWARMROOM_AGENT_BUDGETS?.trim();
+  if (!value) return new Map();
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(value) as unknown;
+  } catch {
+    throw new Error("SWARMROOM_AGENT_BUDGETS must be a JSON object mapping agents to owner IDs and token limits.");
+  }
+  const parsed = z.record(z.string(), budgetPolicySchema).safeParse(decoded);
+  if (!parsed.success || Object.keys(parsed.data).length !== agents.length ||
+      Object.keys(parsed.data).some((agent) => !agents.includes(agent)) ||
+      agents.some((agent) => !Object.hasOwn(parsed.data, agent))) {
+    throw new Error("SWARMROOM_AGENT_BUDGETS contains invalid policies or agents not configured on this host.");
+  }
+  return new Map(Object.entries(parsed.data));
 }
 
 export function loadDaemonConfig(env: NodeJS.ProcessEnv): DaemonConfig {

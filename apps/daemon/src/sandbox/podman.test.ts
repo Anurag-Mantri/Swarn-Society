@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxConfig } from "../config.js";
 import { createPodmanSandboxBackend, type PodmanSpawnFunction } from "./podman.js";
 import type { ProviderEgressBroker } from "../provider-broker.js";
+import { BudgetExceededError } from "../budget-ledger.js";
 
 const image = `registry.example/swarmroom-agent@sha256:${"a".repeat(64)}`;
 const workspaces: string[] = [];
@@ -25,7 +26,7 @@ async function workspace(): Promise<string> {
 }
 
 function fakeBroker(socketPath: string, close = vi.fn(async () => undefined)): ProviderEgressBroker {
-  return { openForAgent: async () => ({ socketPath, close }) };
+  return { openForTask: async () => ({ socketPath, budgetExceeded: () => false, close }) };
 }
 
 function fakeChild(): FakeChild {
@@ -88,6 +89,32 @@ describe("rootless Podman sandbox", () => {
     expect(closeBroker).toHaveBeenCalledOnce();
     expect(inputs).toHaveLength(1);
     expect(JSON.parse(inputs[0] ?? "null")).toEqual(task);
+  });
+
+  it("surfaces a broker budget denial as a host budget error", async () => {
+    const cwd = await workspace();
+    const broker: ProviderEgressBroker = {
+      openForTask: async () => ({
+        socketPath: "/tmp/provider.sock",
+        budgetExceeded: () => true,
+        close: async () => undefined,
+      }),
+    };
+    const launch: PodmanSpawnFunction = (_command, args) => {
+      const child = fakeChild();
+      queueMicrotask(() => {
+        if (args[0] === "info") child.stdout.end(JSON.stringify({
+          host: { security: { rootless: true }, serviceIsRemote: false },
+        }));
+      else child.stdout.end("fabricated answer after budget denial");
+      child.emit("close", 0);
+      });
+      return child as unknown as ChildProcessWithoutNullStreams;
+    };
+    const backend = await createPodmanSandboxBackend({ image, workspaces: new Map([["scout", cwd]]) }, broker, launch);
+    await expect(backend.run({
+      t: "task", channelId: "channel", from: "requester", agent: "scout", text: "hello",
+    }, new AbortController().signal)).rejects.toBeInstanceOf(BudgetExceededError);
   });
 
   it("rejects rootful or remote Podman runtimes", async () => {
