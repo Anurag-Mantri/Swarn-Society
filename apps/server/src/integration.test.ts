@@ -636,6 +636,41 @@ integration("Postgres-backed server routes", () => {
     expect((await app.inject({
       method: "POST", url: `${url}/${task.id}/claim`, headers, payload: { agentId: winner?.claimedByAgentId },
     })).statusCode).toBe(200);
+    const losingAgentId = selectedAgents.find(({ id }) => id !== winner?.claimedByAgentId)?.id;
+    const duplicate = await app.inject({
+      method: "POST", url, headers, payload: { title: "  REVIEW   THE docs  " },
+    });
+    expect(duplicate.statusCode).toBe(201);
+    expect(duplicate.json()).toMatchObject({ intent: "review the docs" });
+    const duplicateClaim = await app.inject({
+      method: "POST", url: `${url}/${duplicate.json<{ id: string }>().id}/claim`, headers,
+      payload: { agentId: losingAgentId },
+    });
+    expect(duplicateClaim.statusCode).toBe(409);
+    expect(duplicateClaim.json()).toMatchObject({ error: expect.stringContaining("already working on this intent") });
+
+    const otherChannel = await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers,
+      payload: { name: "further-work", kind: "task" },
+    });
+    expect(otherChannel.statusCode).toBe(201);
+    const otherUrl = `/api/channels/${otherChannel.json<{ id: string }>().id}/tasks`;
+    const other = await app.inject({
+      method: "POST", url: otherUrl, headers, payload: { title: "Cross-check the implementation", intent: "Regression checks" },
+    });
+    expect(other.statusCode).toBe(201);
+    const otherClaimUrl = `${otherUrl}/${other.json<{ id: string }>().id}/claim`;
+    const busyClaim = await app.inject({
+      method: "POST", url: otherClaimUrl, headers, payload: { agentId: winner?.claimedByAgentId },
+    });
+    expect(busyClaim.statusCode).toBe(409);
+    expect(busyClaim.json()).toMatchObject({ error: expect.stringContaining("active task") });
+    expect((await app.inject({
+      method: "POST", url: `${url}/${task.id}/resolve`, headers, payload: { resolution: "done" },
+    })).statusCode).toBe(200);
+    expect((await app.inject({
+      method: "POST", url: otherClaimUrl, headers, payload: { agentId: winner?.claimedByAgentId },
+    })).statusCode).toBe(200);
   }, 30_000);
 
   it("requires the task author to approve a teammate's proposed contract", async () => {

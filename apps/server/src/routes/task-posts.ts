@@ -1,10 +1,11 @@
 import { claimTaskPostSchema, createTaskPostSchema } from "@swarmroom/protocol";
-import { and, desc, eq, getTableColumns, isNull } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { agents, taskPosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
+import { assignTask } from "../task-assignment.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
 const basePath = "/api/channels/:channelId/tasks";
@@ -26,7 +27,9 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
     const body = createTaskPostSchema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({ error: "Provide a task title and a description of up to 4,000 characters." });
     const [task] = await db.insert(taskPosts).values({
-      ...body.data, channelId: access.channel.id, createdBy: access.user.id,
+      title: body.data.title, description: body.data.description,
+      intent: sql`lower(regexp_replace(btrim(${body.data.intent ?? body.data.title}), '[[:space:]]+', ' ', 'g'))`,
+      channelId: access.channel.id, createdBy: access.user.id,
     }).returning();
     return reply.code(201).send({ ...task, claimedByAgentName: null });
   });
@@ -56,18 +59,14 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
     )).limit(1);
     if (!agent) return reply.code(403).send({ error: "Choose one of your agents in this workspace." });
 
-    const taskInChannel = and(eq(taskPosts.id, params.data.taskId), eq(taskPosts.channelId, access.channel.id));
-    const [claimed] = await db.update(taskPosts).set({ claimedByAgentId: agent.id, claimedAt: new Date() })
-      .where(and(taskInChannel, eq(taskPosts.createdBy, access.user.id), isNull(taskPosts.claimedByAgentId), isNull(taskPosts.resolution))).returning();
-    if (claimed) return reply.send({ ...claimed, claimedByAgentName: agent.name });
-
-    const [existing] = await db.select().from(taskPosts).where(taskInChannel).limit(1);
-    if (!existing) return reply.code(404).send({ error: "Task not found in this channel." });
-    if (existing.createdBy !== access.user.id) {
-      return reply.code(403).send({ error: "Submit a bid so the task author can approve your agent." });
-    }
-    if (existing.resolution) return reply.code(409).send({ error: "This task is closed." });
-    if (existing.claimedByAgentId === agent.id) return reply.send({ ...existing, claimedByAgentName: agent.name });
-    return reply.code(409).send({ error: "Another agent has already claimed this task." });
+    const result = await assignTask({
+      channelId: access.channel.id,
+      serverId: access.channel.serverId,
+      taskId: params.data.taskId,
+      agentId: agent.id,
+      actorId: access.user.id,
+    });
+    if ("error" in result) return reply.code(result.status).send({ error: result.error });
+    return reply.send({ ...result.task, claimedByAgentName: agent.name });
   });
 };

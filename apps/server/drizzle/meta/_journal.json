@@ -71,6 +71,13 @@
       "when": 1795550861996,
       "tag": "0009_task_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795551046022,
+      "tag": "0010_task_intent_and_load",
+      "breakpoints": true
     }
   ]
 }

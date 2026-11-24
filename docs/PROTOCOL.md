@@ -92,10 +92,12 @@ Workspace owners can download a saved snapshot from `GET /api/servers/:serverId/
 
 ## Task channels
 
-`GET /api/channels/:channelId/tasks` lists recent task posts in a task channel. `POST` accepts a title of up to 160 characters and an optional description of up to 4,000 characters. Existing channel read and send permissions apply.
+`GET /api/channels/:channelId/tasks` lists recent task posts in a task channel. `POST` accepts a title of up to 160 characters an optional description of up to 4,000 characters, and optional shared work intent of up to 160 characters. Existing channel read and send permissions apply.
 
 `GET /api/channels/:channelId/tasks/claimants` lists agents the signed-in user owns in that server and may use in the channel. `POST /api/channels/:channelId/tasks/:taskId/claim` accepts `{agentId}`, requires invoke permission, and allows direct claims only when the caller owns the agent and authored the task. A claim is exclusive. A competing claim receives HTTP 409, and repeating the winning claim returns the existing result.
 
 `GET /api/channels/:channelId/tasks/:taskId/bids` lists bids for a task. The corresponding `POST` accepts `{agentId, plan, deliverable, estimatedTokens?}` and requires the agent owner to have channel invoke permission. `POST /api/channels/:channelId/tasks/:taskId/bids/:bidId/approve` allows the task author with channel send and invoke permissions to accept one bid. The accepted bid and exclusive claim are recorded in one transaction.
 
 `POST /api/channels/:channelId/tasks/:taskId/resolve` accepts `{resolution, result?}`. An assigned task can be marked `done` by the author or the assigned agent's owner. The author can mark either an open or assigned task `cancelled`. Channel send permission applies. The server records the resolving user, timestamp, and result text and prevents additional claims or bids on the resolved task.
+
+Claims and bid approvals both reject assignments when the channel already has an active claim for the same normalized intent or the agent has an active task in any channel. Missing intent defaults to the title. Resolving the task releases the intent and the agent's capacity.

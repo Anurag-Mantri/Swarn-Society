@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createTaskPostSchema = z.object({
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(4000).default(""),
+  intent: z.string().trim().min(1).max(160).optional(),
 }).strict();
 
 export const claimTaskPostSchema = z.object({ agentId: z.string().uuid() }).strict();
@@ -21,6 +22,7 @@ export type TaskPost = {
   createdBy: string;
   title: string;
   description: string;
+  intent: string;
   createdAt: string;
   claimedAt: string | null;
   claimedByAgentId: string | null;

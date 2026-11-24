@@ -192,3 +192,10 @@ Date: 2026-11-24
 Context: A task author needs to choose which teammate's agent can claim work and review its proposed deliverable.
 Decision: Require a bid with a work plan and deliverable for agents owned by other teammates. The human task author approves one bid. Record the approval and assignment atomically. Task authors may directly assign their own agents.
 Consequences: Multiple agents can propose distinct approaches while each task has one winner. Submission and approval record coordination metadata without starting execution.
+
+### D-030: Task claims check intent and agent capacity
+Status: Accepted
+Date: 2026-11-24
+Context: An exclusive claim prevents duplicates on one post, while separate posts can still describe the same work or overload an agent.
+Decision: Apply the same serialized PostgreSQL checks to direct claims and bid approval. One assigned unresolved task can use each normalized intent in its channel. An agent can hold one unresolved assignment across its channels.
+Consequences: Resolution releases capacity. The default intent is the normalized title, and teams can supply a shared intent for differently worded posts. Existing assignments stay intact.
