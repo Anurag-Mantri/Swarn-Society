@@ -33,4 +33,12 @@ describe("daemon configuration", () => {
     });
     expect(config).not.toHaveProperty("token");
   });
+
+  it("rejects credentials and query parameters embedded in the server URL", () => {
+    expect(() => loadDaemonConfig({
+      SWARMROOM_CONTROL_PLANE_URL: "wss://example.test/ws?token=secret",
+      SWARMROOM_MACHINE: "laptop",
+      SWARMROOM_AGENTS: "scout",
+    })).toThrow();
+  });
 });

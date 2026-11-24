@@ -1,4 +1,5 @@
 import { createSystemHostTokenKeychain } from "./keychain.js";
+import { loadDaemonConfig } from "./config.js";
 
 async function readSecret(): Promise<string> {
   if (!process.stdin.isTTY || !process.stdin.setRawMode) {
@@ -38,9 +39,8 @@ async function readSecret(): Promise<string> {
 
 async function main(): Promise<void> {
   const action = process.argv[2];
-  const server = process.env.SWARMROOM_CONTROL_PLANE_URL;
-  if (!server) throw new Error("Set SWARMROOM_CONTROL_PLANE_URL before managing the host token.");
-  const account = new URL(server).host;
+  const config = loadDaemonConfig(process.env);
+  const account = config.controlPlaneUrl.host;
   const keychain = await createSystemHostTokenKeychain(account);
   if (action === "set") {
     keychain.store(await readSecret());

@@ -11,6 +11,7 @@ export class HostClient {
   private stopped = false;
   private socket: WebSocket | undefined;
   private heartbeat: ReturnType<typeof setInterval> | undefined;
+  private reconnectWait: { timer: ReturnType<typeof setTimeout>; resolve: () => void } | undefined;
 
   constructor(
     private readonly config: DaemonConfig,
@@ -23,7 +24,13 @@ export class HostClient {
     while (!this.stopped) {
       const shouldReconnect = await this.connectOnce();
       if (!shouldReconnect || this.stopped) break;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          this.reconnectWait = undefined;
+          resolve();
+        }, delay);
+        this.reconnectWait = { timer, resolve };
+      });
       delay = Math.min(delay * 2, RECONNECT_MAX_MS);
     }
   }
@@ -31,12 +38,17 @@ export class HostClient {
   stop(): void {
     this.stopped = true;
     if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.reconnectWait) {
+      clearTimeout(this.reconnectWait.timer);
+      this.reconnectWait.resolve();
+      this.reconnectWait = undefined;
+    }
     this.socket?.close(1000, "daemon stopping");
   }
 
   private connectOnce(): Promise<boolean> {
     return new Promise((resolve) => {
-      const socket = new WebSocket(this.config.controlPlaneUrl);
+      const socket = new WebSocket(this.config.controlPlaneUrl, { followRedirects: false });
       this.socket = socket;
       let finished = false;
       const finish = (reconnect: boolean) => {

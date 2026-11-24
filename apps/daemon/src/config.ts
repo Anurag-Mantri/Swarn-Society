@@ -24,9 +24,10 @@ export function loadDaemonConfig(env: NodeJS.ProcessEnv): DaemonConfig {
 
   const controlPlaneUrl = new URL(parsed.data.SWARMROOM_CONTROL_PLANE_URL);
   const localHost = ["localhost", "127.0.0.1", "[::1]"].includes(controlPlaneUrl.hostname);
-  if (controlPlaneUrl.pathname !== "/ws" ||
+  if (controlPlaneUrl.pathname !== "/ws" || controlPlaneUrl.username || controlPlaneUrl.password ||
+      controlPlaneUrl.search || controlPlaneUrl.hash ||
       (controlPlaneUrl.protocol !== "wss:" && !(controlPlaneUrl.protocol === "ws:" && localHost))) {
-    throw new Error("SWARMROOM_CONTROL_PLANE_URL must use wss:// and end in /ws (ws:// is allowed for localhost).");
+    throw new Error("SWARMROOM_CONTROL_PLANE_URL must use wss:// and end in /ws without credentials or query parameters (ws:// is allowed for localhost).");
   }
 
   const agents = [...new Set(parsed.data.SWARMROOM_AGENTS.split(",").map((agent) => agent.trim()).filter(Boolean))];
