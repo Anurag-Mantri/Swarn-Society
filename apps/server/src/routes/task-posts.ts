@@ -4,6 +4,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { agents, taskPosts } from "../db/schema.js";
+import { recordKnowledgeEvent } from "../knowledge/storage.js";
 import { permissions } from "../permissions.js";
 import { assignTask } from "../task-assignment.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
@@ -26,11 +27,19 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
     if (!access) return;
     const body = createTaskPostSchema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({ error: "Provide a task title and a description of up to 4,000 characters." });
-    const [task] = await db.insert(taskPosts).values({
-      title: body.data.title, description: body.data.description,
-      intent: sql`lower(regexp_replace(btrim(${body.data.intent ?? body.data.title}), '[[:space:]]+', ' ', 'g'))`,
-      channelId: access.channel.id, createdBy: access.user.id,
-    }).returning();
+    const task = await db.transaction(async (transaction) => {
+      const [created] = await transaction.insert(taskPosts).values({
+        title: body.data.title, description: body.data.description,
+        intent: sql`lower(regexp_replace(btrim(${body.data.intent ?? body.data.title}), '[[:space:]]+', ' ', 'g'))`,
+        channelId: access.channel.id, createdBy: access.user.id,
+      }).returning();
+      if (!created) throw new Error("Task insert did not return an ID");
+      await recordKnowledgeEvent(transaction, {
+        type: "task.posted", sourceId: created.id, occurredAt: created.createdAt.toISOString(),
+        serverId: access.channel.serverId, channelId: access.channel.id, taskId: created.id, authorId: access.user.id,
+      });
+      return created;
+    });
     return reply.code(201).send({ ...task, claimedByAgentName: null });
   });
 

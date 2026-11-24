@@ -18,7 +18,6 @@ import {
   hosts,
   memberRoles,
   members,
-  messages,
   roles,
   sessions,
   users,
@@ -26,6 +25,7 @@ import {
 } from "./db/schema.js";
 import { allPermissions, defaultMemberPermissions, permissions } from "./permissions.js";
 import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
+import { storeMessage } from "./messages/storage.js";
 import { threadRootExists } from "./message-threads.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
@@ -730,14 +730,13 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           socket.send(JSON.stringify({ t: "error", code: "invalid_thread", message: "Thread root not found in this channel" }));
           return;
         }
-        const [message] = await db.insert(messages).values({
+        const message = await storeMessage({
           channelId: frame.channelId,
           threadId: frame.threadId,
           authorKind: "user",
           authorId: connection.userId,
           body: frame.text,
-        }).returning({ id: messages.id });
-        if (!message) throw new Error("Message insert did not return an ID");
+        }, channel.serverId, { kind: "person", id: connection.userId });
         const notification = {
           t: "msg",
           id: message.id,
@@ -792,7 +791,9 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
       if (frame.t === "reply") {
         if (!("hostId" in connection)) return;
-        const routes = await db.select({ id: channels.id, serverId: agents.serverId, ownerId: hosts.ownerId })
+        const routes = await db.select({
+          id: channels.id, serverId: agents.serverId, ownerId: hosts.ownerId, agentId: agents.id,
+        })
           .from(agents)
           .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
           .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
@@ -820,15 +821,14 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           socket.send(JSON.stringify({ t: "error", code: "invalid_thread", message: "Thread root not found in this channel" }));
           return;
         }
-        const [message] = await db.insert(messages).values({
+        const message = await storeMessage({
           channelId: frame.channelId,
           threadId: frame.threadId,
           authorKind: "agent",
           authorId: frame.agent,
           hostId: connection.hostId,
           body: frame.text,
-        }).returning({ id: messages.id });
-        if (!message) throw new Error("Message insert did not return an ID");
+        }, route.serverId, { kind: "agent", id: route.agentId });
         await broadcastChannel(frame.channelId, {
           t: "msg",
           id: message.id,

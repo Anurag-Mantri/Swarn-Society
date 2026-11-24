@@ -7,6 +7,7 @@ import { requireUser } from "../auth.js";
 import { hasServerPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { servers, workspaceFiles } from "../db/schema.js";
+import { recordKnowledgeEvent } from "../knowledge/storage.js";
 import { permissions } from "../permissions.js";
 
 const pathParams = z.object({ serverId: z.string().uuid() });
@@ -89,6 +90,11 @@ export const workspaceFileRoutes: FastifyPluginAsync = async (app) => {
         return current === normalized || current.startsWith(`${normalized}/`) || normalized.startsWith(`${current}/`);
       })) return undefined;
       const [inserted] = await transaction.insert(workspaceFiles).values({ serverId, path }).returning(fileMetadata);
+      if (!inserted) throw new Error("Workspace file insert did not return an ID");
+      await recordKnowledgeEvent(transaction, {
+        type: "file.changed", sourceId: `created:${inserted.id}`, occurredAt: new Date().toISOString(),
+        serverId, fileId: inserted.id, actor: { kind: "person", id: user.id },
+      });
       return inserted;
     });
     if (!file) return reply.code(409).send({ error: "That path conflicts with an existing workspace file." });

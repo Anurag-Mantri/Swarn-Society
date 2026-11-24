@@ -1,3 +1,4 @@
+import type { KnowledgeEvent } from "@swarmroom/knowledge-graph";
 import { Hocuspocus } from "@hocuspocus/server";
 import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
@@ -8,25 +9,38 @@ import { hasServerPermission } from "../channel-access.js";
 import { config } from "../config.js";
 import { db } from "../db/index.js";
 import { workspaceFiles } from "../db/schema.js";
+import { recordKnowledgeEvent } from "../knowledge/storage.js";
 import { permissions } from "../permissions.js";
 
 const documentId = z.string().uuid();
 const writeMask = permissions.readMessages | permissions.sendMessages;
 const maxDocumentBytes = 192 * 1024;
 type Context = { userId: string; serverId?: string };
+type FileEdit = Extract<KnowledgeEvent, { type: "file.changed" }>;
 
-async function storeDocument(id: string, update: Uint8Array): Promise<void> {
+async function storeDocument(id: string, update: Uint8Array, edits: FileEdit[]): Promise<void> {
   await db.transaction(async (transaction) => {
-    const [file] = await transaction.select({ document: workspaceFiles.document })
+    const [file] = await transaction.select({ serverId: workspaceFiles.serverId, document: workspaceFiles.document })
       .from(workspaceFiles).where(eq(workspaceFiles.id, id)).for("update");
     if (!file) return;
     const merged = file.document ? Y.mergeUpdates([file.document, update]) : update;
     await transaction.update(workspaceFiles).set({ document: Buffer.from(merged) })
       .where(eq(workspaceFiles.id, id));
+    for (const edit of edits.sort((left, right) => left.sourceId.localeCompare(right.sourceId))) {
+      await recordKnowledgeEvent(transaction, { ...edit, serverId: file.serverId });
+    }
   });
 }
 
 export const workspaceCollaborationRoutes: FastifyPluginAsync = async (app) => {
+  const pendingEdits = new Map<string, Map<string, FileEdit>>();
+  const persist = async (documentName: string, document: Y.Doc) => {
+    const pending = pendingEdits.get(documentName);
+    const edited = [...(pending?.values() ?? [])];
+    await storeDocument(documentName, Y.encodeStateAsUpdate(document), edited);
+    for (const edit of edited) if (pending?.get(edit.sourceId) === edit) pending.delete(edit.sourceId);
+    if (pending?.size === 0 && pendingEdits.get(documentName) === pending) pendingEdits.delete(documentName);
+  };
   const collaboration = new Hocuspocus<Context>({
     name: "Swarmroom workspace",
     quiet: true,
@@ -63,8 +77,20 @@ export const workspaceCollaborationRoutes: FastifyPluginAsync = async (app) => {
         throw { code: 1009, reason: "Workspace file exceeds the size limit." };
       }
     },
+    async onChange({ context, documentName, connection }) {
+      if (!connection || !context.serverId) return;
+      const minute = Math.floor(Date.now() / 60_000) * 60_000;
+      const pending = pendingEdits.get(documentName) ?? new Map<string, FileEdit>();
+      const sourceId = `edited:${documentName}:${context.userId}:${minute}`;
+      pending.set(sourceId, {
+        type: "file.changed", sourceId,
+        serverId: context.serverId, fileId: documentName,
+        actor: { kind: "person", id: context.userId }, occurredAt: new Date(minute).toISOString(),
+      });
+      pendingEdits.set(documentName, pending);
+    },
     async onStoreDocument({ document, documentName }) {
-      await storeDocument(documentName, Y.encodeStateAsUpdate(document));
+      await persist(documentName, document);
     },
   });
 
@@ -102,7 +128,7 @@ export const workspaceCollaborationRoutes: FastifyPluginAsync = async (app) => {
     collaboration.closeConnections();
     collaboration.flushPendingStores();
     await Promise.all([...collaboration.documents].map(([id, document]) =>
-      storeDocument(id, Y.encodeStateAsUpdate(document)),
+      persist(id, document),
     ));
   });
 };

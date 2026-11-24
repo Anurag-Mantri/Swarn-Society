@@ -58,7 +58,8 @@ Keep each pull request on one task or a tightly related task group.
 ## Phase 4: Knowledge graph
 - [x] Define deterministic node and edge extractors.
 - [x] Add node, edge, source and review tables.
-- [ ] Import message, task, file and commit events.
+- [x] Import new message, task, and workspace file events.
+- [ ] Import GitHub commit receipts and backfill historical sources.
 - [x] Store extraction method, confidence and provenance.
 - [ ] Add a 90% automatic acceptance threshold.
 - [ ] Add human approval for low-confidence and conflicting edges.
