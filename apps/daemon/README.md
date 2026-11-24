@@ -27,3 +27,13 @@ The task-scoped Unix socket exposes only `POST /openai/responses`, `POST /openai
 The TypeScript package now includes a minimal no-tools agent runtime. Its `swarmroom-agent` executable reads one protocol-validated task from stdin, loads a fixed image-baked config from `/etc/swarmroom/agent.json`, calls the selected provider through the broker, and writes only the model reply to stdout. Start from `agent-runtime-config.example.json` when building a custom digest-pinned image. The runtime does not execute shell commands or expose workspace tools. Tool policy, approvals, and per-requester budgets remain open. macOS and Windows sandbox support also remain open. Without a sandbox configuration, the daemon connects but fails tasks closed.
 
 Task start, success and failure records are appended to a local `audit.jsonl` file under the platform's Swarmroom state directory. The log contains timestamps, agent/requester/channel IDs and lifecycle state; it never contains message text, provider credentials or process output. The daemon does not start a task if it cannot write the start record. Per-tool action auditing and approvals remain future work.
+
+## Requester token budgets
+
+Set `SWARMROOM_AGENT_BUDGETS` to a JSON object with one policy for every configured agent to enable budgets. Each policy has an `ownerId`, `taskTokens`, `hourTokens`, and `dayTokens`; limits must be ordered from smallest to largest. The hour and day windows roll from the current time. The owner ID must match the user ID sent in the server task's `from` field. Owners are exempt. For example:
+
+```sh
+export SWARMROOM_AGENT_BUDGETS='{"scout":{"ownerId":"user-id","taskTokens":20000,"hourTokens":60000,"dayTokens":200000}}'
+```
+
+Before each upstream model call, the host reserves a conservative amount based on the serialized request size, output-token cap and provider framing allowance. It settles that reservation with provider-reported usage. If usage is absent or a request fails after dispatch, the full reservation stays charged. Usage metadata is persisted in a mode-0600 `budget-usage.jsonl` file; prompts and credentials are never stored. If no policy variable is set, existing agents run without requester-specific budgets.

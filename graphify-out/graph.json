@@ -281,6 +281,125 @@
       "sourceLocation": "apps/daemon/src/audit-log.test.ts:1"
     },
     {
+      "id": "daemon::file::budget_ledger",
+      "label": "budget-ledger.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:1"
+    },
+    {
+      "id": "daemon::budget_ledger::budgetexceedederror",
+      "label": "BudgetExceededError",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:36"
+    },
+    {
+      "id": "daemon::budget_ledger::budgetexceedederror::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:37"
+    },
+    {
+      "id": "daemon::budget_ledger::defaultbudgetpath",
+      "label": "defaultBudgetPath",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:42"
+    },
+    {
+      "id": "daemon::budget_ledger::emptysession",
+      "label": "emptySession",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:54"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger",
+      "label": "LocalBudgetLedger",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:58"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:61"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::fortask",
+      "label": ".forTask",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:67"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::runrequest",
+      "label": ".runRequest",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:77"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::acquire",
+      "label": ".acquire",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:128"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::readevents",
+      "label": ".readEvents",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:136"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::appendevent",
+      "label": ".appendEvent",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:169"
+    },
+    {
+      "id": "daemon::budget_ledger::localbudgetledger::replaceevents",
+      "label": ".replaceEvents",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:188"
+    },
+    {
+      "id": "daemon::budget_ledger::ismissingfile",
+      "label": "isMissingFile",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:212"
+    },
+    {
+      "id": "daemon::budget_ledger::validateeventpairs",
+      "label": "validateEventPairs",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.ts:216"
+    },
+    {
+      "id": "daemon::file::budget_ledger_test",
+      "label": "budget-ledger.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.test.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.test.ts:1"
+    },
+    {
+      "id": "daemon::budget-ledger.test::task",
+      "label": "task",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/budget-ledger.test.ts",
+      "sourceLocation": "apps/daemon/src/budget-ledger.test.ts:9"
+    },
+    {
       "id": "daemon::file::config",
       "label": "config.ts",
       "fileType": "code",
@@ -288,18 +407,25 @@
       "sourceLocation": "apps/daemon/src/config.ts:1"
     },
     {
+      "id": "daemon::config::loadagentbudgetpolicies",
+      "label": "loadAgentBudgetPolicies",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/config.ts",
+      "sourceLocation": "apps/daemon/src/config.ts:29"
+    },
+    {
       "id": "daemon::config::loaddaemonconfig",
       "label": "loadDaemonConfig",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/config.ts",
-      "sourceLocation": "apps/daemon/src/config.ts:21"
+      "sourceLocation": "apps/daemon/src/config.ts:47"
     },
     {
       "id": "daemon::config::loadsandboxconfig",
       "label": "loadSandboxConfig",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/config.ts",
-      "sourceLocation": "apps/daemon/src/config.ts:47"
+      "sourceLocation": "apps/daemon/src/config.ts:73"
     },
     {
       "id": "daemon::file::config_test",
@@ -320,56 +446,56 @@
       "label": "HostClient",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:11"
+      "sourceLocation": "apps/daemon/src/host-client.ts:12"
     },
     {
       "id": "daemon::host_client::hostclient::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:18"
+      "sourceLocation": "apps/daemon/src/host-client.ts:19"
     },
     {
       "id": "daemon::host_client::hostclient::start",
       "label": ".start",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:25"
+      "sourceLocation": "apps/daemon/src/host-client.ts:26"
     },
     {
       "id": "daemon::host_client::hostclient::stop",
       "label": ".stop",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:41"
+      "sourceLocation": "apps/daemon/src/host-client.ts:42"
     },
     {
       "id": "daemon::host_client::hostclient::connectonce",
       "label": ".connectOnce",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:53"
+      "sourceLocation": "apps/daemon/src/host-client.ts:54"
     },
     {
       "id": "daemon::host_client::hostclient::handletask",
       "label": ".handleTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:101"
+      "sourceLocation": "apps/daemon/src/host-client.ts:102"
     },
     {
       "id": "daemon::host_client::hostclient::abortactivetasks",
       "label": ".abortActiveTasks",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:126"
+      "sourceLocation": "apps/daemon/src/host-client.ts:129"
     },
     {
       "id": "daemon::host_client::hostclient::send",
       "label": ".send",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:130"
+      "sourceLocation": "apps/daemon/src/host-client.ts:133"
     },
     {
       "id": "daemon::file::host_client_test",
@@ -523,7 +649,7 @@
       "label": "main",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/main.ts",
-      "sourceLocation": "apps/daemon/src/main.ts:10"
+      "sourceLocation": "apps/daemon/src/main.ts:11"
     },
     {
       "id": "daemon::file::provider_broker_client",
@@ -551,70 +677,77 @@
       "label": "BrokerError",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:66"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:70"
     },
     {
       "id": "daemon::provider_broker::brokererror::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:67"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:71"
     },
     {
       "id": "daemon::provider_broker::sendjson",
       "label": "sendJson",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:72"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:76"
     },
     {
       "id": "daemon::provider_broker::readrequestbody",
       "label": "readRequestBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:77"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:81"
     },
     {
       "id": "daemon::provider_broker::readresponsebody",
       "label": "readResponseBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:92"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:96"
     },
     {
       "id": "daemon::provider_broker::prepareproviderbody",
       "label": "prepareProviderBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:115"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:119"
+    },
+    {
+      "id": "daemon::provider_broker::providerusage",
+      "label": "providerUsage",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:134"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker",
       "label": "LocalProviderEgressBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:130"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:154"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:131"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:155"
     },
     {
-      "id": "daemon::provider_broker::localprovideregressbroker::openforagent",
-      "label": ".openForAgent",
+      "id": "daemon::provider_broker::localprovideregressbroker::openfortask",
+      "label": ".openForTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:136"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:161"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker::handlerequest",
       "label": ".handleRequest",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:190"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:218"
     },
     {
       "id": "daemon::file::provider_broker_test",
@@ -628,49 +761,49 @@
       "label": "MemoryEntry",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:8"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:12"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:9"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:13"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::getpassword",
       "label": ".getPassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:10"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:14"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::setpassword",
       "label": ".setPassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:11"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:15"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::deletepassword",
       "label": ".deletePassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:12"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:16"
     },
     {
       "id": "daemon::provider_broker_test::secretstore",
       "label": "secretStore",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:15"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:19"
     },
     {
       "id": "daemon::provider_broker_test::requestbroker",
       "label": "requestBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:26"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:35"
     },
     {
       "id": "daemon::file::podman",
@@ -684,70 +817,70 @@
       "label": "childEnvironment",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:29"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:30"
     },
     {
       "id": "daemon::podman::spawnoptions",
       "label": "spawnOptions",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:41"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:42"
     },
     {
       "id": "daemon::podman::collectprocessoutput",
       "label": "collectProcessOutput",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:45"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:46"
     },
     {
       "id": "daemon::podman::assertrootlesspodmaninfo",
       "label": "assertRootlessPodmanInfo",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:87"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:88"
     },
     {
       "id": "daemon::podman::buildrunarguments",
       "label": "buildRunArguments",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:103"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:104"
     },
     {
       "id": "daemon::podman::resolveworkspaces",
       "label": "resolveWorkspaces",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:120"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:121"
     },
     {
       "id": "daemon::podman::podmansandboxbackend",
       "label": "PodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:155"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:156"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:158"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:159"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::run",
       "label": ".run",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:165"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:166"
     },
     {
       "id": "daemon::podman::createpodmansandboxbackend",
       "label": "createPodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:197"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:202"
     },
     {
       "id": "daemon::file::podman_test",
@@ -761,28 +894,28 @@
       "label": "workspace",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:21"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:22"
     },
     {
       "id": "daemon::podman_test::fakebroker",
       "label": "fakeBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:27"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:28"
     },
     {
       "id": "daemon::podman_test::fakechild",
       "label": "fakeChild",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:31"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:32"
     },
     {
       "id": "daemon::podman.test::launch",
       "label": "launch",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:54"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:55"
     },
     {
       "id": "daemon::file::runner",
@@ -1029,12 +1162,156 @@
       "weight": 1
     },
     {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::budgetexceedederror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:22",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::budgetexceedederror",
+      "target": "daemon::budget_ledger::budgetexceedederror::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:23",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::defaultbudgetpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:27",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::emptysession",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:38",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::localbudgetledger",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:41",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:46",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::fortask",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:51",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::runrequest",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:60",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::acquire",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:104",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::readevents",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:111",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::appendevent",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:150",
+      "weight": 1
+    },
+    {
+      "source": "daemon::budget_ledger::localbudgetledger",
+      "target": "daemon::budget_ledger::localbudgetledger::replaceevents",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:169",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::ismissingfile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:194",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger",
+      "target": "daemon::budget_ledger::validateeventpairs",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.js:197",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::budget_ledger_test",
+      "target": "daemon::budget-ledger.test::task",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/budget-ledger.test.js",
+      "sourceLocation": "apps/daemon/dist/budget-ledger.test.js:7",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::config",
+      "target": "daemon::config::loadagentbudgetpolicies",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/config.js",
+      "sourceLocation": "apps/daemon/dist/config.js:14",
+      "weight": 1
+    },
+    {
       "source": "daemon::file::config",
       "target": "daemon::config::loaddaemonconfig",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/config.js",
-      "sourceLocation": "apps/daemon/dist/config.js:8",
+      "sourceLocation": "apps/daemon/dist/config.js:33",
       "weight": 1
     },
     {
@@ -1043,7 +1320,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/config.js",
-      "sourceLocation": "apps/daemon/dist/config.js:30",
+      "sourceLocation": "apps/daemon/dist/config.js:55",
       "weight": 1
     },
     {
@@ -1052,7 +1329,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:6",
+      "sourceLocation": "apps/daemon/dist/host-client.js:7",
       "weight": 1
     },
     {
@@ -1061,7 +1338,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:16",
+      "sourceLocation": "apps/daemon/dist/host-client.js:17",
       "weight": 1
     },
     {
@@ -1070,7 +1347,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:22",
+      "sourceLocation": "apps/daemon/dist/host-client.js:23",
       "weight": 1
     },
     {
@@ -1079,7 +1356,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:38",
+      "sourceLocation": "apps/daemon/dist/host-client.js:39",
       "weight": 1
     },
     {
@@ -1088,7 +1365,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:50",
+      "sourceLocation": "apps/daemon/dist/host-client.js:51",
       "weight": 1
     },
     {
@@ -1097,7 +1374,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:99",
+      "sourceLocation": "apps/daemon/dist/host-client.js:100",
       "weight": 1
     },
     {
@@ -1106,7 +1383,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:126",
+      "sourceLocation": "apps/daemon/dist/host-client.js:129",
       "weight": 1
     },
     {
@@ -1115,7 +1392,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:130",
+      "sourceLocation": "apps/daemon/dist/host-client.js:133",
       "weight": 1
     },
     {
@@ -1277,7 +1554,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/main.js",
-      "sourceLocation": "apps/daemon/dist/main.js:9",
+      "sourceLocation": "apps/daemon/dist/main.js:10",
       "weight": 1
     },
     {
@@ -1295,7 +1572,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:41",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:43",
       "weight": 1
     },
     {
@@ -1304,7 +1581,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:43",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:45",
       "weight": 1
     },
     {
@@ -1313,7 +1590,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:48",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:50",
       "weight": 1
     },
     {
@@ -1322,7 +1599,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:52",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:54",
       "weight": 1
     },
     {
@@ -1331,7 +1608,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:66",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:68",
       "weight": 1
     },
     {
@@ -1340,7 +1617,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:91",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:93",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::providerusage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:105",
       "weight": 1
     },
     {
@@ -1349,7 +1635,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:103",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:128",
       "weight": 1
     },
     {
@@ -1358,16 +1644,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:106",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:132",
       "weight": 1
     },
     {
       "source": "daemon::provider_broker::localprovideregressbroker",
-      "target": "daemon::provider_broker::localprovideregressbroker::openforagent",
+      "target": "daemon::provider_broker::localprovideregressbroker::openfortask",
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:110",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:137",
       "weight": 1
     },
     {
@@ -1376,7 +1662,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:163",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:193",
       "weight": 1
     },
     {
@@ -1385,7 +1671,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:7",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:10",
       "weight": 1
     },
     {
@@ -1394,7 +1680,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:9",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:12",
       "weight": 1
     },
     {
@@ -1403,7 +1689,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:12",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:15",
       "weight": 1
     },
     {
@@ -1412,7 +1698,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:13",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:16",
       "weight": 1
     },
     {
@@ -1421,7 +1707,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:14",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:17",
       "weight": 1
     },
     {
@@ -1430,7 +1716,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:16",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:19",
       "weight": 1
     },
     {
@@ -1439,7 +1725,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:27",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:33",
       "weight": 1
     },
     {
@@ -1448,7 +1734,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:16",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:17",
       "weight": 1
     },
     {
@@ -1457,7 +1743,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:28",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:29",
       "weight": 1
     },
     {
@@ -1466,7 +1752,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:31",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:32",
       "weight": 1
     },
     {
@@ -1475,7 +1761,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:71",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:72",
       "weight": 1
     },
     {
@@ -1484,7 +1770,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:87",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:88",
       "weight": 1
     },
     {
@@ -1493,7 +1779,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:103",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:104",
       "weight": 1
     },
     {
@@ -1502,7 +1788,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:138",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:139",
       "weight": 1
     },
     {
@@ -1511,7 +1797,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:144",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:145",
       "weight": 1
     },
     {
@@ -1520,7 +1806,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:150",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:151",
       "weight": 1
     },
     {
@@ -1529,7 +1815,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:189",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:197",
       "weight": 1
     },
     {
@@ -1538,7 +1824,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:10",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:11",
       "weight": 1
     },
     {
@@ -1547,7 +1833,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:15",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:16",
       "weight": 1
     },
     {
@@ -1556,7 +1842,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:18",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:19",
       "weight": 1
     },
     {
@@ -1565,7 +1851,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:39",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:40",
       "weight": 1
     },
     {
@@ -1597,9 +1883,9 @@
     }
   ],
   "metadata": {
-    "files": 31,
-    "nodes": 117,
-    "edges": 86,
-    "builtAt": "2026-11-24T18:13:00.970Z"
+    "files": 33,
+    "nodes": 136,
+    "edges": 103,
+    "builtAt": "2026-11-24T18:42:57.148Z"
   }
 }

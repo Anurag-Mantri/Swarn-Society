@@ -18,7 +18,7 @@ If no host is online the server posts a system message naming the agent and its 
 The first TypeScript runtime accepts one validated task on stdin and reads its provider/model/system prompt from an image-baked config at `/etc/swarmroom/agent.json`. It has no shell or workspace tools. Model calls go through the task-scoped host broker; the API key is never present in the container. Add tools only with explicit per-agent permissions, sandbox APIs and host-owner approval for high-risk actions.
 
 ## Budgets
-Per-requester token limits (hour/day/task) enforced by the daemon. The owner is exempt. When exhausted the agent replies that the budget is used up and who can raise it. Usage is reported to the server for display only; the host is the authority.
+Per-requester token limits (rolling hour/day/task) are enforced by the daemon when a host policy is configured. The owner is exempt. The host reserves a conservative upper bound before provider calls and settles with provider usage. If a task would exceed its budget, the daemon tells the requester to ask the agent owner to raise the limit or shorten the task. Usage is reported to the server for display only; the host is the authority.
 
 ## Multi-host agents
 Another user can register as a host for an agent if they hold valid provider keys. Priority order decides routing; failover happens on missed heartbeats. Agent memory is stored encrypted on the control plane so it follows the agent between hosts. Provider keys never move.

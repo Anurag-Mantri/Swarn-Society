@@ -129,3 +129,10 @@ Date: 2026-11-24
 Context: The message protocol carries task text but not a validated agent definition or tool permission manifest.
 Decision: The initial TypeScript runtime reads a fixed, image-baked config, sends one task to a configured model through the host broker, and returns text. It does not execute commands, access workspace tools, or load config paths from task content.
 Consequences: Runtime images are agent-specific until the control plane delivers a validated agent definition. Add tool execution only after permissions, host approval and audit boundaries are implemented.
+
+### D-021: Host budgets reserve before provider calls
+Status: Accepted
+Date: 2026-11-24
+Context: Requester budgets must be enforced locally without trusting usage claims from the sandbox or storing prompts.
+Decision: Configure owner IDs and per-task/hour/day token limits on the host. Before each provider request, reserve tokens using serialized request bytes, the output cap and a framing allowance. Settle with usage returned by the fixed provider API; if usage is missing or the request fails after dispatch, retain the full reservation. Persist only agent/requester IDs, timestamps, task IDs and token counts.
+Consequences: Budget enforcement is opt-in per host configuration to preserve existing daemon setups. Missing policy means no requester-specific budget is applied; usage estimates can conservatively deny a call before dispatch.

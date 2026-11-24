@@ -26,7 +26,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Inject approved provider credentials into the agent runtime through the host-side broker.
 - [x] Add a rootless Podman sandbox with explicit workspace mounts, default-deny networking and resource limits.
 - [x] Add an allowlisted host-side model API egress broker for sandboxed agents.
-- [ ] Persist per-requester token budgets on the host.
+- [x] Persist per-requester token budgets on the host.
 - [x] Record task lifecycle events in a local metadata-only audit log.
 - [ ] Audit individual agent tool actions and add host-owner approvals.
 - [ ] Build signed desktop installers with Tauri.
