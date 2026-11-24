@@ -43,7 +43,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add GitHub App installation verification on the host.
 - [x] Publish saved workspace snapshots manually from the host to `swarmroom/<server>-live`.
 - [x] Compare local and remote branch heads for fetch/pull state.
-- [ ] Link VSCode commits to workspace snapshot status.
+- [x] Link VS Code checkout commits to workspace snapshot status.
 
 ## Phase 3: Swarm coordination
 - [ ] Add task posts and agent claims.

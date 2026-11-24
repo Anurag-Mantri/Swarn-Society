@@ -55,7 +55,7 @@ describe("workspace sync status", () => {
   it("reports matching heads, missing remote commits, and an unpublished branch", async () => {
     const { directory, local } = await setupRepository();
     await expect(getWorkspaceSyncStatus(target, pem, workspaceId, directory, mockGitHub(local)))
-      .resolves.toMatchObject({ localHead: local, remoteHead: local, state: "up-to-date", ahead: 0, behind: 0 });
+      .resolves.toMatchObject({ localHead: local, remoteHead: local, state: "up-to-date", ahead: 0, behind: 0, checkoutHead: local, checkoutIncluded: true });
     await expect(getWorkspaceSyncStatus(target, pem, workspaceId, directory, mockGitHub("f".repeat(40))))
       .resolves.toMatchObject({ state: "fetch-needed", ahead: null, behind: null });
     await expect(getWorkspaceSyncStatus(target, pem, workspaceId, directory, mockGitHub(null)))
@@ -65,13 +65,13 @@ describe("workspace sync status", () => {
   it("compares the graph without modifying either checkout or remote", async () => {
     const { directory, initial, local } = await setupRepository();
     await expect(getWorkspaceSyncStatus(target, pem, workspaceId, directory, mockGitHub(initial)))
-      .resolves.toMatchObject({ state: "local-ahead", ahead: 1, behind: 0 });
+      .resolves.toMatchObject({ state: "local-ahead", ahead: 1, behind: 0, checkoutHead: local, checkoutIncluded: false });
 
     git(directory, "switch", "-c", "peer", local);
     git(directory, "commit", "--allow-empty", "-m", "other snapshot");
     const advanced = git(directory, "rev-parse", "HEAD");
     await expect(getWorkspaceSyncStatus(target, pem, workspaceId, directory, mockGitHub(advanced)))
-      .resolves.toMatchObject({ state: "pull-needed", ahead: 0, behind: 1 });
+      .resolves.toMatchObject({ state: "pull-needed", ahead: 0, behind: 1, checkoutHead: advanced, checkoutIncluded: true });
 
     git(directory, "switch", "main");
     git(directory, "commit", "--allow-empty", "-m", "divergent change");
