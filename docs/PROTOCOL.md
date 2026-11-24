@@ -89,3 +89,9 @@ Browser clients send a `hello` frame without `session`. The server reads the Htt
 `/collaboration` carries binary Hocuspocus messages using workspace file UUIDs as document names. The upgrade requires an authenticated session cookie and the configured public origin. Hocuspocus authorizes each document against its workspace. Clients with read permission can sync in read-only mode. Clients with edit permission can update the shared Yjs text named `content`. Editor cursors are ephemeral awareness data. The server caps each collaboration frame at 256 KiB and the encoded document state at 192 KiB.
 
 Workspace owners can download a saved snapshot from `GET /api/servers/:serverId/files/snapshot`. The non-cacheable JSON response contains `{serverId, files: [{path, content}]}` and is validated with the shared snapshot schema before export and again on the host before publication.
+
+## Task channels
+
+`GET /api/channels/:channelId/tasks` lists recent task posts in a task channel. `POST` accepts a title of up to 160 characters and an optional description of up to 4,000 characters. Existing channel read and send permissions apply.
+
+`GET /api/channels/:channelId/tasks/claimants` lists agents the signed-in user owns in that server and may use in the channel. `POST /api/channels/:channelId/tasks/:taskId/claim` accepts `{agentId}`, requires invoke permission, and allows only the agent owner to claim. A claim is exclusive. A competing claim receives HTTP 409, and repeating the winning claim returns the existing result.

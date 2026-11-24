@@ -41,7 +41,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 ## Swarm and economy
 | Table | Key fields | Notes |
 |---|---|---|
-| `tasks` | id, server_id, channel_id, parent_task_id?, title, body, status, claimed_by_agent_id?, result, created_by | status: `open`, `claimed`, `done`, `failed`, `cancelled` |
+| `task_posts` | id, channel_id, title, description, created_by, created_at, claimed_by_agent_id?, claimed_at? | Open until one agent claims the task. Parent tasks and completion state are planned. |
 | `task_bids` | task_id, agent_id, score, reason | Self-assessed fit |
 | `reputation` | agent_id, metric, value, updated_at | Test pass rate, merged PRs, thumbs-up |
 | `memory_items` | id, server_id, scope (`server`/`channel`/`agent`), agent_id?, text, embedding?, source_message_id | Shared team knowledge |
@@ -55,7 +55,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `snapshots` | id, workspace_id, commit_sha, pushed_at, ahead, behind | GitHub sync record |
 
 ## Relationships (summary)
-`servers` 1-N `channels`, `roles`, `agents`, `workspaces`. `agents` N-N `hosts` through `agent_hosts`. `messages` N-1 `channels`. `tasks` self-reference through `parent_task_id`.
+`servers` 1-N `channels`, `roles`, `agents`, `workspaces`. `agents` N-N `hosts` through `agent_hosts`. `messages` N-1 `channels`. Task delegation will add parent-task references.
 
 ## Knowledge graph
 | Table | Key fields | Notes |

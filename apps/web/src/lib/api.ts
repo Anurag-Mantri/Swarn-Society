@@ -1,4 +1,4 @@
-import type { ChannelKind } from '@swarmroom/protocol';
+import type { ChannelKind, TaskClaimant, TaskPost } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -54,5 +54,11 @@ export const api = {
   snapshot: (workspaceId: string) => request<{ serverId: string; files: { path: string; content: string }[] }>(
     `/api/servers/${encodeURIComponent(workspaceId)}/files/snapshot`
   ),
+  tasks: (channelId: string) => request<TaskPost[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks`),
+  taskClaimants: (channelId: string) => request<TaskClaimant[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/claimants`),
+  createTask: (channelId: string, title: string, description: string) =>
+    post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks`, { title, description }),
+  claimTask: (channelId: string, taskId: string, agentId: string) =>
+    post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/claim`, { agentId }),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

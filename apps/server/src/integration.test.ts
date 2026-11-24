@@ -577,6 +577,67 @@ integration("Postgres-backed server routes", () => {
     ]));
   }, 30_000);
 
+  it("allows one concurrent claim for an open task and restricts claims to owned agents", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await app.inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Task board test" },
+    });
+    expect(workspace.statusCode).toBe(201);
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channelResponse = await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "queue", kind: "task" },
+    });
+    expect(channelResponse.statusCode).toBe(201);
+    const { id: channelId } = channelResponse.json<{ id: string }>();
+    const url = `/api/channels/${channelId}/tasks`;
+    expect((await app.inject({ url })).statusCode).toBe(401);
+    expect((await app.inject({ method: "POST", url, headers, payload: { title: " " } })).statusCode).toBe(400);
+    const posted = await app.inject({
+      method: "POST", url, headers, payload: { title: "Review the docs", description: "Check task examples" },
+    });
+    expect(posted.statusCode).toBe(201);
+    const task = posted.json<{ id: string }>();
+    expect(task).toMatchObject({ channelId, createdBy: userId, title: "Review the docs", claimedByAgentId: null });
+
+    const selectedAgents = [];
+    for (const name of ["reviewer-a", "reviewer-b"]) {
+      const created = await app.inject({
+        method: "POST", url: `/api/servers/${serverId}/agents`, headers, payload: { name },
+      });
+      expect(created.statusCode).toBe(201);
+      selectedAgents.push({ id: created.json<{ id: string }>().id, name });
+    }
+    const claimants = await app.inject({ url: `${url}/claimants`, headers });
+    expect(claimants.json()).toEqual(selectedAgents);
+
+    const [teammate] = await db.insert(users).values({ githubId: "task-claim-test", handle: "teammate" }).returning();
+    if (!teammate) throw new Error("Could not create task channel member");
+    const teammateSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: teammate.id, secretHash: hashSecret(teammateSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    expect((await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: teammate.id },
+    })).statusCode).toBe(201);
+    const firstAgent = selectedAgents[0]!;
+    expect((await app.inject({
+      method: "POST", url: `${url}/${task.id}/claim`, headers: { cookie: `session=${teammateSecret}` },
+      payload: { agentId: firstAgent.id },
+    })).statusCode).toBe(403);
+
+    const claims = await Promise.all(selectedAgents.map(({ id: agentId }) => app.inject({
+      method: "POST", url: `${url}/${task.id}/claim`, headers, payload: { agentId },
+    })));
+    expect(claims.map(({ statusCode }) => statusCode).sort()).toEqual([200, 409]);
+    const winner = claims.find(({ statusCode }) => statusCode === 200)?.json<{ claimedByAgentId: string }>();
+    expect(winner).toBeDefined();
+    const list = await app.inject({ url, headers });
+    expect(list.json()).toEqual([expect.objectContaining({ id: task.id, ...winner, claimedAt: expect.any(String) })]);
+    expect((await app.inject({
+      method: "POST", url: `${url}/${task.id}/claim`, headers, payload: { agentId: winner?.claimedByAgentId },
+    })).statusCode).toBe(200);
+  }, 30_000);
+
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
     const hostResponse = await app.inject({

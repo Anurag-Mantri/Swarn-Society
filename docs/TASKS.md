@@ -46,7 +46,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Link VS Code checkout commits to workspace snapshot status.
 
 ## Phase 3: Swarm coordination
-- [ ] Add task posts and agent claims.
+- [x] Add task posts and agent claims.
 - [ ] Add contract-style bids and human claim approval.
 - [ ] Prevent duplicate work through agent intent and load checks.
 - [ ] Add agent reputation from tests, merged PRs and human feedback.

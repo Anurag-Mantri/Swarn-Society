@@ -121,6 +121,20 @@ export const agents = pgTable("agents", {
   visibility: text("visibility").notNull().default("server"),
 });
 
+export const taskPosts = pgTable("task_posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  claimedAt: timestamp("claimed_at", { withTimezone: true }),
+  claimedByAgentId: uuid("claimed_by_agent_id").references(() => agents.id),
+}, (table) => [
+  index("task_posts_channel_created_idx").on(table.channelId, table.createdAt),
+  check("task_posts_claim_fields_match", sql`(${table.claimedAt} is null) = (${table.claimedByAgentId} is null)`),
+]);
+
 export const agentHosts = pgTable("agent_hosts", {
   agentId: uuid("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
   hostId: uuid("host_id").notNull().references(() => hosts.id, { onDelete: "cascade" }),
