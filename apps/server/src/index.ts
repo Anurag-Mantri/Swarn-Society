@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
@@ -38,6 +39,7 @@ import { taskBidRoutes } from "./routes/task-bids.js";
 import { taskPostRoutes } from "./routes/task-posts.js";
 import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
+import { closeAdapterSessions, handleAdapterFrame, type AdapterConnection } from "./extensions/adapter-session.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
@@ -65,10 +67,8 @@ await app.register(taskResolutionRoutes);
 await app.register(taskMetricsRoutes);
 await app.register(workspaceCollaborationRoutes);
 
-type HostConnection = {
+type HostConnection = AdapterConnection & {
   socket: WebSocket;
-  hostId: string;
-  tokenHash: string;
   supportsThreads: boolean;
 };
 
@@ -513,6 +513,13 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
   let connection: HostConnection | UserConnection | null = null;
 
   const close = () => {
+    if (connection && "hostId" in connection) {
+      const cleanup = closeAdapterSessions(connection.connectionId).catch((error: unknown) => {
+        app.log.error({ error }, "Could not close adapter sessions");
+      });
+      pendingHostStatusUpdates.add(cleanup);
+      void cleanup.then(() => pendingHostStatusUpdates.delete(cleanup));
+    }
     if (connection && "hostId" in connection && hostConnections.delete(connection)) {
       const closingConnection = connection;
       const statusUpdate = db.update(hosts).set({ status: "offline" }).where(and(
@@ -650,7 +657,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           return;
         }
         connection = {
-          socket, hostId: host.id, tokenHash: host.tokenHash,
+          socket, hostId: host.id, tokenHash: host.tokenHash, connectionId: randomUUID(),
           supportsThreads: (frame.version ?? 1) >= threadedHostProtocolVersion,
         };
         hostConnections.add(connection);
@@ -660,6 +667,16 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
       if (!connection) {
         socket.close(1008, "Connection not registered");
+        return;
+      }
+
+      if (frame.t === "adapter.register" || frame.t === "adapter.session.start" || frame.t === "adapter.resource" ||
+          frame.t === "adapter.snapshot" || frame.t === "adapter.session.stop") {
+        if ("hostId" in connection) {
+          const result = await handleAdapterFrame(connection, frame);
+          if (socket.readyState === 1) socket.send(JSON.stringify(result));
+          else if (frame.t === "adapter.session.start") await closeAdapterSessions(connection.connectionId);
+        }
         return;
       }
 

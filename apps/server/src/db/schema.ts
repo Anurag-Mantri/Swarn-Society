@@ -135,6 +135,48 @@ export const hostExtensionApprovals = pgTable("host_extension_approvals", {
   index("host_extension_approvals_manifest_idx").on(table.manifestId),
 ]);
 
+export const extensionAdapters = pgTable("extension_adapters", {
+  id: uuid("id").primaryKey(),
+  hostId: uuid("host_id").notNull().references(() => hosts.id, { onDelete: "cascade" }),
+  manifestId: uuid("manifest_id").notNull().references(() => extensionManifests.id, { onDelete: "cascade" }),
+  registeredAt: timestamp("registered_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const extensionSessions = pgTable("extension_sessions", {
+  id: uuid("id").primaryKey(),
+  adapterId: uuid("adapter_id").notNull().references(() => extensionAdapters.id, { onDelete: "cascade" }),
+  channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  connectionId: uuid("connection_id").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  stoppedAt: timestamp("stopped_at", { withTimezone: true }),
+}, (table) => [
+  index("extension_sessions_connection_idx").on(table.connectionId),
+]);
+
+export const extensionResources = pgTable("extension_resources", {
+  id: uuid("id").primaryKey(),
+  sessionId: uuid("session_id").notNull().references(() => extensionSessions.id, { onDelete: "cascade" }),
+  resourceType: text("resource_type").notNull(),
+  extension: text("extension").notNull(),
+  byteLength: integer("byte_length").notNull(),
+  reportedAt: timestamp("reported_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique("extension_resources_session_id_unique").on(table.sessionId, table.id),
+]);
+
+export const extensionSnapshots = pgTable("extension_snapshots", {
+  id: uuid("id").primaryKey(),
+  sessionId: uuid("session_id").notNull(),
+  resourceId: uuid("resource_id").notNull(),
+  format: text("format").notNull(),
+  sha256: text("sha256").notNull(),
+  byteLength: integer("byte_length").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ name: "extension_snapshots_resource_scope_fk", columns: [table.sessionId, table.resourceId],
+    foreignColumns: [extensionResources.sessionId, extensionResources.id] }).onDelete("cascade"),
+]);
+
 export const agents = pgTable("agents", {
   id: uuid("id").primaryKey().defaultRandom(),
   serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),

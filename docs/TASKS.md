@@ -70,8 +70,8 @@ Keep each pull request on one task or a tightly related task group.
 ## Phase 5: Voice and external app extensions
 - [ ] Add LiveKit voice channels.
 - [x] Add extension manifests and host approval.
-- [ ] Add the adapter register/session/snapshot protocol.
-- [ ] Add Zod schemas for every adapter message.
+- [x] Add the adapter register/session/snapshot protocol.
+- [x] Add Zod schemas for every adapter message.
 - [ ] Add one manual adapter for a local file-based app.
 - [ ] Test denied permissions and offline/unresponsive hosts.
 - [ ] Document a Blender or Photoshop adapter only after a tested integration exists.

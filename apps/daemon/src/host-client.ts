@@ -89,7 +89,7 @@ export class HostClient {
           finish(false);
           return;
         }
-        void this.handleTask(frame, socket);
+        if (frame.t === "task") void this.handleTask(frame, socket);
       });
       socket.on("error", () => finish(true));
       socket.on("close", (code) => finish(code !== 1008 && !this.stopped));

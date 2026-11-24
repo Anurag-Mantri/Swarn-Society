@@ -56,4 +56,4 @@ Adapters need explicit tests before a manifest is enabled for a server.
 - `PUT /api/hosts/:hostId/extensions/:manifestId/approval` accepts `{capabilities}` and requires the registered host owner and workspace read access.
 - `DELETE /api/hosts/:hostId/extensions/:manifestId/approval` revokes consent for that version.
 
-Registration and approval record metadata. A separate adapter protocol must enforce the approved subset before starting a session or sending a snapshot.
+Registration and approval record metadata. The [adapter session protocol](PROTOCOL.md#host-owned-adapter-sessions) enforces the approved subset and channel access. A host adapter executable still needs to be installed and started manually.

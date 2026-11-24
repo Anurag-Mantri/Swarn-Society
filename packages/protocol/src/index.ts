@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { adapterAckSchema, adapterFrames } from "./adapter-frames.js";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const threadId = z.string().uuid().optional();
@@ -95,11 +96,13 @@ export const hostClientFrameSchema = z.discriminatedUnion("t", [
   hostHeartbeatSchema,
   agentUsageSchema,
   replySchema,
+  ...adapterFrames,
 ]);
 
 export const hostServerFrameSchema = z.discriminatedUnion("t", [
   taskSchema,
   hostRegisteredSchema,
+  adapterAckSchema,
   errorSchema,
 ]);
 
@@ -110,6 +113,7 @@ export const inboundFrameSchema = z.discriminatedUnion("t", [
   agentUsageSchema,
   messageSchema,
   replySchema,
+  ...adapterFrames,
 ]);
 
 export type Hello = z.infer<typeof helloSchema>;
@@ -136,3 +140,5 @@ export type { TaskCoordinationMetrics } from "./task-posts.js";
 export type { KnowledgeOverview } from "./knowledge.js";
 export { extensionApprovalSchema, extensionCapability, extensionManifestSchema } from "./extensions.js";
 export type { ExtensionCapability, ExtensionManifest } from "./extensions.js";
+export { adapterAckSchema, adapterFrameSchema } from "./adapter-frames.js";
+export type { AdapterFrame } from "./adapter-frames.js";
