@@ -6,6 +6,7 @@ import type { ChildProcessWithoutNullStreams, SpawnOptions } from "node:child_pr
 import type { Task } from "@swarmroom/protocol";
 import type { SandboxConfig } from "../config.js";
 import type { SandboxBackend } from "./runner.js";
+import type { ProviderEgressBroker, ProviderBrokerLease } from "../provider-broker.js";
 
 const CONTAINER_COMMAND = ["/usr/local/bin/swarmroom-agent"] as const;
 const MAX_WALL_TIME_MS = 120_000;
@@ -99,8 +100,9 @@ function assertRootlessPodmanInfo(infoText: string): void {
   }
 }
 
-function buildRunArguments(image: string, workspace: string): string[] {
-  if (!isAbsolute(workspace) || /[,\r\n]/.test(workspace)) {
+function buildRunArguments(image: string, workspace: string, brokerSocketPath: string): string[] {
+  if (!isAbsolute(workspace) || /[,\r\n]/.test(workspace) ||
+      !isAbsolute(brokerSocketPath) || /[,\r\n]/.test(brokerSocketPath)) {
     throw new Error("Sandbox workspace path is invalid.");
   }
   const { uid, gid } = userInfo();
@@ -108,6 +110,8 @@ function buildRunArguments(image: string, workspace: string): string[] {
     ...RUN_OPTIONS,
     `--user=${uid}:${gid}`,
     `--mount=type=bind,src=${workspace},dst=/workspace,rw`,
+    `--mount=type=bind,src=${brokerSocketPath},dst=/run/swarmroom/provider.sock,rw`,
+    "--env=SWARMROOM_PROVIDER_SOCKET=/run/swarmroom/provider.sock",
     image,
     ...CONTAINER_COMMAND,
   ];
@@ -154,6 +158,7 @@ class PodmanSandboxBackend implements SandboxBackend {
   constructor(
     private readonly image: string,
     private readonly workspaces: Map<string, string>,
+    private readonly broker: ProviderEgressBroker,
     private readonly launch: PodmanSpawnFunction,
   ) {}
 
@@ -164,18 +169,24 @@ class PodmanSandboxBackend implements SandboxBackend {
     if (!workspace) throw new Error("No workspace is configured for this agent.");
     this.busy = true;
     try {
-      const child = this.launch("podman", buildRunArguments(this.image, workspace), spawnOptions());
-      const abort = () => child.kill("SIGKILL");
-      signal.addEventListener("abort", abort, { once: true });
+      const brokerLease = await this.broker.openForAgent(task.agent);
       try {
-        child.stdin.on("error", () => undefined);
-        child.stdin.end(JSON.stringify(task));
-        const output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS);
-        const text = output.toString("utf8").trim();
-        if (!text) throw new Error("Sandbox returned an empty response.");
-        return text.slice(0, 8_000);
+        if (signal.aborted) throw new Error("Sandbox task was cancelled.");
+        const child = this.launch("podman", buildRunArguments(this.image, workspace, brokerLease.socketPath), spawnOptions());
+        const abort = () => child.kill("SIGKILL");
+        signal.addEventListener("abort", abort, { once: true });
+        try {
+          child.stdin.on("error", () => undefined);
+          child.stdin.end(JSON.stringify(task));
+          const output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS);
+          const text = output.toString("utf8").trim();
+          if (!text) throw new Error("Sandbox returned an empty response.");
+          return text.slice(0, 8_000);
+        } finally {
+          signal.removeEventListener("abort", abort);
+        }
       } finally {
-        signal.removeEventListener("abort", abort);
+        await brokerLease.close();
       }
     } finally {
       this.busy = false;
@@ -185,6 +196,7 @@ class PodmanSandboxBackend implements SandboxBackend {
 
 export async function createPodmanSandboxBackend(
   config: SandboxConfig,
+  broker: ProviderEgressBroker,
   launch: PodmanSpawnFunction = (command, args, options) =>
     nodeSpawn(command, args, options) as ChildProcessWithoutNullStreams,
 ): Promise<SandboxBackend> {
@@ -200,7 +212,7 @@ export async function createPodmanSandboxBackend(
   infoChild.stdin.end();
   const info = await collectProcessOutput(infoChild, MAX_INFO_BYTES, 5_000);
   assertRootlessPodmanInfo(info.toString("utf8"));
-  return new PodmanSandboxBackend(config.image, workspaces, launch);
+  return new PodmanSandboxBackend(config.image, workspaces, broker, launch);
 }
 
 export const podmanSandboxLimits = {

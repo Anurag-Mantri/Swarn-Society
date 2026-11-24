@@ -7,6 +7,7 @@ import type { ChildProcessWithoutNullStreams, SpawnOptions } from "node:child_pr
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxConfig } from "../config.js";
 import { createPodmanSandboxBackend, type PodmanSpawnFunction } from "./podman.js";
+import type { ProviderEgressBroker } from "../provider-broker.js";
 
 const image = `registry.example/swarmroom-agent@sha256:${"a".repeat(64)}`;
 const workspaces: string[] = [];
@@ -21,6 +22,10 @@ async function workspace(): Promise<string> {
   const path = await mkdtemp(join(tmpdir(), "swarmroom-sandbox-test-"));
   workspaces.push(path);
   return path;
+}
+
+function fakeBroker(socketPath: string, close = vi.fn(async () => undefined)): ProviderEgressBroker {
+  return { openForAgent: async () => ({ socketPath, close }) };
 }
 
 function fakeChild(): FakeChild {
@@ -41,6 +46,9 @@ describe("rootless Podman sandbox", () => {
   it("passes task JSON through stdin with fixed, isolated container arguments", async () => {
     vi.stubEnv("SWARMROOM_TEST_PROVIDER_SECRET", "must-not-reach-runtime");
     const cwd = await workspace();
+    const brokerDirectory = await workspace();
+    const brokerSocket = join(brokerDirectory, "provider.sock");
+    const closeBroker = vi.fn(async () => undefined);
     const calls: Array<{ command: string; args: string[]; options: SpawnOptions; child: FakeChild }> = [];
     const inputs: string[] = [];
     const launch: PodmanSpawnFunction = (command, args, options) => {
@@ -61,7 +69,7 @@ describe("rootless Podman sandbox", () => {
       return child as unknown as ChildProcessWithoutNullStreams;
     };
     const config: SandboxConfig = { image, workspaces: new Map([["scout", cwd]]) };
-    const backend = await createPodmanSandboxBackend(config, launch);
+    const backend = await createPodmanSandboxBackend(config, fakeBroker(brokerSocket, closeBroker), launch);
     const task = { t: "task" as const, channelId: "c1", from: "u1", agent: "scout", text: "$(touch /tmp/unsafe)" };
     await expect(backend.run(task, new AbortController().signal)).resolves.toBe("sandbox response");
 
@@ -70,11 +78,14 @@ describe("rootless Podman sandbox", () => {
     expect(calls[1]?.args).toEqual(expect.arrayContaining([
       "--network=none", "--read-only", "--cap-drop=ALL", "--pids-limit=64", "--memory=512m",
       "--cpus=1", `--mount=type=bind,src=${cwd},dst=/workspace,rw`, image,
+      `--mount=type=bind,src=${brokerSocket},dst=/run/swarmroom/provider.sock,rw`,
+      "--env=SWARMROOM_PROVIDER_SOCKET=/run/swarmroom/provider.sock",
       "/usr/local/bin/swarmroom-agent",
     ]));
     expect(calls[1]?.args.join(" ")).not.toContain("touch");
     expect(calls[1]?.options.env).not.toHaveProperty("SWARMROOM_TEST_PROVIDER_SECRET");
     expect(calls[1]?.options.shell).toBe(false);
+    expect(closeBroker).toHaveBeenCalledOnce();
     expect(inputs).toHaveLength(1);
     expect(JSON.parse(inputs[0] ?? "null")).toEqual(task);
   });
@@ -89,7 +100,7 @@ describe("rootless Podman sandbox", () => {
       });
       return child as unknown as ChildProcessWithoutNullStreams;
     };
-    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", cwd]]) }, launch))
+    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", cwd]]) }, fakeBroker(cwd), launch))
       .rejects.toThrow("local rootless Podman");
   });
 
@@ -97,9 +108,9 @@ describe("rootless Podman sandbox", () => {
     const launch: PodmanSpawnFunction = () => {
       throw new Error("Podman should not be launched for an unsafe workspace.");
     };
-    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", homedir()]]) }, launch))
+    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", homedir()]]) }, fakeBroker("/tmp/broker.sock"), launch))
       .rejects.toThrow("cannot be the home directory");
-    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", "/"]]) }, launch))
+    await expect(createPodmanSandboxBackend({ image, workspaces: new Map([["scout", "/"]]) }, fakeBroker("/tmp/broker.sock"), launch))
       .rejects.toThrow("cannot be the home directory");
   });
 
@@ -113,6 +124,6 @@ describe("rootless Podman sandbox", () => {
     await expect(createPodmanSandboxBackend({
       image,
       workspaces: new Map([["scout", parent], ["reviewer", childWorkspace]]),
-    }, launch)).rejects.toThrow("cannot overlap");
+    }, fakeBroker("/tmp/broker.sock"), launch)).rejects.toThrow("cannot overlap");
   });
 });
