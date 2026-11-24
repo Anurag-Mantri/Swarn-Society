@@ -62,3 +62,11 @@ pnpm --filter @swarmroom/daemon github-app publish <app-id> <installation-id> <r
 ```
 
 The command derives `swarmroom/<workspace-id>-live` from the snapshot. It verifies that the branch is neither the repository default nor protected and that no active ruleset applies. It uses non-forced updates and reports the branch and commit SHA. Provision the App without branch bypass privileges. Publishing overlays the saved workspace files onto the target tree and uses the default branch as the starting point if the snapshot branch does not exist.
+
+### Compare a local checkout with GitHub
+
+```sh
+pnpm --filter @swarmroom/daemon github-app status <app-id> <installation-id> <repository-id> <workspace-id> <checkout>
+```
+
+The command verifies that the checkout's `origin` points to the approved repository. It compares the local and GitHub heads of the workspace snapshot branch, then reports their commit SHAs and the ahead/behind counts when the local Git graph can establish them. A `fetch-needed` result means the checkout lacks the remote commit or enough history to compare it. This operation reads from GitHub and the checkout. Fetching, pulling, merging, and publishing are separate actions.
