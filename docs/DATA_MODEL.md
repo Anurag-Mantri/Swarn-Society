@@ -74,7 +74,8 @@ Deterministic edges require no model call and must include an attributable sourc
 ## External app extensions
 | Table | Key fields | Notes |
 |---|---|---|
-| `app_extensions` | id, server_id, name, manifest_json, owner_id, enabled | Manually registered by a server admin |
+| `extension_manifests` | id, server_id, slug, version, manifest, registered_by, created_at | Immutable version registered with server agent-management permission. |
+| `host_extension_approvals` | host_id, manifest_id, capabilities, approved_by, approved_at | Version-specific consent and capability subset from the registered host owner. |
 | `extension_adapters` | id, extension_id, host_id, protocol_version, capabilities_json, status | Host-provided adapter instance |
 | `extension_sessions` | id, adapter_id, channel_id, task_id?, external_app, external_resource, status | One active collaboration session |
 | `extension_snapshots` | id, session_id, snapshot_key, source_uri, hash, created_at | Captures work outside the code workspace |

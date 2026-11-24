@@ -13,13 +13,12 @@ Each extension manifest declares:
 - Requested read and write capabilities
 - Resource types and file extensions
 - Approval requirements
-- Snapshot command or file format
-- Cleanup and uninstall behavior
+- Snapshot format when snapshot access is requested
 
 ## Host permission
-The host owner approves the extension and its capabilities.
+The server stores immutable manifest versions, and the registered host owner approves a subset of each version's capabilities. A new version requires its own approval. The manifest schema accepts structured capability and resource declarations. Commands, secrets, environment values, and filesystem paths are outside the manifest format.
 An extension cannot run shell commands or access files outside declared paths without a separate approval.
-API keys and environment variables stay outside the extension manifest and OS keychain.
+Provider credentials stay in the host daemon’s OS keychain.
 
 ## Adapter interface
 An adapter implements a small local protocol:
@@ -48,3 +47,13 @@ No direct control of applications that provide no safe local API or documented f
 ## Validation
 Test each adapter for permission denial, snapshot corruption, offline hosts and app process termination.
 Adapters need explicit tests before a manifest is enabled for a server.
+
+## Registration and approval API
+
+- `GET /api/servers/:serverId/extensions` lists registered versions for workspace members with read access.
+- `POST /api/servers/:serverId/extensions` registers an immutable manifest and requires agent-management permission.
+- `GET /api/hosts/:hostId/extensions` lists the host owner's current approvals.
+- `PUT /api/hosts/:hostId/extensions/:manifestId/approval` accepts `{capabilities}` and requires the registered host owner and workspace read access.
+- `DELETE /api/hosts/:hostId/extensions/:manifestId/approval` revokes consent for that version.
+
+Registration and approval record metadata. A separate adapter protocol must enforce the approved subset before starting a session or sending a snapshot.

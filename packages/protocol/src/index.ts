@@ -134,3 +134,5 @@ export { createTaskBidSchema } from "./task-posts.js";
 export type { TaskBid, TaskBidInput } from "./task-posts.js";
 export type { TaskCoordinationMetrics } from "./task-posts.js";
 export type { KnowledgeOverview } from "./knowledge.js";
+export { extensionApprovalSchema, extensionCapability, extensionManifestSchema } from "./extensions.js";
+export type { ExtensionCapability, ExtensionManifest } from "./extensions.js";

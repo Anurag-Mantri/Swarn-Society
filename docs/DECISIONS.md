@@ -199,3 +199,10 @@ Date: 2026-11-24
 Context: An exclusive claim prevents duplicates on one post, while separate posts can still describe the same work or overload an agent.
 Decision: Apply the same serialized PostgreSQL checks to direct claims and bid approval. One assigned unresolved task can use each normalized intent in its channel. An agent can hold one unresolved assignment across its channels.
 Consequences: Resolution releases capacity. The default intent is the normalized title, and teams can supply a shared intent for differently worded posts. Existing assignments stay intact.
+
+### D-031: Extension approval applies to an immutable version
+Status: Accepted
+Date: 2026-11-24
+Context: A workspace needs to request adapter capabilities without granting access to a teammate's computer.
+Decision: A workspace manager registers a structured manifest. The registered host owner approves a subset of its capabilities for that exact version. New versions require fresh approval.
+Consequences: Approval is revocable metadata. An adapter session must validate the same manifest version and grants before it can operate.

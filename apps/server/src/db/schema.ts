@@ -1,6 +1,6 @@
 import { boolean, check, customType, date, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { ChannelKind, TaskResolution } from "@swarmroom/protocol";
+import type { ChannelKind, ExtensionCapability, ExtensionManifest, TaskResolution } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
 
 export const users = pgTable("users", {
@@ -111,6 +111,29 @@ export const hosts = pgTable("hosts", {
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const extensionManifests = pgTable("extension_manifests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),
+  registeredBy: uuid("registered_by").notNull().references(() => users.id),
+  slug: text("slug").notNull(),
+  version: text("version").notNull(),
+  manifest: jsonb("manifest").$type<ExtensionManifest>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique("extension_manifests_version_unique").on(table.serverId, table.slug, table.version),
+]);
+
+export const hostExtensionApprovals = pgTable("host_extension_approvals", {
+  hostId: uuid("host_id").notNull().references(() => hosts.id, { onDelete: "cascade" }),
+  manifestId: uuid("manifest_id").notNull().references(() => extensionManifests.id, { onDelete: "cascade" }),
+  approvedBy: uuid("approved_by").notNull().references(() => users.id),
+  capabilities: jsonb("capabilities").$type<ExtensionCapability[]>().notNull(),
+  approvedAt: timestamp("approved_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.hostId, table.manifestId] }),
+  index("host_extension_approvals_manifest_idx").on(table.manifestId),
+]);
 
 export const agents = pgTable("agents", {
   id: uuid("id").primaryKey().defaultRandom(),
