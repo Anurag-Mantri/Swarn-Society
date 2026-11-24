@@ -101,3 +101,5 @@ Workspace owners can download a saved snapshot from `GET /api/servers/:serverId/
 `POST /api/channels/:channelId/tasks/:taskId/resolve` accepts `{resolution, result?}`. An assigned task can be marked `done` by the author or the assigned agent's owner. The author can mark either an open or assigned task `cancelled`. Channel send permission applies. The server records the resolving user, timestamp, and result text and prevents additional claims or bids on the resolved task.
 
 Claims and bid approvals both reject assignments when the channel already has an active claim for the same normalized intent or the agent has an active task in any channel. Missing intent defaults to the title. Resolving the task releases the intent and the agent's capacity.
+
+`GET /api/channels/:channelId/tasks/metrics?days=7|30|90` returns channel task counts, mean time to completion, and assignment blocks. The UTC window defaults to 30 days and includes today. Task totals use the date the task was posted. Rejection totals count attempts on the UTC day of rejection, so retries may increase them. The route requires channel read permission.

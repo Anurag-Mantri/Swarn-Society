@@ -3,6 +3,7 @@
   import type { TaskClaimant, TaskPost, TaskResolution } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
   import TaskBids from './TaskBids.svelte';
+  import TaskMetrics from './TaskMetrics.svelte';
 
   let { channelId, name, currentUser }: { channelId: string; name: string; currentUser: string } = $props();
   let tasks = $state<TaskPost[]>([]);
@@ -92,6 +93,7 @@
     <button type="button" disabled={loading || busy} onclick={refresh}>Refresh</button>
   </header>
   {#if error}<p class="alert" role="alert">{error}</p>{/if}
+  <TaskMetrics {channelId} />
   <form onsubmit={post}>
     <label for="task-title">Task title</label>
     <input id="task-title" required maxlength="160" bind:value={title} />

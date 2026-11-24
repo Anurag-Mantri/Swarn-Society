@@ -132,3 +132,4 @@ export { claimTaskPostSchema, createTaskPostSchema, resolveTaskPostSchema } from
 export type { TaskClaimant, TaskPost, TaskResolution } from "./task-posts.js";
 export { createTaskBidSchema } from "./task-posts.js";
 export type { TaskBid, TaskBidInput } from "./task-posts.js";
+export type { TaskCoordinationMetrics } from "./task-posts.js";

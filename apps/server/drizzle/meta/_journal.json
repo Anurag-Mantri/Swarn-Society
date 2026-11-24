@@ -78,6 +78,13 @@
       "when": 1795551046022,
       "tag": "0010_task_intent_and_load",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795551181983,
+      "tag": "0011_task_coordination_metrics",
+      "breakpoints": true
     }
   ]
 }

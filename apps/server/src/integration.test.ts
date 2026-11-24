@@ -671,6 +671,20 @@ integration("Postgres-backed server routes", () => {
     expect((await app.inject({
       method: "POST", url: otherClaimUrl, headers, payload: { agentId: winner?.claimedByAgentId },
     })).statusCode).toBe(200);
+    const metrics = await app.inject({ url: `${url}/metrics?days=7`, headers });
+    expect(metrics.statusCode).toBe(200);
+    expect(metrics.json()).toMatchObject({
+      days: 7, posted: 2, open: 1, inProgress: 0, completed: 1, cancelled: 0,
+      meanCompletionSeconds: expect.any(Number),
+      duplicateIntentAttempts: 1, busyAgentAttempts: 0, competingClaimAttempts: 1,
+    });
+    const otherMetrics = await app.inject({ url: `${otherUrl}/metrics`, headers });
+    expect(otherMetrics.json()).toMatchObject({
+      posted: 1, inProgress: 1, completed: 0, meanCompletionSeconds: null,
+      duplicateIntentAttempts: 0, busyAgentAttempts: 1, competingClaimAttempts: 0,
+    });
+    expect((await app.inject({ url: `${url}/metrics?days=15`, headers })).statusCode).toBe(400);
+    expect((await app.inject({ url: `${url}/metrics` })).statusCode).toBe(401);
   }, 30_000);
 
   it("requires the task author to approve a teammate's proposed contract", async () => {
