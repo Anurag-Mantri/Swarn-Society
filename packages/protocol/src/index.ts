@@ -14,7 +14,7 @@ export const createChannelSchema = z.object({
 
 export const helloSchema = z.object({
   t: z.literal("hello"),
-  session: text(512),
+  session: text(512).optional(),
   version: z.number().int().positive().optional(),
 }).strict();
 
@@ -70,6 +70,7 @@ export const initSchema = z.object({
     id: z.string(),
     name: z.string(),
     kind: channelKindSchema.default("text"),
+    serverId: z.string().uuid().optional(),
   })),
   agents: z.array(z.object({
     name: z.string(),
