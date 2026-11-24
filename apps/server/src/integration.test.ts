@@ -351,7 +351,7 @@ integration("Postgres-backed server routes", () => {
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "error");
       const userReply = nextWebSocketFrame(userSocket, "agent reply", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "msg" && "kind" in frame && frame.kind === "agent");
-      userSocket.send(JSON.stringify({ t: "reply", channelId: channel.id, agent: "routing-agent", text: "completed" }));
+      hostSocket.send(JSON.stringify({ t: "reply", channelId: channel.id, agent: "routing-agent", text: "completed" }));
       const replyResult = await Promise.race([
         reply.then((frame) => ({ kind: "error" as const, frame })),
         userReply.then((frame) => ({ kind: "reply" as const, frame })),
