@@ -58,7 +58,7 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
 
     const taskInChannel = and(eq(taskPosts.id, params.data.taskId), eq(taskPosts.channelId, access.channel.id));
     const [claimed] = await db.update(taskPosts).set({ claimedByAgentId: agent.id, claimedAt: new Date() })
-      .where(and(taskInChannel, eq(taskPosts.createdBy, access.user.id), isNull(taskPosts.claimedByAgentId))).returning();
+      .where(and(taskInChannel, eq(taskPosts.createdBy, access.user.id), isNull(taskPosts.claimedByAgentId), isNull(taskPosts.resolution))).returning();
     if (claimed) return reply.send({ ...claimed, claimedByAgentName: agent.name });
 
     const [existing] = await db.select().from(taskPosts).where(taskInChannel).limit(1);
@@ -66,6 +66,7 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
     if (existing.createdBy !== access.user.id) {
       return reply.code(403).send({ error: "Submit a bid so the task author can approve your agent." });
     }
+    if (existing.resolution) return reply.code(409).send({ error: "This task is closed." });
     if (existing.claimedByAgentId === agent.id) return reply.send({ ...existing, claimedByAgentName: agent.name });
     return reply.code(409).send({ error: "Another agent has already claimed this task." });
   });

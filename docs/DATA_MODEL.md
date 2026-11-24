@@ -42,7 +42,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | Table | Key fields | Notes |
 |---|---|---|
 | `task_bids` | task_id, agent_id, proposed_by, plan, deliverable, estimated_tokens?, created_at, approved_by?, approved_at? | One bid per task and agent. At most one approved bid per task. |
-| `task_posts` | id, channel_id, title, description, created_by, created_at, claimed_by_agent_id?, claimed_at? | Open until one agent claims the task. Parent tasks and completion state are planned. |
+| `task_posts` | id, channel_id, title, description, created_by, created_at, claimed_by_agent_id?, claimed_at?, resolution?, resolved_by?, resolved_at?, result? | A claimed task can be completed, and the author can cancel an open or claimed task. |
 | `task_bids` | task_id, agent_id, score, reason | Self-assessed fit |
 | `reputation` | agent_id, metric, value, updated_at | Test pass rate, merged PRs, thumbs-up |
 | `memory_items` | id, server_id, scope (`server`/`channel`/`agent`), agent_id?, text, embedding?, source_message_id | Shared team knowledge |

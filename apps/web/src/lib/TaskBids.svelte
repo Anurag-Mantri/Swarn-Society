@@ -14,7 +14,7 @@
   let deliverable = $state('');
   let estimatedTokens = $state<number>();
   const hasBid = $derived(bids.some((bid) => bid.agentId === selectedAgent));
-  const open = $derived(!task.claimedByAgentId);
+  const open = $derived(!task.claimedByAgentId && !task.resolution);
 
   function showError(problem: unknown) {
     error = problem instanceof Error ? problem.message : 'Could not update this bid.';

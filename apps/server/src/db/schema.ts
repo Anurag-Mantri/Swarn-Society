@@ -1,6 +1,6 @@
 import { boolean, check, customType, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { ChannelKind } from "@swarmroom/protocol";
+import type { ChannelKind, TaskResolution } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
 
 export const users = pgTable("users", {
@@ -130,9 +130,16 @@ export const taskPosts = pgTable("task_posts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   claimedAt: timestamp("claimed_at", { withTimezone: true }),
   claimedByAgentId: uuid("claimed_by_agent_id").references(() => agents.id),
+  resolution: text("resolution").$type<TaskResolution>(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  resolvedBy: uuid("resolved_by").references(() => users.id),
+  result: text("result"),
 }, (table) => [
   index("task_posts_channel_created_idx").on(table.channelId, table.createdAt),
   check("task_posts_claim_fields_match", sql`(${table.claimedAt} is null) = (${table.claimedByAgentId} is null)`),
+  check("task_posts_resolution_valid", sql`${table.resolution} in ('done', 'cancelled')`),
+  check("task_posts_resolution_fields_match", sql`num_nonnulls(${table.resolution}, ${table.resolvedAt}, ${table.resolvedBy}, ${table.result}) in (0, 4)`),
+  check("task_posts_completion_has_claim", sql`${table.resolution} != 'done' or ${table.claimedByAgentId} is not null`),
 ]);
 
 export const taskBids = pgTable("task_bids", {

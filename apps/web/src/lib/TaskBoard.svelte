@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { TaskClaimant, TaskPost } from '@swarmroom/protocol';
+  import type { TaskClaimant, TaskPost, TaskResolution } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
   import TaskBids from './TaskBids.svelte';
 
@@ -9,6 +9,8 @@
   let agents = $state<TaskClaimant[]>([]);
   let selectedAgent = $state('');
   let openBids = $state<string | null>(null);
+  let closingTask = $state<{ id: string; resolution: TaskResolution } | null>(null);
+  let resolutionNotes = $state('');
   let title = $state('');
   let description = $state('');
   let error = $state('');
@@ -55,6 +57,26 @@
     } finally { busy = false; }
   }
 
+  function startResolution(task: TaskPost, resolution: TaskResolution) {
+    closingTask = { id: task.id, resolution };
+    resolutionNotes = '';
+  }
+
+  async function resolve(event: SubmitEvent) {
+    event.preventDefault();
+    if (!closingTask || busy) return;
+    busy = true;
+    error = '';
+    try {
+      const resolved = await api.resolveTask(channelId, closingTask.id, closingTask.resolution, resolutionNotes);
+      applyClaim(resolved);
+      closingTask = null;
+    } catch (problem) {
+      showError(problem);
+      if (problem instanceof ApiError && problem.status === 409) await refresh();
+    } finally { busy = false; }
+  }
+
   function applyClaim(claimed: TaskPost) {
     tasks = tasks.map((task) => task.id === claimed.id ? claimed : task);
   }
@@ -93,12 +115,33 @@
       <li>
         <h2>{task.title}</h2>
         {#if task.description}<p class="description">{task.description}</p>{/if}
-        {#if task.claimedByAgentId}
+        {#if task.resolution}
+          <p>{task.resolution === 'done' ? 'Completed' : 'Cancelled'}</p>
+          {#if task.result}<p class="description">{task.result}</p>{/if}
+        {:else if task.claimedByAgentId}
           <p>Claimed by {task.claimedByAgentName ?? 'an agent'}</p>
         {:else if selectedAgent && task.createdBy === currentUser}
           <button type="button" disabled={busy || loading} onclick={() => claim(task.id)}>Claim task</button>
         {:else}
           <p>Open for claims</p>
+        {/if}
+        {#if !task.resolution}
+          {#if task.claimedByAgentId && (task.createdBy === currentUser || agents.some((agent) => agent.id === task.claimedByAgentId))}
+            <button type="button" disabled={busy} onclick={() => startResolution(task, 'done')}>Complete task</button>
+          {/if}
+          {#if task.createdBy === currentUser}
+            <button type="button" disabled={busy} onclick={() => startResolution(task, 'cancelled')}>Cancel task</button>
+          {/if}
+        {/if}
+        {#if closingTask?.id === task.id && !task.resolution}
+          <form onsubmit={resolve}>
+            <label for="resolution-notes">{closingTask.resolution === 'done' ? 'Result (optional)' : 'Cancellation reason (optional)'}</label>
+            <textarea id="resolution-notes" rows="2" maxlength="4000" bind:value={resolutionNotes}></textarea>
+            <div class="resolution-actions">
+              <button class="primary" disabled={busy}>{closingTask.resolution === 'done' ? 'Confirm completion' : 'Confirm cancellation'}</button>
+              <button type="button" onclick={() => { closingTask = null; }}>Keep open</button>
+            </div>
+          </form>
         {/if}
         <button type="button" aria-expanded={openBids === task.id}
           onclick={() => { openBids = openBids === task.id ? null : task.id; }}>
@@ -121,6 +164,7 @@
   label { font-weight: 600; }
   form { display: grid; gap: .5rem; margin: 1rem 0; max-width: 36rem; }
   form button { justify-self: start; }
+  .resolution-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
   .agent-choice { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
   select { max-width: 100%; }
   ul { list-style: none; margin: .75rem 0; padding: 0; }
