@@ -1,304 +1,712 @@
 {
   "nodes": [
     {
-      "id": "server::file::auth",
+      "id": "server::server::file::auth",
       "label": "auth.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:1"
     },
     {
-      "id": "server::auth::getsessionuser",
+      "id": "server::server::auth::getsessionuser",
       "label": "getSessionUser",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:7"
     },
     {
-      "id": "server::auth::requireuser",
+      "id": "server::server::auth::requireuser",
       "label": "requireUser",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:25"
     },
     {
-      "id": "server::file::config",
+      "id": "server::server::file::config",
       "label": "config.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/config.ts",
       "sourceLocation": "apps/server/src/config.ts:1"
     },
     {
-      "id": "server::file::index",
+      "id": "server::server::file::index",
       "label": "index.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:1"
     },
     {
-      "id": "server::file::schema",
+      "id": "server::server::file::schema",
       "label": "schema.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/db/schema.ts",
       "sourceLocation": "apps/server/src/db/schema.ts:1"
     },
     {
-      "id": "server::index::flushhoststatusupdates",
+      "id": "server::server::index::flushhoststatusupdates",
       "label": "flushHostStatusUpdates",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:57"
     },
     {
-      "id": "server::index::hasserverpermission",
+      "id": "server::server::index::hasserverpermission",
       "label": "hasServerPermission",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:92"
     },
     {
-      "id": "server::index::expirestalehosts",
+      "id": "server::server::index::expirestalehosts",
       "label": "expireStaleHosts",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:115"
     },
     {
-      "id": "server::index::broadcastchannel",
+      "id": "server::server::index::broadcastchannel",
       "label": "broadcastChannel",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:131"
     },
     {
-      "id": "server::index::close",
+      "id": "server::server::index::close",
       "label": "close",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:525"
     },
     {
-      "id": "server::file::integration_test",
+      "id": "server::server::file::integration_test",
       "label": "integration.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:1"
     },
     {
-      "id": "server::integration_test::connectwebsocket",
+      "id": "server::server::integration_test::connectwebsocket",
       "label": "connectWebSocket",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:14"
     },
     {
-      "id": "server::integration_test::nextwebsocketframe",
+      "id": "server::server::integration_test::nextwebsocketframe",
       "label": "nextWebSocketFrame",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:22"
     },
     {
-      "id": "server::file::main",
+      "id": "server::server::file::main",
       "label": "main.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/main.ts",
       "sourceLocation": "apps/server/src/main.ts:1"
     },
     {
-      "id": "server::file::permissions",
+      "id": "server::server::file::permissions",
       "label": "permissions.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.ts",
       "sourceLocation": "apps/server/src/permissions.ts:1"
     },
     {
-      "id": "server::permissions::includespermission",
+      "id": "server::server::permissions::includespermission",
       "label": "includesPermission",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.ts",
       "sourceLocation": "apps/server/src/permissions.ts:16"
     },
     {
-      "id": "server::file::permissions_test",
+      "id": "server::server::file::permissions_test",
       "label": "permissions.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.test.ts",
       "sourceLocation": "apps/server/src/permissions.test.ts:1"
     },
     {
-      "id": "server::file::security",
+      "id": "server::server::file::security",
       "label": "security.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:1"
     },
     {
-      "id": "server::security::hashsecret",
+      "id": "server::server::security::hashsecret",
       "label": "hashSecret",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:3"
     },
     {
-      "id": "server::security::createsecret",
+      "id": "server::server::security::createsecret",
       "label": "createSecret",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:7"
     },
     {
-      "id": "server::security::secretsequal",
+      "id": "server::server::security::secretsequal",
       "label": "secretsEqual",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:11"
     },
     {
-      "id": "server::file::security_test",
+      "id": "server::server::file::security_test",
       "label": "security.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.test.ts",
       "sourceLocation": "apps/server/src/security.test.ts:1"
     },
     {
-      "id": "protocol::file::index_test",
-      "label": "index.test.ts",
+      "id": "daemon::file::config",
+      "label": "config.ts",
       "fileType": "code",
-      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.test.ts",
-      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.test.ts:1"
+      "sourceFile": "apps/daemon/src/config.ts",
+      "sourceLocation": "apps/daemon/src/config.ts:1"
+    },
+    {
+      "id": "daemon::config::loaddaemonconfig",
+      "label": "loadDaemonConfig",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/config.ts",
+      "sourceLocation": "apps/daemon/src/config.ts:15"
+    },
+    {
+      "id": "daemon::file::config_test",
+      "label": "config.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/config.test.ts",
+      "sourceLocation": "apps/daemon/src/config.test.ts:1"
+    },
+    {
+      "id": "daemon::file::host_client",
+      "label": "host-client.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:1"
+    },
+    {
+      "id": "daemon::host_client::hostclient",
+      "label": "HostClient",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:10"
+    },
+    {
+      "id": "daemon::host_client::hostclient::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:15"
+    },
+    {
+      "id": "daemon::host_client::hostclient::start",
+      "label": ".start",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:21"
+    },
+    {
+      "id": "daemon::host_client::hostclient::stop",
+      "label": ".stop",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:31"
+    },
+    {
+      "id": "daemon::host_client::hostclient::connectonce",
+      "label": ".connectOnce",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:37"
+    },
+    {
+      "id": "daemon::host_client::hostclient::handletask",
+      "label": ".handleTask",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:84"
+    },
+    {
+      "id": "daemon::host_client::hostclient::send",
+      "label": ".send",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:95"
+    },
+    {
+      "id": "daemon::file::keychain",
+      "label": "keychain.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:1"
+    },
+    {
+      "id": "daemon::keychain::hosttokenkeychain",
+      "label": "HostTokenKeychain",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:7"
+    },
+    {
+      "id": "daemon::keychain::hosttokenkeychain::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:8"
+    },
+    {
+      "id": "daemon::keychain::hosttokenkeychain::load",
+      "label": ".load",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:10"
+    },
+    {
+      "id": "daemon::keychain::hosttokenkeychain::store",
+      "label": ".store",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:14"
+    },
+    {
+      "id": "daemon::keychain::hosttokenkeychain::delete",
+      "label": ".delete",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:19"
+    },
+    {
+      "id": "daemon::keychain::createsystemhosttokenkeychain",
+      "label": "createSystemHostTokenKeychain",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:24"
+    },
+    {
+      "id": "daemon::file::keychain_test",
+      "label": "keychain.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "apps/daemon/src/keychain.test.ts:1"
+    },
+    {
+      "id": "daemon::keychain_test::memoryentry",
+      "label": "MemoryEntry",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "apps/daemon/src/keychain.test.ts:4"
+    },
+    {
+      "id": "daemon::keychain_test::memoryentry::getpassword",
+      "label": ".getPassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "apps/daemon/src/keychain.test.ts:6"
+    },
+    {
+      "id": "daemon::keychain_test::memoryentry::setpassword",
+      "label": ".setPassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "apps/daemon/src/keychain.test.ts:7"
+    },
+    {
+      "id": "daemon::keychain_test::memoryentry::deletepassword",
+      "label": ".deletePassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "apps/daemon/src/keychain.test.ts:8"
+    },
+    {
+      "id": "daemon::file::main",
+      "label": "main.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/main.ts",
+      "sourceLocation": "apps/daemon/src/main.ts:1"
+    },
+    {
+      "id": "daemon::main::main",
+      "label": "main",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/main.ts",
+      "sourceLocation": "apps/daemon/src/main.ts:6"
+    },
+    {
+      "id": "daemon::file::runner",
+      "label": "runner.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:1"
+    },
+    {
+      "id": "daemon::runner::sandboxrunner",
+      "label": "SandboxRunner",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:7"
+    },
+    {
+      "id": "daemon::runner::sandboxrunner::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:8"
+    },
+    {
+      "id": "daemon::runner::sandboxrunner::run",
+      "label": ".run",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:10"
+    },
+    {
+      "id": "daemon::file::runner_test",
+      "label": "runner.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.test.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.test.ts:1"
     },
     {
       "id": "protocol::file::index",
       "label": "index.ts",
       "fileType": "code",
-      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
-      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:1"
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:1"
     },
     {
       "id": "protocol::index::text",
       "label": "text",
       "fileType": "code",
-      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
-      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:3"
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:3"
+    },
+    {
+      "id": "protocol::file::index_test",
+      "label": "index.test.ts",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.test.ts",
+      "sourceLocation": "packages/protocol/src/index.test.ts:1"
     }
   ],
   "edges": [
     {
-      "source": "server::file::auth",
-      "target": "server::auth::getsessionuser",
+      "source": "server::server::file::auth",
+      "target": "server::server::auth::getsessionuser",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js",
+      "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js:5",
       "weight": 1
     },
     {
-      "source": "server::file::auth",
-      "target": "server::auth::requireuser",
+      "source": "server::server::file::auth",
+      "target": "server::server::auth::requireuser",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js",
+      "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js:17",
       "weight": 1
     },
     {
-      "source": "server::file::index",
-      "target": "server::index::flushhoststatusupdates",
+      "source": "server::server::file::index",
+      "target": "server::server::index::flushhoststatusupdates",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js",
+      "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:29",
       "weight": 1
     },
     {
-      "source": "server::file::index",
-      "target": "server::index::hasserverpermission",
+      "source": "server::server::file::index",
+      "target": "server::server::index::hasserverpermission",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js",
+      "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:57",
       "weight": 1
     },
     {
-      "source": "server::file::index",
-      "target": "server::index::expirestalehosts",
+      "source": "server::server::file::index",
+      "target": "server::server::index::expirestalehosts",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js",
+      "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:73",
       "weight": 1
     },
     {
-      "source": "server::file::index",
-      "target": "server::index::broadcastchannel",
+      "source": "server::server::file::index",
+      "target": "server::server::index::broadcastchannel",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js",
+      "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:89",
       "weight": 1
     },
     {
-      "source": "server::file::index",
-      "target": "server::index::close",
+      "source": "server::server::file::index",
+      "target": "server::server::index::close",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js",
+      "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:494",
       "weight": 1
     },
     {
-      "source": "server::file::integration_test",
-      "target": "server::integration_test::connectwebsocket",
+      "source": "server::server::file::integration_test",
+      "target": "server::server::integration_test::connectwebsocket",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js",
+      "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js:12",
       "weight": 1
     },
     {
-      "source": "server::file::integration_test",
-      "target": "server::integration_test::nextwebsocketframe",
+      "source": "server::server::file::integration_test",
+      "target": "server::server::integration_test::nextwebsocketframe",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js",
+      "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js:19",
       "weight": 1
     },
     {
-      "source": "server::file::permissions",
-      "target": "server::permissions::includespermission",
+      "source": "server::server::file::permissions",
+      "target": "server::server::permissions::includespermission",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/permissions.js",
+      "sourceFile": "apps/server/src/permissions.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/permissions.js:14",
       "weight": 1
     },
     {
-      "source": "server::file::security",
-      "target": "server::security::hashsecret",
+      "source": "server::server::file::security",
+      "target": "server::server::security::hashsecret",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js",
+      "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:2",
       "weight": 1
     },
     {
-      "source": "server::file::security",
-      "target": "server::security::createsecret",
+      "source": "server::server::file::security",
+      "target": "server::server::security::createsecret",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js",
+      "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:5",
       "weight": 1
     },
     {
-      "source": "server::file::security",
-      "target": "server::security::secretsequal",
+      "source": "server::server::file::security",
+      "target": "server::server::security::secretsequal",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js",
+      "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:8",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::config",
+      "target": "daemon::config::loaddaemonconfig",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/config.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/config.js:7",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::host_client",
+      "target": "daemon::host_client::hostclient",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:6",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:13",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::start",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:18",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::stop",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:28",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::connectonce",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:34",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::handletask",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:82",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::send",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:93",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::keychain",
+      "target": "daemon::keychain::hosttokenkeychain",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:1",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::hosttokenkeychain",
+      "target": "daemon::keychain::hosttokenkeychain::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:3",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::hosttokenkeychain",
+      "target": "daemon::keychain::hosttokenkeychain::load",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:6",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::hosttokenkeychain",
+      "target": "daemon::keychain::hosttokenkeychain::store",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:9",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::hosttokenkeychain",
+      "target": "daemon::keychain::hosttokenkeychain::delete",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:14",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::keychain",
+      "target": "daemon::keychain::createsystemhosttokenkeychain",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:18",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::keychain_test",
+      "target": "daemon::keychain_test::memoryentry",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:3",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain_test::memoryentry",
+      "target": "daemon::keychain_test::memoryentry::getpassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:5",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain_test::memoryentry",
+      "target": "daemon::keychain_test::memoryentry::setpassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:6",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain_test::memoryentry",
+      "target": "daemon::keychain_test::memoryentry::deletepassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.test.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:7",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::main",
+      "target": "daemon::main::main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/main.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/main.js:5",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::runner",
+      "target": "daemon::runner::sandboxrunner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:1",
+      "weight": 1
+    },
+    {
+      "source": "daemon::runner::sandboxrunner",
+      "target": "daemon::runner::sandboxrunner::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:3",
+      "weight": 1
+    },
+    {
+      "source": "daemon::runner::sandboxrunner",
+      "target": "daemon::runner::sandboxrunner::run",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:6",
       "weight": 1
     },
     {
@@ -306,15 +714,15 @@
       "target": "protocol::index::text",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts",
-      "sourceLocation": "/mnt/c/Users/anura/Projects/Swarm-Slack/packages/protocol/src/index.ts:3",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/packages/protocol/dist/index.js:2",
       "weight": 1
     }
   ],
   "metadata": {
-    "files": 12,
-    "nodes": 26,
-    "edges": 14,
-    "builtAt": "2026-11-24T00:09:23.917809+00:00"
+    "files": 20,
+    "nodes": 56,
+    "edges": 36,
+    "builtAt": "2026-11-24T00:20:00Z"
   }
 }
