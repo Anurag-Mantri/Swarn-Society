@@ -162,6 +162,27 @@
       "sourceLocation": "apps/server/src/security.test.ts:1"
     },
     {
+      "id": "protocol::file::index",
+      "label": "index.ts",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:1"
+    },
+    {
+      "id": "protocol::index::text",
+      "label": "text",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:3"
+    },
+    {
+      "id": "protocol::file::index_test",
+      "label": "index.test.ts",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.test.ts",
+      "sourceLocation": "packages/protocol/src/index.test.ts:1"
+    },
+    {
       "id": "daemon::file::config",
       "label": "config.ts",
       "fileType": "code",
@@ -372,25 +393,11 @@
       "sourceLocation": "apps/daemon/src/sandbox/runner.test.ts:1"
     },
     {
-      "id": "protocol::file::index",
-      "label": "index.ts",
+      "id": "daemon::file::host_client_test",
+      "label": "host-client.test.ts",
       "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "packages/protocol/src/index.ts:1"
-    },
-    {
-      "id": "protocol::index::text",
-      "label": "text",
-      "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "packages/protocol/src/index.ts:3"
-    },
-    {
-      "id": "protocol::file::index_test",
-      "label": "index.test.ts",
-      "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.test.ts",
-      "sourceLocation": "packages/protocol/src/index.test.ts:1"
+      "sourceFile": "apps/daemon/src/host-client.test.ts",
+      "sourceLocation": "apps/daemon/src/host-client.test.ts:1"
     }
   ],
   "edges": [
@@ -509,6 +516,15 @@
       "confidence": "EXTRACTED",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:8",
+      "weight": 1
+    },
+    {
+      "source": "protocol::file::index",
+      "target": "protocol::index::text",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/packages/protocol/dist/index.js:2",
       "weight": 1
     },
     {
@@ -708,21 +724,12 @@
       "sourceFile": "apps/daemon/src/sandbox/runner.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:6",
       "weight": 1
-    },
-    {
-      "source": "protocol::file::index",
-      "target": "protocol::index::text",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/packages/protocol/dist/index.js:2",
-      "weight": 1
     }
   ],
   "metadata": {
-    "files": 20,
-    "nodes": 56,
+    "files": 21,
+    "nodes": 57,
     "edges": 36,
-    "builtAt": "2026-11-24T00:20:00Z"
+    "builtAt": "2026-11-24T00:22:00Z"
   }
 }
