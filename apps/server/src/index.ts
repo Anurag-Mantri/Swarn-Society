@@ -738,7 +738,14 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
             eq(channels.id, frame.channelId),
           ))
           .limit(1);
-        if (!routes[0]) return;
+        if (!routes[0]) {
+          socket.send(JSON.stringify({
+            t: "error",
+            code: "unauthorized_reply",
+            message: "Host is not authorized to reply as this agent in this channel",
+          }));
+          return;
+        }
         await db.insert(messages).values({
           channelId: frame.channelId,
           authorKind: "agent",

@@ -32,6 +32,11 @@ Connection roles are decided by the first message: `hello` makes a **user** conn
 |---|---|---|
 | `task` | `ch`, `from`, `agent`, `text` | A message mentioned this agent. |
 
+## Server errors
+| `t` | Fields | Meaning |
+|---|---|---|
+| `error` | `code`, `message` | A frame was rejected. `unauthorized_reply` means the host is not authorized to reply as that agent in the requested channel. |
+
 ## Server foundation additions
 | `t` | Direction | Fields | Meaning |
 |---|---|---|---|

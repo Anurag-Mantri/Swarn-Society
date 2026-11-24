@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { db, pool } from "./db/index.js";
-import { channels, hosts, members, messages, sessions, users } from "./db/schema.js";
+import { agentHosts, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
 import { hashSecret } from "./security.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -325,10 +325,43 @@ integration("Postgres-backed server routes", () => {
         agent: "routing-agent",
       });
 
-      const reply = nextWebSocketFrame(userSocket, "agent reply", (frame) =>
+      const registeredRoute = await db.select({
+        agentId: agents.id,
+        enabled: agentHosts.enabled,
+        tokenHash: hosts.tokenHash,
+        status: hosts.status,
+        hostOwnerId: hosts.ownerId,
+        channelServerId: channels.serverId,
+      }).from(agents)
+        .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
+        .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
+        .innerJoin(members, and(eq(members.serverId, agents.serverId), eq(members.userId, hosts.ownerId)))
+        .innerJoin(channels, eq(channels.serverId, agents.serverId))
+        .where(and(
+          eq(agents.name, "routing-agent"),
+          eq(agentHosts.hostId, host.id),
+          eq(agentHosts.enabled, true),
+          eq(hosts.tokenHash, hashSecret(host.token)),
+          eq(hosts.status, "online"),
+          eq(channels.id, channel.id),
+        ));
+      expect(registeredRoute).toHaveLength(1);
+
+      const reply = nextWebSocketFrame(hostSocket, "agent reply authorization", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "error");
+      const userReply = nextWebSocketFrame(userSocket, "agent reply", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "msg" && "kind" in frame && frame.kind === "agent");
       userSocket.send(JSON.stringify({ t: "reply", channelId: channel.id, agent: "routing-agent", text: "completed" }));
-      expect(await reply).toMatchObject({ t: "msg", text: "completed", from: "routing-agent", kind: "agent" });
+      const replyResult = await Promise.race([
+        reply.then((frame) => ({ kind: "error" as const, frame })),
+        userReply.then((frame) => ({ kind: "reply" as const, frame })),
+      ]);
+      expect(replyResult.kind).toBe("reply");
+      if (replyResult.kind === "reply") {
+        expect(replyResult.frame).toMatchObject({ t: "msg", text: "completed", from: "routing-agent", kind: "agent" });
+      } else {
+        expect(replyResult.frame).toMatchObject({ t: "error", code: "unauthorized_reply" });
+      }
 
       const oldHostClosed = new Promise<number>((resolve) => {
         hostSocket.once("close", (code) => resolve(code));
