@@ -53,7 +53,7 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Add agent reputation from tests, merged PRs and human feedback.
 - [ ] Add scoped shared memory retrieval.
 - [ ] Add delegation depth and hard cost limits.
-- [ ] Add measurable duplicate-work and task-completion metrics.
+- [x] Add measurable duplicate-work and task-completion metrics.
 
 ## Phase 4: Knowledge graph
 - [ ] Define deterministic node and edge extractors.

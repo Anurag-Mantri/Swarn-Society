@@ -1,4 +1,4 @@
-import { boolean, check, customType, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, customType, date, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { ChannelKind, TaskResolution } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
@@ -145,6 +145,16 @@ export const taskPosts = pgTable("task_posts", {
   check("task_posts_resolution_valid", sql`${table.resolution} in ('done', 'cancelled')`),
   check("task_posts_resolution_fields_match", sql`num_nonnulls(${table.resolution}, ${table.resolvedAt}, ${table.resolvedBy}, ${table.result}) in (0, 4)`),
   check("task_posts_completion_has_claim", sql`${table.resolution} != 'done' or ${table.claimedByAgentId} is not null`),
+]);
+
+export const taskCoordinationDaily = pgTable("task_coordination_daily", {
+  channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  day: date("day").notNull(),
+  duplicateIntentAttempts: integer("duplicate_intent_attempts").notNull().default(0),
+  busyAgentAttempts: integer("busy_agent_attempts").notNull().default(0),
+  competingClaimAttempts: integer("competing_claim_attempts").notNull().default(0),
+}, (table) => [
+  primaryKey({ columns: [table.channelId, table.day] }),
 ]);
 
 export const taskBids = pgTable("task_bids", {

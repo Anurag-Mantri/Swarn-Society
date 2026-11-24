@@ -54,3 +54,18 @@ export type TaskBid = Omit<TaskBidInput, "estimatedTokens"> & {
   approvedAt: string | null;
   createdAt: string;
 };
+
+export type TaskCoordinationMetrics = {
+  days: number;
+  from: string;
+  through: string;
+  posted: number;
+  open: number;
+  inProgress: number;
+  completed: number;
+  cancelled: number;
+  meanCompletionSeconds: number | null;
+  duplicateIntentAttempts: number;
+  busyAgentAttempts: number;
+  competingClaimAttempts: number;
+};
