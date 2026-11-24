@@ -3,6 +3,7 @@ import { and, eq, getTableColumns, isNull } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { agents, taskPosts } from "../db/schema.js";
+import { recordKnowledgeEvent } from "../knowledge/storage.js";
 import { permissions } from "../permissions.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
@@ -33,9 +34,20 @@ export const taskResolutionRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(409).send({ error: "Assign an agent before completing the task." });
     }
 
-    const [updated] = await db.update(taskPosts).set({
-      resolution, result, resolvedAt: new Date(), resolvedBy: access.user.id,
-    }).where(and(taskInChannel, isNull(taskPosts.resolution))).returning();
+    const updated = await db.transaction(async (transaction) => {
+      const resolvedAt = new Date();
+      const [resolved] = await transaction.update(taskPosts).set({
+        resolution, result, resolvedAt, resolvedBy: access.user.id,
+      }).where(and(taskInChannel, isNull(taskPosts.resolution))).returning();
+      if (resolved?.resolution === "done" && resolved.claimedByAgentId) {
+        await recordKnowledgeEvent(transaction, {
+          type: "task.completed", sourceId: resolved.id, occurredAt: resolvedAt.toISOString(),
+          serverId: access.channel.serverId, channelId: access.channel.id, taskId: resolved.id,
+          agentId: resolved.claimedByAgentId, resolvedBy: access.user.id,
+        });
+      }
+      return resolved;
+    });
     if (!updated) return reply.code(409).send({ error: "This task has already been resolved." });
 
     // A claim may have committed between the initial read and resolution.

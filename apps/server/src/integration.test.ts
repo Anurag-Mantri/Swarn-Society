@@ -242,6 +242,9 @@ integration("Postgres-backed server routes", () => {
     expect(file.json()).toMatchObject({ path: "src/main.ts" });
     const fileList = await app.inject({ url: filesUrl, headers: { cookie } });
     expect(fileList.json()).toEqual([file.json()]);
+    const [fileSource] = await db.select().from(knowledgeSources)
+      .where(eq(knowledgeSources.sourceId, `created:${file.json<{ id: string }>().id}`));
+    expect(fileSource).toMatchObject({ serverId: server.id, channelId: null, type: "file.changed" });
     const snapshot = await app.inject({ url: `${filesUrl}/snapshot`, headers: { cookie } });
     expect(snapshot.statusCode).toBe(200);
     expect(snapshot.headers["cache-control"]).toBe("no-store");
@@ -573,6 +576,15 @@ integration("Postgres-backed server routes", () => {
     expect(history.statusCode).toBe(200);
     const persistedMessages = history.json<Array<{ body: string; authorKind: string }>>();
     expect(persistedMessages).toHaveLength(2);
+    const messageSources = await db.select().from(knowledgeSources).where(and(
+      eq(knowledgeSources.channelId, channel.id), eq(knowledgeSources.type, "message.posted"),
+    ));
+    expect(messageSources).toHaveLength(4);
+    expect(messageSources.map(({ event }) => event)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ author: { kind: "person", id: userId } }),
+      expect.objectContaining({ author: expect.objectContaining({ kind: "agent" }) }),
+    ]));
+    expect(JSON.stringify(messageSources)).not.toContain("follow up");
     expect(persistedMessages).toEqual(expect.arrayContaining([
       expect.objectContaining({ authorKind: "user", body: "@routing-agent inspect this" }),
       expect.objectContaining({ authorKind: "agent", body: "completed" }),
@@ -764,6 +776,10 @@ integration("Postgres-backed server routes", () => {
       resolution: "done", result: "Shared the completed summary.",
       resolvedBy: bidder.id, claimedByAgentId: winner.agentId,
     });
+    const taskSources = await db.select({ type: knowledgeSources.type, event: knowledgeSources.event })
+      .from(knowledgeSources).where(eq(knowledgeSources.sourceId, taskId));
+    expect(taskSources.map(({ type }) => type).sort()).toEqual(["task.assigned", "task.completed", "task.posted"]);
+    expect(JSON.stringify(taskSources)).not.toContain("Shared the completed summary.");
     expect((await app.inject({
       method: "POST", url: resolvePath, headers: authorHeaders, payload: { resolution: "cancelled" },
     })).statusCode).toBe(409);

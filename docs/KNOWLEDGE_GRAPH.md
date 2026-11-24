@@ -32,6 +32,8 @@ Deterministic edges use confidence 100% unless the source has conflicting eviden
 
 `packages/knowledge-graph` accepts validated event identifiers and timestamps. It returns stable workspace-scoped node and edge IDs plus the source record, extraction method, confidence, and channel scope. Message mentions must already be resolved to recorded agent IDs. Extraction consumes no free-text content. The storage layer saves sources, nodes, edges, and their provenance links in a transaction. Replaying the same immutable source is idempotent. A channel source must belong to the same workspace as the source record. Graph reads must join through a visible source before returning a fact.
 
+Live capture records new messages, posted and assigned tasks, completed tasks, file creation, and collaborative edits. Message and task records commit with their graph sources. File edits are aggregated by file, editor, and UTC minute and recorded when Yjs state is saved. The graph consumes identifiers and timestamps from these operations, while their text stays in the original application records.
+
 ## AI-assisted extraction
 AI may extract possible relationships from transcripts and free-text logs.
 AI-created edges start as pending hypotheses.

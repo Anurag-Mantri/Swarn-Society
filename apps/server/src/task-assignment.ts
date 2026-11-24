@@ -1,5 +1,6 @@
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
+import { recordKnowledgeEvent } from "./knowledge/storage.js";
 import { agents, channels, taskBids, taskCoordinationDaily, taskPosts } from "./db/schema.js";
 
 type Assignment = {
@@ -73,6 +74,10 @@ export function assignTask(assignment: Assignment): Promise<AssignmentResult> {
         .returning({ id: taskBids.id });
       if (!approved) throw new Error("The approved bid did not exist");
     }
+    await recordKnowledgeEvent(transaction, {
+      type: "task.assigned", sourceId: taskId, occurredAt: assignedAt.toISOString(),
+      serverId, channelId, taskId, agentId, assignedBy: actorId,
+    });
     return { task: claimed };
   });
 }
