@@ -1,4 +1,5 @@
 import { homedir, userInfo } from "node:os";
+import { randomUUID } from "node:crypto";
 import { isAbsolute, relative, resolve } from "node:path";
 import { spawn as nodeSpawn } from "node:child_process";
 import { realpath, stat } from "node:fs/promises";
@@ -12,12 +13,14 @@ const CONTAINER_COMMAND = ["/usr/local/bin/swarmroom-agent"] as const;
 const MAX_WALL_TIME_MS = 120_000;
 const MAX_OUTPUT_BYTES = 32_000;
 const MAX_INFO_BYTES = 256_000;
+const PODMAN_COMMAND_TIMEOUT_MS = 5_000;
 const RUN_OPTIONS = [
   "run", "--rm", "--interactive", "--pull=never", "--network=none", "--read-only",
   "--read-only-tmpfs=false", "--cap-drop=ALL", "--security-opt=no-new-privileges",
   "--pids-limit=64", "--memory=512m", "--cpus=1", "--ulimit=nofile=1024:1024",
   "--tmpfs=/tmp:rw,noexec,nosuid,nodev,size=64m", "--userns=keep-id",
   "--log-driver=none", "--workdir=/workspace",
+  `--timeout=${MAX_WALL_TIME_MS / 1_000}`,
 ] as const;
 
 export type PodmanSpawnFunction = (
@@ -46,41 +49,61 @@ function collectProcessOutput(
   child: ChildProcessWithoutNullStreams,
   maxBytes: number,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<Buffer> {
   return new Promise((resolveOutput, rejectOutput) => {
     const chunks: Buffer[] = [];
     let size = 0;
     let settled = false;
+    let exited = false;
+    let stopError: Error | undefined;
+    const abort = () => stop(new Error("Sandbox task was cancelled."));
     const finish = (error: Error | undefined, output?: Buffer) => {
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
       if (error) rejectOutput(error);
       else resolveOutput(output ?? Buffer.alloc(0));
     };
     const timeout = setTimeout(() => {
-      child.kill("SIGKILL");
-      finish(new Error("Sandbox process timed out."));
+      stop(new Error("Sandbox process timed out."));
     }, timeoutMs);
+    function stop(error: Error): void {
+      if (stopError) return;
+      stopError = error;
+      if (exited) finish(error);
+      else child.kill("SIGKILL");
+    }
     child.stdout.on("data", (chunk: Buffer | string) => {
+      if (stopError) return;
       const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       size += buffer.length;
       if (size > maxBytes) {
-        child.kill("SIGKILL");
-        finish(new Error("Sandbox process output exceeded its limit."));
+        stop(new Error("Sandbox process output exceeded its limit."));
         return;
       }
       chunks.push(buffer);
     });
     child.stderr.on("data", () => undefined);
     child.once("error", () => finish(new Error("Sandbox process could not be started.")));
+    child.once("exit", () => {
+      exited = true;
+      if (stopError) finish(stopError);
+    });
     child.once("close", (code) => {
+      if (stopError) {
+        finish(stopError);
+        return;
+      }
       if (code !== 0) {
         finish(new Error("Sandbox process failed."));
         return;
       }
       finish(undefined, Buffer.concat(chunks));
     });
+    signal?.addEventListener("abort", abort, { once: true });
+    if (signal?.aborted) abort();
   });
 }
 
@@ -100,7 +123,7 @@ function assertRootlessPodmanInfo(infoText: string): void {
   }
 }
 
-function buildRunArguments(image: string, workspace: string, brokerSocketPath: string): string[] {
+function buildRunArguments(image: string, workspace: string, brokerSocketPath: string, name: string): string[] {
   if (!isAbsolute(workspace) || /[,\r\n]/.test(workspace) ||
       !isAbsolute(brokerSocketPath) || /[,\r\n]/.test(brokerSocketPath)) {
     throw new Error("Sandbox workspace path is invalid.");
@@ -108,6 +131,7 @@ function buildRunArguments(image: string, workspace: string, brokerSocketPath: s
   const { uid, gid } = userInfo();
   return [
     ...RUN_OPTIONS,
+    `--name=${name}`,
     `--user=${uid}:${gid}`,
     `--mount=type=bind,src=${workspace},dst=/workspace,rw`,
     `--mount=type=bind,src=${brokerSocketPath},dst=/run/swarmroom/provider.sock,rw`,
@@ -172,13 +196,21 @@ class PodmanSandboxBackend implements SandboxBackend {
       const brokerLease = await this.broker.openForTask(task);
       try {
         if (signal.aborted) throw new Error("Sandbox task was cancelled.");
-        const child = this.launch("podman", buildRunArguments(this.image, workspace, brokerLease.socketPath), spawnOptions());
-        const abort = () => child.kill("SIGKILL");
-        signal.addEventListener("abort", abort, { once: true });
+        const name = `swarmroom-task-${randomUUID()}`;
+        const args = buildRunArguments(this.image, workspace, brokerLease.socketPath, name);
+        const child = this.launch("podman", args, spawnOptions());
         try {
           child.stdin.on("error", () => undefined);
           child.stdin.end(JSON.stringify(task));
-          const output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS);
+          let output: Buffer;
+          try {
+            output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS, signal);
+            if (signal.aborted) throw new Error("Sandbox task was cancelled.");
+          } catch (error) {
+            // Killing the Podman client can leave its container running under conmon.
+            await this.removeContainer(name);
+            throw error;
+          }
           if (brokerLease.budgetExceeded()) {
             throw new SandboxExecutionError("Requester token budget exceeded.", brokerLease.usage(), true);
           }
@@ -188,8 +220,6 @@ class PodmanSandboxBackend implements SandboxBackend {
         } catch (error) {
           if (error instanceof SandboxExecutionError) throw error;
           throw new SandboxExecutionError("Sandbox execution failed.", brokerLease.usage(), brokerLease.budgetExceeded());
-        } finally {
-          signal.removeEventListener("abort", abort);
         }
       } finally {
         await brokerLease.close();
@@ -197,6 +227,13 @@ class PodmanSandboxBackend implements SandboxBackend {
     } finally {
       this.busy = false;
     }
+  }
+
+  private async removeContainer(name: string): Promise<void> {
+    const child = this.launch("podman", ["rm", "--force", "--ignore", "--time", "0", name], spawnOptions());
+    child.stdin.on("error", () => undefined);
+    child.stdin.end();
+    await collectProcessOutput(child, MAX_INFO_BYTES, PODMAN_COMMAND_TIMEOUT_MS);
   }
 }
 
@@ -216,7 +253,7 @@ export async function createPodmanSandboxBackend(
   const infoChild = launch("podman", ["info", "--format", "json"], spawnOptions());
   infoChild.stdin.on("error", () => undefined);
   infoChild.stdin.end();
-  const info = await collectProcessOutput(infoChild, MAX_INFO_BYTES, 5_000);
+  const info = await collectProcessOutput(infoChild, MAX_INFO_BYTES, PODMAN_COMMAND_TIMEOUT_MS);
   assertRootlessPodmanInfo(info.toString("utf8"));
   return new PodmanSandboxBackend(config.image, workspaces, broker, launch);
 }
