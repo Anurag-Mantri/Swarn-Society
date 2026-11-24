@@ -13,6 +13,7 @@
   let resolutionNotes = $state('');
   let title = $state('');
   let description = $state('');
+  let intent = $state('');
   let error = $state('');
   let loading = $state(true);
   let busy = $state(false);
@@ -36,10 +37,11 @@
     busy = true;
     error = '';
     try {
-      const task = await api.createTask(channelId, title, description);
+      const task = await api.createTask(channelId, title, description, intent.trim() || undefined);
       tasks = [task, ...tasks];
       title = '';
       description = '';
+      intent = '';
     } catch (problem) { showError(problem); }
     finally { busy = false; }
   }
@@ -95,6 +97,11 @@
     <input id="task-title" required maxlength="160" bind:value={title} />
     <label for="task-description">Description</label>
     <textarea id="task-description" rows="3" maxlength="4000" bind:value={description}></textarea>
+    <details>
+      <summary>Set a shared work intent</summary>
+      <label for="task-intent">Work intent (optional)</label>
+      <input id="task-intent" maxlength="160" bind:value={intent} />
+    </details>
     <button class="primary" disabled={busy || loading || !title.trim()}>Post task</button>
   </form>
   {#if agents.length}
@@ -163,6 +170,9 @@
   h1 { margin: 0; font-size: 1.25rem; overflow-wrap: anywhere; }
   label { font-weight: 600; }
   form { display: grid; gap: .5rem; margin: 1rem 0; max-width: 36rem; }
+  details { display: grid; }
+  details[open] { display: grid; gap: .45rem; }
+  details label, details input { display: block; margin-top: .45rem; }
   form button { justify-self: start; }
   .resolution-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
   .agent-choice { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }

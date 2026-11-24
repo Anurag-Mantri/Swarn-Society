@@ -127,6 +127,7 @@ export const taskPosts = pgTable("task_posts", {
   createdBy: uuid("created_by").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
+  intent: text("intent").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   claimedAt: timestamp("claimed_at", { withTimezone: true }),
   claimedByAgentId: uuid("claimed_by_agent_id").references(() => agents.id),
@@ -136,6 +137,10 @@ export const taskPosts = pgTable("task_posts", {
   result: text("result"),
 }, (table) => [
   index("task_posts_channel_created_idx").on(table.channelId, table.createdAt),
+  index("task_posts_active_agent_idx").on(table.claimedByAgentId)
+    .where(sql`${table.resolution} is null and ${table.claimedByAgentId} is not null`),
+  index("task_posts_active_intent_idx").on(table.channelId, table.intent)
+    .where(sql`${table.resolution} is null and ${table.claimedByAgentId} is not null`),
   check("task_posts_claim_fields_match", sql`(${table.claimedAt} is null) = (${table.claimedByAgentId} is null)`),
   check("task_posts_resolution_valid", sql`${table.resolution} in ('done', 'cancelled')`),
   check("task_posts_resolution_fields_match", sql`num_nonnulls(${table.resolution}, ${table.resolvedAt}, ${table.resolvedBy}, ${table.result}) in (0, 4)`),

@@ -1,11 +1,12 @@
 import { createTaskBidSchema } from "@swarmroom/protocol";
-import { and, eq, getTableColumns, isNull } from "drizzle-orm";
+import { and, eq, getTableColumns } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { agents, taskBids, taskPosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
+import { assignTask } from "../task-assignment.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
 const basePath = "/api/channels/:channelId/tasks/:taskId/bids";
@@ -74,23 +75,15 @@ export const taskBidRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(409).send({ error: "This agent owner can no longer claim tasks in this channel." });
     }
 
-    const result = await db.transaction(async (transaction) => {
-      const approvedAt = new Date();
-      const [claimed] = await transaction.update(taskPosts).set({ claimedByAgentId: bid.agentId, claimedAt: approvedAt })
-        .where(and(eq(taskPosts.id, taskId), isNull(taskPosts.claimedByAgentId), isNull(taskPosts.resolution))).returning();
-      if (!claimed) {
-        const [approved] = await transaction.select({ approvedBy: taskBids.approvedBy })
-          .from(taskBids).where(eq(taskBids.id, bidId)).limit(1);
-        if (approved?.approvedBy !== access.user.id) return undefined;
-        const [existing] = await transaction.select().from(taskPosts).where(eq(taskPosts.id, taskId)).limit(1);
-        return existing;
-      }
-      const [approved] = await transaction.update(taskBids).set({ approvedAt, approvedBy: access.user.id })
-        .where(eq(taskBids.id, bidId)).returning({ id: taskBids.id });
-      if (!approved) throw new Error("The approved bid did not exist");
-      return claimed;
+    const result = await assignTask({
+      channelId: access.channel.id,
+      serverId: access.channel.serverId,
+      taskId,
+      bidId,
+      agentId: bid.agentId,
+      actorId: access.user.id,
     });
-    if (!result) return reply.code(409).send({ error: "Another claim was accepted for this task." });
-    return reply.send({ ...result, claimedByAgentName: bid.agentName });
+    if ("error" in result) return reply.code(result.status).send({ error: result.error });
+    return reply.send({ ...result.task, claimedByAgentName: bid.agentName });
   });
 };
