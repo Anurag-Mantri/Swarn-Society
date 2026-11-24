@@ -1,6 +1,7 @@
-import { createWorkspaceFileSchema } from "@swarmroom/protocol";
+import { createWorkspaceFileSchema, maximumSnapshotFiles, workspaceSnapshotSchema } from "@swarmroom/protocol";
 import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
+import * as Y from "yjs";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
 import { hasServerPermission } from "../channel-access.js";
@@ -23,6 +24,43 @@ export const workspaceFileRoutes: FastifyPluginAsync = async (app) => {
     }
     return reply.send(await db.select(fileMetadata).from(workspaceFiles)
       .where(eq(workspaceFiles.serverId, serverId)).orderBy(workspaceFiles.path));
+  });
+
+  app.get("/api/servers/:serverId/files/snapshot", async (request, reply) => {
+    const user = await requireUser(request, reply);
+    if (!user) return;
+    const params = pathParams.safeParse(request.params);
+    if (!params.success) return reply.code(400).send({ error: "Provide a valid workspace ID." });
+    const { serverId } = params.data;
+    const [server] = await db.select({ ownerId: servers.ownerId }).from(servers).where(eq(servers.id, serverId));
+    if (server?.ownerId !== user.id) {
+      return reply.code(403).send({ error: "Only the workspace owner can export a snapshot." });
+    }
+
+    const rows = await db.select({ path: workspaceFiles.path, document: workspaceFiles.document })
+      .from(workspaceFiles).where(eq(workspaceFiles.serverId, serverId))
+      .orderBy(workspaceFiles.path).limit(maximumSnapshotFiles + 1);
+    if (rows.length === 0) return reply.code(409).send({ error: "Create a file before exporting a snapshot." });
+    if (rows.length > maximumSnapshotFiles) {
+      return reply.code(413).send({ error: "The workspace has too many files for a snapshot." });
+    }
+    const files = rows.map(({ path, document }) => {
+      if (!document) return { path, content: "" };
+      const doc = new Y.Doc();
+      try {
+        Y.applyUpdate(doc, document);
+        return { path, content: doc.getText("content").toString() };
+      } finally {
+        doc.destroy();
+      }
+    });
+    const snapshot = workspaceSnapshotSchema.safeParse({ serverId, files });
+    if (!snapshot.success) {
+      return reply.code(409).send({ error: "The snapshot contains blocked files or exceeds the size limit." });
+    }
+    return reply.header("Cache-Control", "no-store")
+      .header("Content-Disposition", `attachment; filename="swarmroom-${serverId}.json"`)
+      .send(snapshot.data);
   });
 
   app.post("/api/servers/:serverId/files", async (request, reply) => {

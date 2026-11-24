@@ -18,15 +18,15 @@ export type InstallationTarget = z.infer<typeof installationTarget>;
 
 const repositorySchema = z.object({
   id: githubId,
-  full_name: z.string().min(1),
+  full_name: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
   default_branch: z.string().min(1),
 });
 
-const tokenSchema = z.object({
+const tokenSchema = (permission: "read" | "write") => z.object({
   token: z.string().min(1).max(8192),
   expires_at: z.string().datetime({ offset: true }),
   permissions: z.object({
-    contents: z.literal("read"),
+    contents: z.literal(permission),
     metadata: z.literal("read").optional(),
   }).strict(),
   repositories: z.array(z.object({ id: githubId })).length(1),
@@ -54,10 +54,10 @@ function appJwt(appId: number, pem: string, now: Date): string {
   return `${input}.${signature}`;
 }
 
-async function githubRequest(path: string, credential: string, request: typeof fetch, body?: object) {
+async function githubRequest(path: string, credential: string, request: typeof fetch, body?: object, method?: "PATCH") {
   try {
     const response = await request(`${githubApi}${path}`, {
-      method: body ? "POST" : "GET",
+      method: method ?? (body ? "POST" : "GET"),
       body: body ? JSON.stringify(body) : undefined,
       redirect: "error",
       signal: AbortSignal.timeout(15_000),
@@ -78,23 +78,24 @@ async function githubRequest(path: string, credential: string, request: typeof f
   }
 }
 
-export async function inspectGitHubInstallation(
+export async function openGitHubInstallation(
   target: InstallationTarget,
   pem: string,
+  permission: "read" | "write",
   request: typeof fetch = globalThis.fetch,
   now = new Date(),
-): Promise<{ id: number; fullName: string; defaultBranch: string }> {
+) {
   const { appId, installationId, repositoryId } = installationTarget.parse(target);
   const installation = await githubRequest(
     `/app/installations/${installationId}/access_tokens`,
     appJwt(appId, pem, now),
     request,
-    { repository_ids: [repositoryId], permissions: { contents: "read" } },
+    { repository_ids: [repositoryId], permissions: { contents: permission } },
   );
   if (installation.status !== 201) {
     throw new Error(`GitHub refused the installation token (HTTP ${installation.status}). Check the app and installation IDs.`);
   }
-  const scoped = tokenSchema.safeParse(installation.value);
+  const scoped = tokenSchema(permission).safeParse(installation.value);
   if (!scoped.success || scoped.data.repositories[0]?.id !== repositoryId ||
       new Date(scoped.data.expires_at) <= now) {
     throw new Error("GitHub did not grant the requested repository scope.");
@@ -106,5 +107,21 @@ export async function inspectGitHubInstallation(
     throw new Error(`Could not verify the installed repository (HTTP ${result.status}).`);
   }
   const { id, full_name: fullName, default_branch: defaultBranch } = repository.data;
-  return { id, fullName, defaultBranch };
+  const [owner, name] = fullName.split("/");
+  const repositoryPath = `/repos/${encodeURIComponent(owner!)}/${encodeURIComponent(name!)}`;
+  return {
+    repository: { id, fullName, defaultBranch },
+    request: (path: string, body?: object, method?: "PATCH") =>
+      githubRequest(`${repositoryPath}${path}`, scoped.data.token, request, body, method),
+  };
+}
+
+export async function inspectGitHubInstallation(
+  target: InstallationTarget,
+  pem: string,
+  request: typeof fetch = globalThis.fetch,
+  now = new Date(),
+): Promise<{ id: number; fullName: string; defaultBranch: string }> {
+  const installation = await openGitHubInstallation(target, pem, "read", request, now);
+  return installation.repository;
 }

@@ -277,7 +277,7 @@
       </div>
       {#if error}<div class="alert" role="alert">{error}</div>{/if}
       {#if workspace && view === 'files'}
-        {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} />{/key}
+        {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} canExport={workspace.ownerId === profile.id} />{/key}
       {:else if channel}
         <div class="chat-layout" class:thread-open={root !== null}>
           {#key channelId}

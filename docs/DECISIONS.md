@@ -171,3 +171,10 @@ Date: 2026-11-24
 Context: GitHub workspace sync requires installation tokens while the daemon remains the credential boundary.
 Decision: Import the App private key into the host OS keychain. The daemon signs the app JWT and requests short-lived installation tokens scoped to a single repository ID and the permissions needed for each operation.
 Consequences: The control plane can exchange repository and sync metadata without receiving GitHub App private keys or installation tokens. Setup requires an App installed on the approved repository.
+
+### D-027: Workspace owners export snapshots for host publication
+Status: Accepted
+Date: 2026-11-24
+Context: Snapshot publication needs approval and repository credentials scoped to the host.
+Decision: The workspace owner downloads the saved snapshot from the control plane. A host operator explicitly publishes it with the GitHub App CLI. Derive the target branch from the workspace UUID and reject default or protected branches and branches with active GitHub rules.
+Consequences: This first sync workflow is manual and uses saved database state. Publication overlays workspace files onto a repository tree and uses non-forced ref updates. Remote head comparison and editor integration can consume the same stable branch name.
