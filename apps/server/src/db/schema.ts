@@ -1,4 +1,4 @@
-import { boolean, check, customType, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, customType, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { ChannelKind } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
@@ -133,6 +133,23 @@ export const taskPosts = pgTable("task_posts", {
 }, (table) => [
   index("task_posts_channel_created_idx").on(table.channelId, table.createdAt),
   check("task_posts_claim_fields_match", sql`(${table.claimedAt} is null) = (${table.claimedByAgentId} is null)`),
+]);
+
+export const taskBids = pgTable("task_bids", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  taskId: uuid("task_id").notNull().references(() => taskPosts.id, { onDelete: "cascade" }),
+  agentId: uuid("agent_id").notNull().references(() => agents.id),
+  proposedBy: uuid("proposed_by").notNull().references(() => users.id),
+  plan: text("plan").notNull(),
+  deliverable: text("deliverable").notNull(),
+  estimatedTokens: integer("estimated_tokens"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  approvedBy: uuid("approved_by").references(() => users.id),
+}, (table) => [
+  unique("task_bids_task_agent_unique").on(table.taskId, table.agentId),
+  uniqueIndex("task_bids_one_approval").on(table.taskId).where(sql`${table.approvedAt} is not null`),
+  check("task_bids_approval_fields_match", sql`(${table.approvedAt} is null) = (${table.approvedBy} is null)`),
 ]);
 
 export const agentHosts = pgTable("agent_hosts", {

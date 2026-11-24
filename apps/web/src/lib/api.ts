@@ -1,4 +1,4 @@
-import type { ChannelKind, TaskClaimant, TaskPost } from '@swarmroom/protocol';
+import type { ChannelKind, TaskBid, TaskBidInput, TaskClaimant, TaskPost } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -60,5 +60,11 @@ export const api = {
     post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks`, { title, description }),
   claimTask: (channelId: string, taskId: string, agentId: string) =>
     post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/claim`, { agentId }),
+  taskBids: (channelId: string, taskId: string) =>
+    request<TaskBid[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids`),
+  placeBid: (channelId: string, taskId: string, bid: TaskBidInput) =>
+    post<TaskBid>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids`, bid),
+  approveBid: (channelId: string, taskId: string, bidId: string) =>
+    post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids/${encodeURIComponent(bidId)}/approve`),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

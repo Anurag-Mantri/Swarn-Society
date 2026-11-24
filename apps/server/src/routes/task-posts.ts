@@ -1,38 +1,13 @@
 import { claimTaskPostSchema, createTaskPostSchema } from "@swarmroom/protocol";
 import { and, desc, eq, getTableColumns, isNull } from "drizzle-orm";
-import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
-import { requireUser } from "../auth.js";
+import type { FastifyPluginAsync } from "fastify";
 import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
-import { agents, channels, taskPosts } from "../db/schema.js";
+import { agents, taskPosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
+import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
-const uuid = z.string().uuid();
-const channelParams = z.object({ channelId: uuid });
-const taskParams = channelParams.extend({ taskId: uuid });
 const basePath = "/api/channels/:channelId/tasks";
-
-async function taskChannel(request: FastifyRequest, reply: FastifyReply, requiredPermission: number) {
-  const user = await requireUser(request, reply);
-  if (!user) return;
-  const params = channelParams.safeParse(request.params);
-  if (!params.success) {
-    await reply.code(400).send({ error: "Provide a valid task channel ID." });
-    return;
-  }
-  const [channel] = await db.select().from(channels)
-    .where(and(eq(channels.id, params.data.channelId), eq(channels.kind, "task"))).limit(1);
-  if (!channel) {
-    await reply.code(404).send({ error: "Task channel not found." });
-    return;
-  }
-  if (!await hasChannelPermission(channel, user.id, requiredPermission)) {
-    await reply.code(403).send({ error: "You do not have permission for this action in the task channel." });
-    return;
-  }
-  return { channel, user };
-}
 
 export const taskPostRoutes: FastifyPluginAsync = async (app) => {
   app.get(basePath, async (request, reply) => {
@@ -69,7 +44,7 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
   app.post(`${basePath}/:taskId/claim`, async (request, reply) => {
     const access = await taskChannel(request, reply, permissions.invokeAgents);
     if (!access) return;
-    const params = taskParams.safeParse(request.params);
+    const params = taskPostParams.safeParse(request.params);
     const body = claimTaskPostSchema.safeParse(request.body);
     if (!params.success || !body.success) {
       return reply.code(400).send({ error: "Provide valid task and agent IDs." });
@@ -83,11 +58,14 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
 
     const taskInChannel = and(eq(taskPosts.id, params.data.taskId), eq(taskPosts.channelId, access.channel.id));
     const [claimed] = await db.update(taskPosts).set({ claimedByAgentId: agent.id, claimedAt: new Date() })
-      .where(and(taskInChannel, isNull(taskPosts.claimedByAgentId))).returning();
+      .where(and(taskInChannel, eq(taskPosts.createdBy, access.user.id), isNull(taskPosts.claimedByAgentId))).returning();
     if (claimed) return reply.send({ ...claimed, claimedByAgentName: agent.name });
 
     const [existing] = await db.select().from(taskPosts).where(taskInChannel).limit(1);
     if (!existing) return reply.code(404).send({ error: "Task not found in this channel." });
+    if (existing.createdBy !== access.user.id) {
+      return reply.code(403).send({ error: "Submit a bid so the task author can approve your agent." });
+    }
     if (existing.claimedByAgentId === agent.id) return reply.send({ ...existing, claimedByAgentName: agent.name });
     return reply.code(409).send({ error: "Another agent has already claimed this task." });
   });

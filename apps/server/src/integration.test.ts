@@ -638,6 +638,70 @@ integration("Postgres-backed server routes", () => {
     })).statusCode).toBe(200);
   }, 30_000);
 
+  it("requires the task author to approve a teammate's proposed contract", async () => {
+    const authorHeaders = { cookie: `session=${sessionSecret}` };
+    const workspace = await app.inject({
+      method: "POST", url: "/api/servers", headers: authorHeaders, payload: { name: "Bid approvals test" },
+    });
+    expect(workspace.statusCode).toBe(201);
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channel = await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers: authorHeaders,
+      payload: { name: "contracts", kind: "task" },
+    });
+    const url = `/api/channels/${channel.json<{ id: string }>().id}/tasks`;
+    const posted = await app.inject({
+      method: "POST", url, headers: authorHeaders, payload: { title: "Write a summary" },
+    });
+    expect(posted.statusCode).toBe(201);
+    const { id: taskId } = posted.json<{ id: string }>();
+
+    const [bidder] = await db.insert(users).values({ githubId: "bid-test", handle: "bidder" }).returning();
+    if (!bidder) throw new Error("Could not create a bidder");
+    const secret = randomBytes(32).toString("base64url");
+    const bidderHeaders = { cookie: `session=${secret}` };
+    await db.insert(sessions).values({
+      userId: bidder.id, secretHash: hashSecret(secret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    expect((await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers: authorHeaders, payload: { userId: bidder.id },
+    })).statusCode).toBe(201);
+    const bidAgents = await db.insert(agents).values([
+      { name: "first-bidder", role: "Writer", serverId, ownerId: bidder.id },
+      { name: "second-bidder", role: "Writer", serverId, ownerId: bidder.id },
+    ]).returning({ id: agents.id });
+    expect(bidAgents).toHaveLength(2);
+
+    const bidsPath = `${url}/${taskId}/bids`;
+    const [first, second] = await Promise.all(bidAgents.map(({ id: agentId }) => app.inject({
+      method: "POST", url: bidsPath, headers: bidderHeaders,
+      payload: { agentId, plan: "Summarize the source", deliverable: "A short summary", estimatedTokens: 500 },
+    })));
+    expect(first?.statusCode).toBe(201);
+    expect(second?.statusCode).toBe(201);
+    const bids = [first!, second!].map((response) => response.json<{ id: string; agentId: string }>());
+    expect((await app.inject({
+      method: "POST", url: `${url}/${taskId}/claim`, headers: bidderHeaders, payload: { agentId: bids[0]!.agentId },
+    })).statusCode).toBe(403);
+    expect((await app.inject({
+      method: "POST", url: `${bidsPath}/${bids[0]!.id}/approve`, headers: bidderHeaders,
+    })).statusCode).toBe(403);
+
+    const results = await Promise.all(bids.map(({ id }) => app.inject({
+      method: "POST", url: `${bidsPath}/${id}/approve`, headers: authorHeaders,
+    })));
+    expect(results.map(({ statusCode }) => statusCode).sort()).toEqual([200, 409]);
+    const winnerIndex = results.findIndex(({ statusCode }) => statusCode === 200);
+    const winner = bids[winnerIndex]!;
+    expect(results[winnerIndex]?.json()).toMatchObject({ claimedByAgentId: winner.agentId });
+    const listed = await app.inject({ url: bidsPath, headers: authorHeaders });
+    expect(listed.json<Array<{ approvedBy: string | null; id: string }>>().filter(({ approvedBy }) => approvedBy))
+      .toEqual([expect.objectContaining({ id: winner.id, approvedBy: userId })]);
+    expect((await app.inject({
+      method: "POST", url: `${bidsPath}/${winner.id}/approve`, headers: authorHeaders,
+    })).statusCode).toBe(200);
+  }, 30_000);
+
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
     const hostResponse = await app.inject({
