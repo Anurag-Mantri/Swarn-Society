@@ -886,6 +886,63 @@ integration("Postgres-backed server routes", () => {
     expect(await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, edges[0]!.id))).toHaveLength(0);
   }, 30_000);
 
+  it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Extension test" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const directory = `/api/servers/${serverId}/extensions`;
+    const manifest = {
+      slug: "file-preview", name: "File Preview", version: "1.0.0", protocolVersion: 1,
+      operatingSystems: ["linux"], capabilities: ["resource.read", "snapshot.create"],
+      resources: [{ type: "document", extensions: [".txt"] }], snapshotFormat: "metadata-json",
+    };
+    expect((await inject({
+      method: "POST", url: directory, headers, payload: { ...manifest, command: "undeclared" },
+    })).statusCode).toBe(400);
+    const registered = await inject({ method: "POST", url: directory, headers, payload: manifest });
+    expect(registered.statusCode).toBe(201);
+    const { id: manifestId } = registered.json<{ id: string }>();
+    expect((await inject({ method: "POST", url: directory, headers, payload: manifest })).statusCode).toBe(409);
+    expect((await inject({ url: directory, headers })).json()).toEqual([
+      expect.objectContaining({ id: manifestId, manifest }),
+    ]);
+
+    const hostResponse = await inject({
+      method: "POST", url: "/api/hosts", headers, payload: { machine: "Approved host" },
+    });
+    const { id: hostId } = hostResponse.json<{ id: string }>();
+    const approvalPath = `/api/hosts/${hostId}/extensions/${manifestId}/approval`;
+    const approvalsPath = `/api/hosts/${hostId}/extensions`;
+    const [anotherUser] = await db.insert(users).values({ githubId: "extension-test-user", handle: "other" }).returning();
+    if (!anotherUser) throw new Error("Could not create another user");
+    const secret = randomBytes(32).toString("base64url");
+    const otherHeaders = { cookie: `session=${secret}` };
+    await db.insert(sessions).values({
+      userId: anotherUser.id, secretHash: hashSecret(secret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    expect((await inject({
+      method: "PUT", url: approvalPath, headers: otherHeaders, payload: { capabilities: ["resource.read"] },
+    })).statusCode).toBe(404);
+    expect((await inject({
+      method: "PUT", url: approvalPath, headers, payload: { capabilities: ["resource.write"] },
+    })).statusCode).toBe(400);
+    expect((await inject({
+      method: "PUT", url: approvalPath, headers, payload: { capabilities: ["resource.read"] },
+    })).statusCode).toBe(200);
+    expect((await inject({ url: approvalsPath, headers })).json()).toEqual([
+      expect.objectContaining({ hostId, manifestId, approvedBy: userId, capabilities: ["resource.read"] }),
+    ]);
+    const revised = await inject({
+      method: "POST", url: directory, headers, payload: { ...manifest, version: "2.0.0" },
+    });
+    expect(revised.statusCode).toBe(201);
+    expect((await inject({ url: approvalsPath, headers })).json()).toHaveLength(1);
+    expect((await inject({ method: "DELETE", url: approvalPath, headers })).statusCode).toBe(204);
+    expect((await inject({ url: approvalsPath, headers })).json()).toEqual([]);
+  }, 30_000);
+
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
     const hostResponse = await inject({

@@ -99,6 +99,13 @@
       "when": 1795551833301,
       "tag": "0013_knowledge_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795552080294,
+      "tag": "0014_extension_manifests",
+      "breakpoints": true
     }
   ]
 }
