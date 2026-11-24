@@ -194,28 +194,28 @@
       "label": "defaultAuditPath",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "apps/daemon/src/audit-log.ts:23"
+      "sourceLocation": "apps/daemon/src/audit-log.ts:25"
     },
     {
       "id": "daemon::audit_log::localauditlog",
       "label": "LocalAuditLog",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "apps/daemon/src/audit-log.ts:35"
+      "sourceLocation": "apps/daemon/src/audit-log.ts:37"
     },
     {
       "id": "daemon::audit_log::localauditlog::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "apps/daemon/src/audit-log.ts:38"
+      "sourceLocation": "apps/daemon/src/audit-log.ts:41"
     },
     {
       "id": "daemon::audit_log::localauditlog::recordtask",
       "label": ".recordTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "apps/daemon/src/audit-log.ts:40"
+      "sourceLocation": "apps/daemon/src/audit-log.ts:43"
     },
     {
       "id": "daemon::file::audit_log_test",
@@ -1158,6 +1158,6 @@
     "files": 25,
     "nodes": 86,
     "edges": 61,
-    "builtAt": "2026-11-24T01:20:00Z"
+    "builtAt": "2026-11-24T01:24:00Z"
   }
 }
