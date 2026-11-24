@@ -5,6 +5,9 @@
   "exports": {
     "./provider-broker-client": "./dist/provider-broker-client.js"
   },
+  "bin": {
+    "swarmroom-agent": "./dist/agent-runtime-cli.js"
+  },
   "scripts": {
     "dev": "tsx src/main.ts",
     "build": "tsc -p tsconfig.json",
