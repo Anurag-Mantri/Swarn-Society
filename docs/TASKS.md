@@ -80,5 +80,5 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Package the daemon for optional cloud hosts.
 - [ ] Add enterprise SSO and audit exports.
 - [ ] Add the internal agent-host credit ledger.
-- [ ] Add a free and paid infrastructure guide.
+- [x] Add a [free and paid infrastructure guide](INFRASTRUCTURE.md).
 - [ ] Do not implement real-money transfers or a plugin marketplace first.
