@@ -76,3 +76,9 @@ Hosts advertise `version: 2` in their `host` frame to receive threaded tasks. Ho
 - Message text is untrusted. It must never be interpolated into shell commands, file paths or tool arguments without validation.
 - Host `key` is a bearer secret; rotate it and never log it.
 - Version the protocol once more than one client build is in the wild (`v` field on `hello`/`host`).
+
+## Browser client
+
+Browser clients send a `hello` frame without `session`. The server reads the HttpOnly session cookie from the upgrade and requires an exact `Origin` match to the configured GitHub OAuth callback origin. Clients may still send an explicit session as before. Cookie-authenticated sockets also receive the message broadcast for their own posts. Initialization includes `serverId` on each readable channel so clients can group channels by workspace.
+
+`GET /api/servers` lists the signed-in user's workspaces as `{id, name, ownerId}` records. Unauthenticated requests receive HTTP 401.

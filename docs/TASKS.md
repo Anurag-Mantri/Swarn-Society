@@ -15,6 +15,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Replace prototype JSON storage with Postgres and Drizzle, covered by disposable-database integration tests.
 - [x] Add the GitHub OAuth flow with mocked provider tests.
 - [ ] Verify OAuth against a registered GitHub app.
+- [x] Add the SvelteKit shell, workspace navigation, channel chat and threads.
+- [ ] Add host and agent management views.
 - [x] Add server role permissions for message access, agent invocation and server administration.
 - [x] Replace shared `HOST_KEY` with hashed, rotating host tokens.
 - [x] Mark hosts offline after missed heartbeat deadlines.

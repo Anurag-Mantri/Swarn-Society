@@ -5,15 +5,18 @@ import { sessions, users } from "./db/schema.js";
 import { hashSecret } from "./security.js";
 
 export async function getSessionUser(request: FastifyRequest) {
-  const cookie = request.cookies.session;
-  if (!cookie) return null;
+  return getUserBySessionSecret(request.cookies.session);
+}
+
+export async function getUserBySessionSecret(secret: string | undefined) {
+  if (!secret) return null;
 
   const rows = await db.select({
     user: users,
   }).from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
     .where(and(
-      eq(sessions.secretHash, hashSecret(cookie)),
+      eq(sessions.secretHash, hashSecret(secret)),
       isNull(sessions.revokedAt),
       gt(sessions.expiresAt, new Date()),
     ))

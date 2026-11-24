@@ -7,7 +7,7 @@ import Fastify from "fastify";
 import type { WebSocket } from "ws";
 import { z } from "zod";
 import { alias } from "drizzle-orm/pg-core";
-import { requireUser, getSessionUser } from "./auth.js";
+import { requireUser, getUserBySessionSecret } from "./auth.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
 import {
@@ -29,6 +29,7 @@ import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
 import { threadRootExists } from "./message-threads.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
+import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
@@ -46,6 +47,7 @@ await app.register(websocket, {
 });
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
+await app.register(workspaceDirectoryRoutes);
 
 type HostConnection = {
   socket: WebSocket;
@@ -57,6 +59,7 @@ type HostConnection = {
 type UserConnection = {
   socket: WebSocket;
   userId: string;
+  echoMessages: boolean;
 };
 
 const hostConnections = new Set<HostConnection>();
@@ -127,7 +130,7 @@ async function broadcastChannel(channelId: string, payload: unknown, excludedUse
   const encoded = JSON.stringify(payload);
   for (const recipient of userConnections) {
     if (recipient.socket.readyState !== 1) continue;
-    if (recipient.userId === excludedUserId || !memberIds.has(recipient.userId)) continue;
+    if (!memberIds.has(recipient.userId) || (recipient.userId === excludedUserId && !recipient.echoMessages)) continue;
     if (!await hasChannelPermission(channel, recipient.userId, permissions.readMessages)) continue;
     recipient.socket.send(encoded);
   }
@@ -259,13 +262,12 @@ app.get("/api/me", async (request, reply) => {
 app.post("/api/servers", async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
-  const body = (request.body ?? {}) as { name?: string };
-  if (!body.name || body.name.trim().length === 0) {
-    return reply.code(400).send({ error: "Server name is required" });
-  }
+  const parsed = z.object({ name: z.string().trim().min(1) }).strict().safeParse(request.body);
+  if (!parsed.success) return reply.code(400).send({ error: "Provide a workspace name." });
+  const name = parsed.data.name;
   const server = await db.transaction(async (transaction) => {
     const inserted = await transaction.insert(servers).values({
-      name: body.name!.trim(),
+      name,
       ownerId: user.id,
     }).returning();
     const created = inserted[0];
@@ -533,13 +535,19 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
       }
 
       if (frame.t === "hello") {
-        const user = await getSessionUser({ cookies: { session: frame.session } } as never);
+        // Cookie-authenticated upgrades must come from the configured public origin.
+        const cookieAuth = frame.session === undefined;
+        if (cookieAuth && request.headers.origin !== new URL(config.githubCallbackUrl).origin) {
+          socket.close(1008, "Invalid origin");
+          return;
+        }
+        const user = await getUserBySessionSecret(frame.session ?? request.cookies.session);
         if (!user) {
           socket.close(1008, "Invalid session");
           return;
         }
         if (socket.readyState !== 1) return;
-        connection = { socket, userId: user.id };
+        connection = { socket, userId: user.id, echoMessages: cookieAuth };
         userConnections.add(connection);
         const channelRows = await db.select({
           id: channels.id, name: channels.name, kind: channels.kind, serverId: channels.serverId,
@@ -549,7 +557,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         const readableChannels = [];
         for (const channel of channelRows) {
           if (await hasChannelPermission(channel, user.id, permissions.readMessages)) {
-            readableChannels.push({ id: channel.id, name: channel.name, kind: channel.kind });
+            readableChannels.push({ id: channel.id, name: channel.name, kind: channel.kind, serverId: channel.serverId });
           }
         }
         socket.send(JSON.stringify({
@@ -696,7 +704,12 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         const channelRows = await db.select().from(channels).where(eq(channels.id, frame.channelId)).limit(1);
         const channel = channelRows[0];
         if (!channel) return;
-        if (!await hasChannelPermission(channel, connection.userId, permissions.sendMessages)) return;
+        if (!await hasChannelPermission(channel, connection.userId, permissions.sendMessages)) {
+          if (connection.echoMessages) {
+            socket.send(JSON.stringify({ t: "error", code: "forbidden", message: "You cannot send messages in this channel." }));
+          }
+          return;
+        }
         if (frame.threadId && !await threadRootExists(frame.channelId, frame.threadId)) {
           socket.send(JSON.stringify({ t: "error", code: "invalid_thread", message: "Thread root not found in this channel" }));
           return;
@@ -709,13 +722,14 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           body: frame.text,
         }).returning({ id: messages.id });
         if (!message) throw new Error("Message insert did not return an ID");
-        await broadcastChannel(frame.channelId, {
+        const notification = {
           t: "msg",
           id: message.id,
           channelId: frame.channelId,
           threadId: frame.threadId,
           text: frame.text,
-        }, connection.userId);
+        };
+        await broadcastChannel(frame.channelId, notification, connection.userId);
 
         if (!await hasChannelPermission(channel, connection.userId, permissions.invokeAgents)) return;
         const mentions = [...frame.text.matchAll(/(?:^|\s)@([a-zA-Z0-9_-]+)/g)]

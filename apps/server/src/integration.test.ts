@@ -4,6 +4,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { and, eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
+import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
 import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
 import { hashSecret } from "./security.js";
@@ -166,6 +167,29 @@ integration("Postgres-backed server routes", () => {
     });
     expect(channelResponse.statusCode).toBe(201);
     const channel = channelResponse.json<{ id: string }>();
+
+    const directory = await app.inject({ url: "/api/servers", headers: { cookie } });
+    expect(directory.statusCode).toBe(200);
+    expect(directory.json()).toContainEqual({ id: server.id, name: "Integration workspace", ownerId: userId });
+    expect((await app.inject({ url: "/api/servers" })).statusCode).toBe(401);
+
+    const origin = new URL(config.githubCallbackUrl).origin;
+    const invalidSocket = await app.injectWS("/ws", { headers: { cookie, origin: "https://invalid.example" } });
+    const invalidConnection = new Promise<number>((resolve) => invalidSocket.once("close", resolve));
+    invalidSocket.send(JSON.stringify({ t: "hello" }));
+    expect(await invalidConnection).toBe(1008);
+
+    const browserSocket = await app.injectWS("/ws", { headers: { cookie, origin } });
+    try {
+      const ready = nextWebSocketFrame(browserSocket, "browser initialization", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "init");
+      browserSocket.send(JSON.stringify({ t: "hello" }));
+      expect(await ready).toMatchObject({
+        channels: expect.arrayContaining([{ id: channel.id, name: "general", kind: "text", serverId: server.id }]),
+      });
+    } finally {
+      browserSocket.terminate();
+    }
 
     await db.insert(messages).values({
       channelId: channel.id,
@@ -386,8 +410,8 @@ integration("Postgres-backed server routes", () => {
       expect(await initialized).toMatchObject({
         t: "init",
         channels: expect.arrayContaining([
-          { id: channel.id, name: "routing", kind: "text" },
-          ...typedChannels.map(({ id, name, kind }) => ({ id, name, kind })),
+          { id: channel.id, name: "routing", kind: "text", serverId: server.id },
+          ...typedChannels.map(({ id, name, kind }) => ({ id, name, kind, serverId: server.id })),
         ]),
       });
 
