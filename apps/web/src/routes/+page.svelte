@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { errorSchema, initSchema, messageSchema } from '@swarmroom/protocol';
+  import TaskBoard from '$lib/TaskBoard.svelte';
   import WorkspaceFiles from '$lib/WorkspaceFiles.svelte';
   import Conversation from '$lib/Conversation.svelte';
   import { api, ApiError, type Channel, type Message, type Profile, type Workspace } from '$lib/api';
@@ -11,7 +12,7 @@
   let workspaces = $state<Workspace[]>([]);
   let channels = $state<Channel[]>([]);
   let workspaceId = $state('');
-  let view = $state<'chat' | 'files'>('chat');
+  let view = $state<'chat' | 'files' | 'tasks'>('chat');
   let channelId = $state('');
   let messages = $state<Message[]>([]);
   let root = $state<Message | null>(null);
@@ -70,6 +71,7 @@
     channelRevision += 1;
     closeThread();
     channelId = id;
+    view = channels.find((item) => item.id === id)?.kind === 'task' ? 'tasks' : 'chat';
     messages = [];
     error = '';
     void refreshChannel();
@@ -240,13 +242,16 @@
       {#if workspace}
         <div class="workspace-view" aria-label="Workspace view">
           <button type="button" aria-pressed={view === 'chat'} onclick={() => { view = 'chat'; }}>Chat</button>
+          {#if channel?.kind === 'task'}
+            <button type="button" aria-pressed={view === 'tasks'} onclick={() => { view = 'tasks'; }}>Tasks</button>
+          {/if}
           <button type="button" aria-pressed={view === 'files'} onclick={() => { view = 'files'; }}>Files</button>
         </div>
         <nav aria-label="Channels">
           <h2>Channels</h2>
           {#each availableChannels as item (item.id)}
             <button type="button" class:active={channelId === item.id}
-              aria-current={channelId === item.id ? 'true' : undefined} onclick={() => { view = 'chat'; chooseChannel(item.id); }}>
+              aria-current={channelId === item.id ? 'true' : undefined} onclick={() => chooseChannel(item.id)}>
               <span>{item.name}</span><small>{item.kind}</small>
             </button>
           {/each}
@@ -278,6 +283,8 @@
       {#if error}<div class="alert" role="alert">{error}</div>{/if}
       {#if workspace && view === 'files'}
         {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} canExport={workspace.ownerId === profile.id} />{/key}
+      {:else if view === 'tasks' && channel?.kind === 'task'}
+        {#key channelId}<TaskBoard {channelId} name={channel.name} />{/key}
       {:else if channel}
         <div class="chat-layout" class:thread-open={root !== null}>
           {#key channelId}

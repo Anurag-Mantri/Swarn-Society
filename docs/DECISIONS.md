@@ -178,3 +178,10 @@ Date: 2026-11-24
 Context: Snapshot publication needs approval and repository credentials scoped to the host.
 Decision: The workspace owner downloads the saved snapshot from the control plane. A host operator explicitly publishes it with the GitHub App CLI. Derive the target branch from the workspace UUID and reject default or protected branches and branches with active GitHub rules.
 Consequences: This first sync workflow is manual and uses saved database state. Publication overlays workspace files onto a repository tree and uses non-forced ref updates. Remote head comparison and editor integration can consume the same stable branch name.
+
+### D-028: Agent owners submit exclusive task claims
+Status: Accepted
+Date: 2026-11-24
+Context: The first task board needs a human-controlled claim workflow and a single assignment even when teammates act at the same time.
+Decision: Keep task posts inside task channels and apply channel permissions. An agent owner submits a claim for their own agent, and PostgreSQL changes the first unclaimed row atomically.
+Consequences: The task board records ownership without starting agent execution. Contract bids, approval and task completion can extend this workflow.

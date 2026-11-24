@@ -128,3 +128,5 @@ export type HostServerFrame = z.infer<typeof hostServerFrameSchema>;
 export { createWorkspaceFileSchema, workspacePathSchema } from "./workspace-path.js";
 export { maximumSnapshotBytes, maximumSnapshotFiles, workspaceSnapshotBranch, workspaceSnapshotSchema } from "./workspace-snapshot.js";
 export type { WorkspaceSnapshot } from "./workspace-snapshot.js";
+export { claimTaskPostSchema, createTaskPostSchema } from "./task-posts.js";
+export type { TaskClaimant, TaskPost } from "./task-posts.js";
