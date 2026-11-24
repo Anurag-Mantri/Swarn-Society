@@ -41,7 +41,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Replace the textarea with Monaco and Yjs.
 - [x] Add presence cursors and conflict-free file editing.
 - [x] Add GitHub App installation verification on the host.
-- [ ] Push workspace snapshots only to `swarmroom/<server>-live`.
+- [x] Publish saved workspace snapshots manually from the host to `swarmroom/<server>-live`.
 - [ ] Compare local and remote branch heads for fetch/pull state.
 - [ ] Link VSCode commits to workspace snapshot status.
 

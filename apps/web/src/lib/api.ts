@@ -51,5 +51,8 @@ export const api = {
   files: (workspaceId: string) => request<WorkspaceFile[]>(`/api/servers/${encodeURIComponent(workspaceId)}/files`),
   createFile: (workspaceId: string, path: string) =>
     post<WorkspaceFile>(`/api/servers/${encodeURIComponent(workspaceId)}/files`, { path }),
+  snapshot: (workspaceId: string) => request<{ serverId: string; files: { path: string; content: string }[] }>(
+    `/api/servers/${encodeURIComponent(workspaceId)}/files/snapshot`
+  ),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

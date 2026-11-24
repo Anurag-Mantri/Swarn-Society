@@ -53,4 +53,12 @@ pnpm --filter @swarmroom/daemon github-app verify <app-id> <installation-id> <re
 
 Verification prints the repository's ID, full name, and default branch. The daemon signs app authentication locally, requests an installation token scoped to one repository with read access, and discards the token when the command exits. Delete the imported key with `github-app key-delete <app-id>`. Keep the downloaded PEM on the host and remove it after import.
 
-Snapshot publishing is a separate operation. The verification command reads repository metadata.
+### Publish a saved workspace snapshot
+
+Download a saved snapshot in the workspace Files view. To publish, give the GitHub App Contents write permission on the approved repository and run this command on the host:
+
+```sh
+pnpm --filter @swarmroom/daemon github-app publish <app-id> <installation-id> <repository-id> <snapshot.json>
+```
+
+The command derives `swarmroom/<workspace-id>-live` from the snapshot. It verifies that the branch is neither the repository default nor protected and that no active ruleset applies. It uses non-forced updates and reports the branch and commit SHA. Provision the App without branch bypass privileges. Publishing overlays the saved workspace files onto the target tree and uses the default branch as the starting point if the snapshot branch does not exist.

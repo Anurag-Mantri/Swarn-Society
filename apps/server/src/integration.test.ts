@@ -240,6 +240,13 @@ integration("Postgres-backed server routes", () => {
     expect(file.json()).toMatchObject({ path: "src/main.ts" });
     const fileList = await app.inject({ url: filesUrl, headers: { cookie } });
     expect(fileList.json()).toEqual([file.json()]);
+    const snapshot = await app.inject({ url: `${filesUrl}/snapshot`, headers: { cookie } });
+    expect(snapshot.statusCode).toBe(200);
+    expect(snapshot.headers["cache-control"]).toBe("no-store");
+    expect(snapshot.json()).toEqual({ serverId: server.id, files: [{ path: "src/main.ts", content: "" }] });
+    expect((await app.inject({
+      url: `${filesUrl}/snapshot`, headers: { cookie: `session=${outsiderSecret}` },
+    })).statusCode).toBe(403);
     expect((await app.inject({
       method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "SRC" },
     })).statusCode).toBe(409);

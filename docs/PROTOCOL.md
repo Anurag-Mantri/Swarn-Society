@@ -87,3 +87,5 @@ Browser clients send a `hello` frame without `session`. The server reads the Htt
 `GET /api/servers/:serverId/files` lists file IDs and repository-relative paths. `POST` on the same route accepts `{path}` and returns `{id, path}` for the new file. Members with server read permission can list files. Members need both read and send permissions to create or edit them.
 
 `/collaboration` carries binary Hocuspocus messages using workspace file UUIDs as document names. The upgrade requires an authenticated session cookie and the configured public origin. Hocuspocus authorizes each document against its workspace. Clients with read permission can sync in read-only mode. Clients with edit permission can update the shared Yjs text named `content`. Editor cursors are ephemeral awareness data. The server caps each collaboration frame at 256 KiB and the encoded document state at 192 KiB.
+
+Workspace owners can download a saved snapshot from `GET /api/servers/:serverId/files/snapshot`. The non-cacheable JSON response contains `{serverId, files: [{path, content}]}` and is validated with the shared snapshot schema before export and again on the host before publication.
