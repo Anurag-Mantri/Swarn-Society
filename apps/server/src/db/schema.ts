@@ -1,5 +1,6 @@
 import { boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { ChannelKind } from "@swarmroom/protocol";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -52,9 +53,11 @@ export const channels = pgTable("channels", {
   id: uuid("id").primaryKey().defaultRandom(),
   serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  kind: text("kind").notNull().default("text"),
+  kind: text("kind").$type<ChannelKind>().notNull().default("text"),
   position: integer("position").notNull().default(0),
-});
+}, (table) => [
+  check("channels_kind_valid", sql`${table.kind} in ('text', 'voice', 'task')`),
+]);
 
 export const messages = pgTable("messages", {
   id: uuid("id").primaryKey().defaultRandom(),

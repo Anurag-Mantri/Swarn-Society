@@ -33,7 +33,7 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Build signed desktop installers with Tauri.
 
 ## Phase 2: Team workspace
-- [ ] Add text, voice and task channel types.
+- [x] Add text, voice and task channel types.
 - [ ] Add threads and role-based channel permissions.
 - [ ] Replace the textarea with Monaco and Yjs.
 - [ ] Add presence cursors and conflict-free file editing.

@@ -1,7 +1,7 @@
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
-import { inboundFrameSchema } from "@swarmroom/protocol";
+import { createChannelSchema, inboundFrameSchema } from "@swarmroom/protocol";
 import { eq, and, desc, lt, ne } from "drizzle-orm";
 import Fastify from "fastify";
 import type { WebSocket } from "ws";
@@ -370,13 +370,13 @@ app.post("/api/servers/:serverId/channels", async (request, reply) => {
   if (!await hasServerPermission(params.serverId, user.id, permissions.manageChannels)) {
     return reply.code(403).send({ error: "Not allowed to manage channels" });
   }
-  const body = (request.body ?? {}) as { name?: string };
-  if (!body.name || body.name.trim().length === 0) {
-    return reply.code(400).send({ error: "Channel name is required" });
+  const parsed = createChannelSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return reply.code(400).send({ error: "Provide a channel name and a valid kind (text, voice, or task)." });
   }
   const inserted = await db.insert(channels).values({
     serverId: params.serverId,
-    name: body.name.trim(),
+    ...parsed.data,
   }).returning();
   return reply.code(201).send(inserted[0]);
 });
@@ -573,13 +573,15 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         if (socket.readyState !== 1) return;
         connection = { socket, userId: user.id };
         userConnections.add(connection);
-        const channelRows = await db.select({ id: channels.id, name: channels.name, serverId: channels.serverId })
+        const channelRows = await db.select({
+          id: channels.id, name: channels.name, kind: channels.kind, serverId: channels.serverId,
+        })
           .from(channels).innerJoin(members, eq(members.serverId, channels.serverId))
           .where(eq(members.userId, user.id));
         const readableChannels = [];
         for (const channel of channelRows) {
           if (await hasServerPermission(channel.serverId, user.id, permissions.readMessages)) {
-            readableChannels.push({ id: channel.id, name: channel.name });
+            readableChannels.push({ id: channel.id, name: channel.name, kind: channel.kind });
           }
         }
         socket.send(JSON.stringify({

@@ -275,7 +275,28 @@ integration("Postgres-backed server routes", () => {
       headers: { cookie },
       payload: { name: "routing" },
     });
+    expect(channelResponse.statusCode).toBe(201);
     const channel = channelResponse.json<{ id: string }>();
+    expect(channel).toMatchObject({ kind: "text" });
+    const typedChannels = [];
+    for (const kind of ["voice", "task"]) {
+      const response = await app.inject({
+        method: "POST",
+        url: `/api/servers/${server.id}/channels`,
+        headers: { cookie },
+        payload: { name: kind, kind },
+      });
+      expect(response.statusCode).toBe(201);
+      expect(response.json()).toMatchObject({ kind });
+      typedChannels.push(response.json<{ id: string; name: string; kind: string }>());
+    }
+    const invalidChannel = await app.inject({
+      method: "POST",
+      url: `/api/servers/${server.id}/channels`,
+      headers: { cookie },
+      payload: { name: "invalid", kind: "video" },
+    });
+    expect(invalidChannel.statusCode).toBe(400);
     const agentResponse = await app.inject({
       method: "POST",
       url: `/api/servers/${server.id}/agents`,
@@ -314,7 +335,13 @@ integration("Postgres-backed server routes", () => {
       const initialized = nextWebSocketFrame(userSocket, "user initialization", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "init");
       userSocket.send(JSON.stringify({ t: "hello", session: sessionSecret }));
-      expect(await initialized).toMatchObject({ t: "init" });
+      expect(await initialized).toMatchObject({
+        t: "init",
+        channels: expect.arrayContaining([
+          { id: channel.id, name: "routing", kind: "text" },
+          ...typedChannels.map(({ id, name, kind }) => ({ id, name, kind })),
+        ]),
+      });
 
       const task = nextWebSocketFrame(hostSocket, "agent task", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "task");

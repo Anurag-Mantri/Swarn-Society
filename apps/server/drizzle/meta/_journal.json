@@ -22,6 +22,13 @@
       "when": 1795546454703,
       "tag": "0002_lovely_infant_terrible",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795547719257,
+      "tag": "0003_channel_kinds",
+      "breakpoints": true
     }
   ]
 }

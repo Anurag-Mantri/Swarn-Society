@@ -41,6 +41,7 @@ Connection roles are decided by the first message: `hello` makes a **user** conn
 | `t` | Direction | Fields | Meaning |
 |---|---|---|---|
 | `hello` | client -> server | `session`, optional `version` | Authenticate a user by its HTTP session secret |
+| `init` | server -> client | `channels[]`, `agents[]` | Each readable channel has an `id`, `name`, and `kind` (`text`, `voice`, or `task`). Clients using the shared schema interpret a missing kind from older servers as `text`. |
 | `host` | host -> server | `token`, `machine`, `agents[]`, optional `version` | Register a host and its agent names |
 | `host.heartbeat` | host -> server | optional `at` | Mark the host as active |
 | `agent.usage` | host -> server; server -> channel members | `channelId`, `agent`, `requesterId`, `tokensIn`, `tokensOut` | Report provider token usage for display; host budgets remain authoritative |
@@ -48,6 +49,8 @@ Connection roles are decided by the first message: `hello` makes a **user** conn
 | `host.registered` | server -> host | `hostId` | Confirm host registration |
 
 The server accepts usage reports only when the host is registered and enabled for the named agent, the channel belongs to that agent's server, and the requester is a server member allowed to invoke agents. Valid reports are stored and broadcast to channel members. They are display data; the host remains the authority for budget enforcement.
+
+`POST /api/servers/:serverId/channels` accepts a nonempty trimmed name and an optional `kind` that defaults to `text`. Creating a channel requires the server's manage-channels permission. All three kinds support messages under the existing permissions. Voice sessions and task workflows are planned separately.
 
 ## Planned additions
 | `t` | Direction | Purpose |
