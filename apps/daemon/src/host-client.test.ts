@@ -71,4 +71,52 @@ describe("host client", () => {
       await rm(auditDirectory, { recursive: true, force: true });
     }
   });
+
+  it("does not execute a task when the audit start record cannot be written", async () => {
+    const server = new WebSocketServer({ port: 0 });
+    await once(server, "listening");
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Test server did not bind a TCP port.");
+
+    const reply = new Promise<unknown>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Timed out waiting for failure reply.")), 5_000);
+      server.once("connection", (socket) => {
+        socket.on("message", (data) => {
+          const frame = JSON.parse(data.toString()) as unknown;
+          if (typeof frame !== "object" || frame === null || !("t" in frame)) return;
+          if (frame.t === "host") {
+            socket.send(JSON.stringify({ t: "host.registered", hostId: "host-1" }));
+            socket.send(JSON.stringify({
+              t: "task", channelId: "channel-1", from: "user-1", agent: "scout", text: "do not execute",
+            }));
+          } else if (frame.t === "reply") {
+            clearTimeout(timeout);
+            resolve(frame);
+          }
+        });
+      });
+    });
+    const run = vi.fn(async () => "must not run");
+    const audit = { recordTask: vi.fn(async () => { throw new Error("audit store unavailable"); }) };
+    const config: DaemonConfig = {
+      controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`),
+      machine: "test machine",
+      agents: ["scout"],
+    };
+    const client = new HostClient(config, "host-token", new SandboxRunner({ run }), audit);
+    const started = client.start();
+
+    try {
+      await expect(reply).resolves.toMatchObject({
+        t: "reply", channelId: "channel-1", agent: "scout",
+        text: "Task could not be completed in the host sandbox.",
+      });
+      expect(audit.recordTask).toHaveBeenCalledTimes(1);
+      expect(run).not.toHaveBeenCalled();
+    } finally {
+      client.stop();
+      await started;
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
 });
