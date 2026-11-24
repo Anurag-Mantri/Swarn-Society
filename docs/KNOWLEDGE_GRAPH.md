@@ -30,6 +30,8 @@ Examples:
 Each edge stores `source_type`, `source_id`, extraction timestamp and confidence.
 Deterministic edges use confidence 100% unless the source has conflicting evidence.
 
+`packages/knowledge-graph` accepts validated event identifiers and timestamps. It returns stable workspace-scoped node and edge IDs plus the source record, extraction method, confidence, and channel scope. Message mentions must already be resolved to recorded agent IDs. Extraction consumes no free-text content. Storage and query layers must carry the source scope through to permission checks.
+
 ## AI-assisted extraction
 AI may extract possible relationships from transcripts and free-text logs.
 AI-created edges start as pending hypotheses.
