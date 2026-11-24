@@ -45,6 +45,8 @@ export type WorkspaceSyncStatus = {
   branch: string;
   localHead: string | null;
   remoteHead: string | null;
+  checkoutHead: string | null;
+  checkoutIncluded: boolean | null;
   ahead: number | null;
   behind: number | null;
   state: SyncState;
@@ -69,7 +71,11 @@ export async function getWorkspaceSyncStatus(
 
   const local = await git(directory, ["show-ref", "--hash", "--verify", `refs/heads/${branch}`], true);
   const localHead = local === null ? null : sha.parse(local);
-  const base = { repository: repository.fullName, branch, localHead, ahead: null, behind: null };
+  const checkoutCommit = await git(directory, ["rev-parse", "--verify", "HEAD"], true);
+  const checkoutHead = checkoutCommit === null ? null : sha.parse(checkoutCommit);
+  const base = {
+    repository: repository.fullName, branch, localHead, checkoutHead, checkoutIncluded: null as boolean | null, ahead: null, behind: null,
+  };
   const response = await request(`/branches/${encodeURIComponent(branch)}`);
   if (response.status === 404) return { ...base, remoteHead: null, state: "unpublished" };
   const remote = branchInfo.safeParse(response.value);
@@ -78,14 +84,15 @@ export async function getWorkspaceSyncStatus(
   }
   const remoteHead = remote.data.commit.sha;
   const compared = { ...base, remoteHead };
+  const available = await git(directory, ["cat-file", "-e", `${remoteHead}^{commit}`], true) !== null;
+  const shallow = available && await git(directory, ["rev-parse", "--is-shallow-repository"]) === "true";
+  if (checkoutHead && checkoutHead === remoteHead) compared.checkoutIncluded = true;
+  else if (checkoutHead && available && !shallow) {
+    compared.checkoutIncluded = await git(directory, ["merge-base", "--is-ancestor", checkoutHead, remoteHead], true) !== null;
+  }
   if (localHead === remoteHead) return { ...compared, ahead: 0, behind: 0, state: "up-to-date" };
-  if (await git(directory, ["cat-file", "-e", `${remoteHead}^{commit}`], true) === null) {
-    return { ...compared, state: "fetch-needed" };
-  }
+  if (!available || shallow) return { ...compared, state: "fetch-needed" };
   if (!localHead) return { ...compared, state: "local-branch-missing" };
-  if (await git(directory, ["rev-parse", "--is-shallow-repository"]) === "true") {
-    return { ...compared, state: "fetch-needed" };
-  }
 
   const counts = await git(directory, ["rev-list", "--left-right", "--count", `${localHead}...${remoteHead}`]);
   const parsed = counts?.match(/^(\d+)\s+(\d+)$/);
