@@ -13,6 +13,7 @@ export class HostClient {
   private socket: WebSocket | undefined;
   private heartbeat: ReturnType<typeof setInterval> | undefined;
   private reconnectWait: { timer: ReturnType<typeof setTimeout>; resolve: () => void } | undefined;
+  private readonly activeTasks = new Set<AbortController>();
 
   constructor(
     private readonly config: DaemonConfig,
@@ -40,6 +41,7 @@ export class HostClient {
   stop(): void {
     this.stopped = true;
     if (this.heartbeat) clearInterval(this.heartbeat);
+    this.abortActiveTasks();
     if (this.reconnectWait) {
       clearTimeout(this.reconnectWait.timer);
       this.reconnectWait.resolve();
@@ -56,6 +58,7 @@ export class HostClient {
       const finish = (reconnect: boolean) => {
         if (finished) return;
         finished = true;
+        this.abortActiveTasks();
         if (this.heartbeat) clearInterval(this.heartbeat);
         resolve(reconnect);
       };
@@ -84,7 +87,7 @@ export class HostClient {
           finish(false);
           return;
         }
-        void this.handleTask(frame);
+        void this.handleTask(frame, socket);
       });
       socket.on("error", () => finish(true));
       socket.on("close", (code) => finish(code !== 1008 && !this.stopped));
@@ -95,8 +98,9 @@ export class HostClient {
     });
   }
 
-  private async handleTask(task: Task): Promise<void> {
+  private async handleTask(task: Task, socket: WebSocket): Promise<void> {
     const controller = new AbortController();
+    this.activeTasks.add(controller);
     let text: string;
     let started = false;
     try {
@@ -113,13 +117,19 @@ export class HostClient {
         }
       }
       text = "Task could not be completed in the host sandbox.";
+    } finally {
+      this.activeTasks.delete(controller);
     }
-    this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text });
+    this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text }, socket);
   }
 
-  private send(frame: unknown): void {
-    if (this.socket?.readyState !== WebSocket.OPEN) return;
+  private abortActiveTasks(): void {
+    for (const controller of this.activeTasks) controller.abort();
+  }
+
+  private send(frame: unknown, socket = this.socket): void {
+    if (socket?.readyState !== WebSocket.OPEN) return;
     const validated = hostClientFrameSchema.parse(frame);
-    this.socket.send(JSON.stringify(validated));
+    socket.send(JSON.stringify(validated));
   }
 }

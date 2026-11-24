@@ -119,4 +119,54 @@ describe("host client", () => {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
   });
+
+  it("aborts sandbox work when its authenticated socket closes", async () => {
+    const server = new WebSocketServer({ port: 0 });
+    await once(server, "listening");
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Test server did not bind a TCP port.");
+    let serverSocket: WebSocket | undefined;
+    let signalStarted: ((signal: AbortSignal) => void) | undefined;
+    const runnerStarted = new Promise<AbortSignal>((resolve) => { signalStarted = resolve; });
+    const run = vi.fn((_task: unknown, signal: AbortSignal) => new Promise<string>((_resolve, reject) => {
+      signalStarted?.(signal);
+      signal.addEventListener("abort", () => reject(new Error("sandbox stopped")), { once: true });
+    }));
+    server.once("connection", (socket) => {
+      serverSocket = socket;
+      socket.on("message", (data) => {
+        const frame = JSON.parse(data.toString()) as unknown;
+        if (typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host") {
+          socket.send(JSON.stringify({ t: "host.registered", hostId: "host-1" }));
+          socket.send(JSON.stringify({
+            t: "task", channelId: "channel-1", from: "user-1", agent: "scout", text: "running task",
+          }));
+        }
+      });
+    });
+
+    const config: DaemonConfig = {
+      controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`),
+      machine: "test machine",
+      agents: ["scout"],
+    };
+    const client = new HostClient(config, "host-token", new SandboxRunner({ run }), {
+      recordTask: async () => undefined,
+    });
+    const started = client.start();
+    try {
+      const signal = await runnerStarted;
+      serverSocket?.close(4000, "test disconnect");
+      await new Promise<void>((resolve) => {
+        if (signal.aborted) resolve();
+        else signal.addEventListener("abort", () => resolve(), { once: true });
+      });
+      expect(signal.aborted).toBe(true);
+      expect(run).toHaveBeenCalledTimes(1);
+    } finally {
+      client.stop();
+      await started;
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
 });
