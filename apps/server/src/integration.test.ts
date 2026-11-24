@@ -1,8 +1,9 @@
+import type { InjectOptions } from "fastify";
 import { randomBytes } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { and, eq } from "drizzle-orm";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
@@ -62,6 +63,11 @@ function nextWebSocketFrame(
 integration("Postgres-backed server routes", () => {
   const sessionSecret = randomBytes(32).toString("base64url");
   let userId: string;
+  let testAddress = 1;
+  const inject = (options: InjectOptions) => app.inject({ ...options, remoteAddress: `127.0.0.${testAddress}` });
+
+  // Each test uses its own simulated client IP so suite order cannot consume another test's rate limit.
+  beforeEach(() => { testAddress += 1; });
 
   beforeAll(async () => {
     if (!databaseUrl) throw new Error("Set TEST_DATABASE_URL to a disposable test database");
@@ -92,7 +98,7 @@ integration("Postgres-backed server routes", () => {
   });
 
   it("validates OAuth state, verifies the GitHub profile and creates a hashed session", async () => {
-    const start = await app.inject({ method: "GET", url: "/auth/github" });
+    const start = await inject({ method: "GET", url: "/auth/github" });
     expect(start.statusCode).toBe(302);
     const stateHeader = start.headers["set-cookie"];
     const startCookies = Array.isArray(stateHeader) ? stateHeader : stateHeader ? [stateHeader] : [];
@@ -104,7 +110,7 @@ integration("Postgres-backed server routes", () => {
     const authorizeUrl = new URL(start.headers.location!);
     expect(authorizeUrl.searchParams.get("state")).toBe(state);
 
-    const rejectedState = await app.inject({
+    const rejectedState = await inject({
       method: "GET",
       url: "/auth/github/callback?code=mock-code&state=wrong-state",
       headers: { cookie: statePair },
@@ -126,7 +132,7 @@ integration("Postgres-backed server routes", () => {
       }));
     vi.stubGlobal("fetch", mockedFetch);
 
-    const callback = await app.inject({
+    const callback = await inject({
       method: "GET",
       url: `/auth/github/callback?code=mock-code&state=${encodeURIComponent(state)}`,
       headers: { cookie: statePair },
@@ -140,7 +146,7 @@ integration("Postgres-backed server routes", () => {
     if (!sessionCookie) throw new Error("Session cookie was not set");
     const sessionPair = sessionCookie.split(";")[0];
     if (!sessionPair) throw new Error("Session cookie is invalid");
-    const me = await app.inject({ method: "GET", url: "/api/me", headers: { cookie: sessionPair } });
+    const me = await inject({ method: "GET", url: "/api/me", headers: { cookie: sessionPair } });
     expect(me.statusCode).toBe(200);
     expect(me.json<{ handle: string }>().handle).toBe("oauth-integration-user");
 
@@ -152,7 +158,7 @@ integration("Postgres-backed server routes", () => {
 
   it("creates a server and channel, then reads persisted messages only for members", async () => {
     const cookie = `session=${sessionSecret}`;
-    const serverResponse = await app.inject({
+    const serverResponse = await inject({
       method: "POST",
       url: "/api/servers",
       headers: { cookie },
@@ -161,7 +167,7 @@ integration("Postgres-backed server routes", () => {
     expect(serverResponse.statusCode).toBe(201);
     const server = serverResponse.json<{ id: string }>();
 
-    const channelResponse = await app.inject({
+    const channelResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/channels`,
       headers: { cookie },
@@ -170,10 +176,10 @@ integration("Postgres-backed server routes", () => {
     expect(channelResponse.statusCode).toBe(201);
     const channel = channelResponse.json<{ id: string }>();
 
-    const directory = await app.inject({ url: "/api/servers", headers: { cookie } });
+    const directory = await inject({ url: "/api/servers", headers: { cookie } });
     expect(directory.statusCode).toBe(200);
     expect(directory.json()).toContainEqual({ id: server.id, name: "Integration workspace", ownerId: userId });
-    expect((await app.inject({ url: "/api/servers" })).statusCode).toBe(401);
+    expect((await inject({ url: "/api/servers" })).statusCode).toBe(401);
 
     const origin = new URL(config.githubCallbackUrl).origin;
     const invalidSocket = await app.injectWS("/ws", { headers: { cookie, origin: "https://invalid.example" } });
@@ -199,7 +205,7 @@ integration("Postgres-backed server routes", () => {
       authorId: userId,
       body: "persisted from Postgres",
     });
-    const historyResponse = await app.inject({
+    const historyResponse = await inject({
       method: "GET",
       url: `/api/channels/${channel.id}/messages`,
       headers: { cookie },
@@ -217,7 +223,7 @@ integration("Postgres-backed server routes", () => {
       expiresAt: new Date(Date.now() + 60_000),
     });
 
-    const roleResponse = await app.inject({
+    const roleResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/roles`,
       headers: { cookie },
@@ -226,7 +232,7 @@ integration("Postgres-backed server routes", () => {
     expect(roleResponse.statusCode).toBe(201);
     const role = roleResponse.json<{ id: string }>();
 
-    const memberResponse = await app.inject({
+    const memberResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/members`,
       headers: { cookie },
@@ -235,41 +241,41 @@ integration("Postgres-backed server routes", () => {
     expect(memberResponse.statusCode).toBe(201);
 
     const filesUrl = `/api/servers/${server.id}/files`;
-    const file = await app.inject({
+    const file = await inject({
       method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "src/main.ts" },
     });
     expect(file.statusCode).toBe(201);
     expect(file.json()).toMatchObject({ path: "src/main.ts" });
-    const fileList = await app.inject({ url: filesUrl, headers: { cookie } });
+    const fileList = await inject({ url: filesUrl, headers: { cookie } });
     expect(fileList.json()).toEqual([file.json()]);
     const [fileSource] = await db.select().from(knowledgeSources)
       .where(eq(knowledgeSources.sourceId, `created:${file.json<{ id: string }>().id}`));
     expect(fileSource).toMatchObject({ serverId: server.id, channelId: null, type: "file.changed" });
-    const snapshot = await app.inject({ url: `${filesUrl}/snapshot`, headers: { cookie } });
+    const snapshot = await inject({ url: `${filesUrl}/snapshot`, headers: { cookie } });
     expect(snapshot.statusCode).toBe(200);
     expect(snapshot.headers["cache-control"]).toBe("no-store");
     expect(snapshot.json()).toEqual({ serverId: server.id, files: [{ path: "src/main.ts", content: "" }] });
-    expect((await app.inject({
+    expect((await inject({
       url: `${filesUrl}/snapshot`, headers: { cookie: `session=${outsiderSecret}` },
     })).statusCode).toBe(403);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "SRC" },
     })).statusCode).toBe(409);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "../private.txt" },
     })).statusCode).toBe(400);
-    expect((await app.inject({
+    expect((await inject({
       url: filesUrl, headers: { cookie: `session=${outsiderSecret}` },
     })).statusCode).toBe(403);
 
-    const outsiderHistory = await app.inject({
+    const outsiderHistory = await inject({
       method: "GET",
       url: `/api/channels/${channel.id}/messages`,
       headers: { cookie: `session=${outsiderSecret}` },
     });
     expect(outsiderHistory.statusCode).toBe(403);
 
-    const outsiderChannel = await app.inject({
+    const outsiderChannel = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/channels`,
       headers: { cookie: `session=${outsiderSecret}` },
@@ -277,7 +283,7 @@ integration("Postgres-backed server routes", () => {
     });
     expect(outsiderChannel.statusCode).toBe(403);
 
-    const readerRoleResponse = await app.inject({
+    const readerRoleResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/roles`,
       headers: { cookie },
@@ -285,7 +291,7 @@ integration("Postgres-backed server routes", () => {
     });
     expect(readerRoleResponse.statusCode).toBe(201);
     const readerRole = readerRoleResponse.json<{ id: string }>();
-    const addReader = await app.inject({
+    const addReader = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/members`,
       headers: { cookie },
@@ -296,20 +302,39 @@ integration("Postgres-backed server routes", () => {
     const historyUrl = `/api/channels/${channel.id}/messages`;
     const restrictionsUrl = `/api/channels/${channel.id}/role-restrictions`;
     const restrictionUrl = `${restrictionsUrl}/${role.id}`;
-    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
-    expect((await app.inject({
+    expect((await inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
+    expect((await inject({
       method: "PUT", url: restrictionUrl, headers: outsiderHeaders, payload: { denied: 1 },
     })).statusCode).toBe(403);
-    expect((await app.inject({
+    expect((await inject({
       method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 8 },
     })).statusCode).toBe(400);
-    expect((await app.inject({
+    expect((await inject({
       method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 1 },
     })).statusCode).toBe(200);
-    const listed = await app.inject({ url: restrictionsUrl, headers: { cookie } });
+    const listed = await inject({ url: restrictionsUrl, headers: { cookie } });
     expect(listed.json()).toEqual([{ roleId: role.id, denied: 1 }]);
-    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(403);
-    expect((await app.inject({ url: historyUrl, headers: { cookie } })).statusCode).toBe(200);
+    expect((await inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(403);
+    expect((await inject({ url: historyUrl, headers: { cookie } })).statusCode).toBe(200);
+    const hiddenGraphSource = await storeKnowledgeEvent({
+      type: "message.posted", sourceId: "private-test-graph-message", occurredAt: new Date().toISOString(),
+      serverId: server.id, channelId: channel.id, messageId: "00000000-0000-4000-8000-000000000001",
+      author: { kind: "person", id: userId },
+    });
+    const knowledgeUrl = `/api/servers/${server.id}/knowledge`;
+    const ownerGraph = await inject({ url: knowledgeUrl, headers: { cookie } });
+    expect(ownerGraph.json()).toMatchObject({
+      sources: expect.arrayContaining([expect.objectContaining({ id: hiddenGraphSource.sourceId })]),
+    });
+    const restrictedGraph = await inject({ url: knowledgeUrl, headers: outsiderHeaders });
+    expect(restrictedGraph.statusCode).toBe(200);
+    expect(restrictedGraph.json()).toMatchObject({
+      sources: [expect.objectContaining({ channelId: null, type: "file.changed" })],
+    });
+    expect(JSON.stringify(restrictedGraph.json())).not.toContain(hiddenGraphSource.sourceId);
+    expect((await inject({
+      url: `${knowledgeUrl}?channelId=${channel.id}`, headers: outsiderHeaders,
+    })).statusCode).toBe(403);
     const restrictedSocket = await app.injectWS("/ws");
     try {
       const initialized = nextWebSocketFrame(restrictedSocket, "restricted channel listing", (frame) =>
@@ -319,12 +344,12 @@ integration("Postgres-backed server routes", () => {
     } finally {
       restrictedSocket.terminate();
     }
-    expect((await app.inject({
+    expect((await inject({
       method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 0 },
     })).statusCode).toBe(200);
-    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
+    expect((await inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
 
-    const agentResponse = await app.inject({
+    const agentResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/agents`,
       headers: { cookie },
@@ -332,7 +357,7 @@ integration("Postgres-backed server routes", () => {
     });
     expect(agentResponse.statusCode).toBe(201);
     const agent = agentResponse.json<{ id: string }>();
-    const outsiderHostResponse = await app.inject({
+    const outsiderHostResponse = await inject({
       method: "POST",
       url: "/api/hosts",
       headers: { cookie: `session=${outsiderSecret}` },
@@ -340,14 +365,14 @@ integration("Postgres-backed server routes", () => {
     });
     expect(outsiderHostResponse.statusCode).toBe(201);
     const outsiderHost = outsiderHostResponse.json<{ id: string }>();
-    const allowHostResponse = await app.inject({
+    const allowHostResponse = await inject({
       method: "POST",
       url: `/api/agents/${agent.id}/hosts`,
       headers: { cookie },
       payload: { hostId: outsiderHost.id },
     });
     expect(allowHostResponse.statusCode).toBe(201);
-    const unauthorizedAllow = await app.inject({
+    const unauthorizedAllow = await inject({
       method: "POST",
       url: `/api/agents/${agent.id}/hosts`,
       headers: { cookie: `session=${outsiderSecret}` },
@@ -363,14 +388,14 @@ integration("Postgres-backed server routes", () => {
 
   it("routes WebSocket tasks only to the registered host and persists agent replies", async () => {
     const cookie = `session=${sessionSecret}`;
-    const serverResponse = await app.inject({
+    const serverResponse = await inject({
       method: "POST",
       url: "/api/servers",
       headers: { cookie },
       payload: { name: "WebSocket integration workspace" },
     });
     const server = serverResponse.json<{ id: string }>();
-    const channelResponse = await app.inject({
+    const channelResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/channels`,
       headers: { cookie },
@@ -381,7 +406,7 @@ integration("Postgres-backed server routes", () => {
     expect(channel).toMatchObject({ kind: "text" });
     const typedChannels = [];
     for (const kind of ["voice", "task"]) {
-      const response = await app.inject({
+      const response = await inject({
         method: "POST",
         url: `/api/servers/${server.id}/channels`,
         headers: { cookie },
@@ -391,14 +416,14 @@ integration("Postgres-backed server routes", () => {
       expect(response.json()).toMatchObject({ kind });
       typedChannels.push(response.json<{ id: string; name: string; kind: string }>());
     }
-    const invalidChannel = await app.inject({
+    const invalidChannel = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/channels`,
       headers: { cookie },
       payload: { name: "invalid", kind: "video" },
     });
     expect(invalidChannel.statusCode).toBe(400);
-    const agentResponse = await app.inject({
+    const agentResponse = await inject({
       method: "POST",
       url: `/api/servers/${server.id}/agents`,
       headers: { cookie },
@@ -406,7 +431,7 @@ integration("Postgres-backed server routes", () => {
     });
     expect(agentResponse.statusCode).toBe(201);
 
-    const hostResponse = await app.inject({
+    const hostResponse = await inject({
       method: "POST",
       url: "/api/hosts",
       headers: { cookie },
@@ -533,7 +558,7 @@ integration("Postgres-backed server routes", () => {
         t: "reply", channelId: channel.id, threadId: root.id, agent: "routing-agent", text: "thread complete",
       }));
       expect(await threadedReply).toMatchObject({ t: "msg", id: expect.any(String), text: "thread complete" });
-      const threadHistory = await app.inject({
+      const threadHistory = await inject({
         url: `/api/channels/${channel.id}/messages?threadId=${root.id}`, headers: { cookie },
       });
       expect(threadHistory.statusCode).toBe(200);
@@ -543,7 +568,7 @@ integration("Postgres-backed server routes", () => {
       const oldHostClosed = new Promise<number>((resolve) => {
         hostSocket.once("close", (code) => resolve(code));
       });
-      const rotated = await app.inject({
+      const rotated = await inject({
         method: "POST",
         url: `/api/hosts/${host.id}/rotate`,
         headers: { cookie },
@@ -568,7 +593,7 @@ integration("Postgres-backed server routes", () => {
       userSocket.terminate();
     }
 
-    const history = await app.inject({
+    const history = await inject({
       method: "GET",
       url: `/api/channels/${channel.id}/messages`,
       headers: { cookie },
@@ -593,20 +618,20 @@ integration("Postgres-backed server routes", () => {
 
   it("allows one concurrent claim for an open task and restricts claims to owned agents", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
-    const workspace = await app.inject({
+    const workspace = await inject({
       method: "POST", url: "/api/servers", headers, payload: { name: "Task board test" },
     });
     expect(workspace.statusCode).toBe(201);
     const { id: serverId } = workspace.json<{ id: string }>();
-    const channelResponse = await app.inject({
+    const channelResponse = await inject({
       method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "queue", kind: "task" },
     });
     expect(channelResponse.statusCode).toBe(201);
     const { id: channelId } = channelResponse.json<{ id: string }>();
     const url = `/api/channels/${channelId}/tasks`;
-    expect((await app.inject({ url })).statusCode).toBe(401);
-    expect((await app.inject({ method: "POST", url, headers, payload: { title: " " } })).statusCode).toBe(400);
-    const posted = await app.inject({
+    expect((await inject({ url })).statusCode).toBe(401);
+    expect((await inject({ method: "POST", url, headers, payload: { title: " " } })).statusCode).toBe(400);
+    const posted = await inject({
       method: "POST", url, headers, payload: { title: "Review the docs", description: "Check task examples" },
     });
     expect(posted.statusCode).toBe(201);
@@ -615,13 +640,13 @@ integration("Postgres-backed server routes", () => {
 
     const selectedAgents = [];
     for (const name of ["reviewer-a", "reviewer-b"]) {
-      const created = await app.inject({
+      const created = await inject({
         method: "POST", url: `/api/servers/${serverId}/agents`, headers, payload: { name },
       });
       expect(created.statusCode).toBe(201);
       selectedAgents.push({ id: created.json<{ id: string }>().id, name });
     }
-    const claimants = await app.inject({ url: `${url}/claimants`, headers });
+    const claimants = await inject({ url: `${url}/claimants`, headers });
     expect(claimants.json()).toEqual(selectedAgents);
 
     const [teammate] = await db.insert(users).values({ githubId: "task-claim-test", handle: "teammate" }).returning();
@@ -630,90 +655,90 @@ integration("Postgres-backed server routes", () => {
     await db.insert(sessions).values({
       userId: teammate.id, secretHash: hashSecret(teammateSecret), expiresAt: new Date(Date.now() + 60_000),
     });
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: teammate.id },
     })).statusCode).toBe(201);
     const firstAgent = selectedAgents[0]!;
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${task.id}/claim`, headers: { cookie: `session=${teammateSecret}` },
       payload: { agentId: firstAgent.id },
     })).statusCode).toBe(403);
 
-    const claims = await Promise.all(selectedAgents.map(({ id: agentId }) => app.inject({
+    const claims = await Promise.all(selectedAgents.map(({ id: agentId }) => inject({
       method: "POST", url: `${url}/${task.id}/claim`, headers, payload: { agentId },
     })));
     expect(claims.map(({ statusCode }) => statusCode).sort()).toEqual([200, 409]);
     const winner = claims.find(({ statusCode }) => statusCode === 200)?.json<{ claimedByAgentId: string }>();
     expect(winner).toBeDefined();
-    const list = await app.inject({ url, headers });
+    const list = await inject({ url, headers });
     expect(list.json()).toEqual([expect.objectContaining({ id: task.id, ...winner, claimedAt: expect.any(String) })]);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${task.id}/claim`, headers, payload: { agentId: winner?.claimedByAgentId },
     })).statusCode).toBe(200);
     const losingAgentId = selectedAgents.find(({ id }) => id !== winner?.claimedByAgentId)?.id;
-    const duplicate = await app.inject({
+    const duplicate = await inject({
       method: "POST", url, headers, payload: { title: "  REVIEW   THE docs  " },
     });
     expect(duplicate.statusCode).toBe(201);
     expect(duplicate.json()).toMatchObject({ intent: "review the docs" });
-    const duplicateClaim = await app.inject({
+    const duplicateClaim = await inject({
       method: "POST", url: `${url}/${duplicate.json<{ id: string }>().id}/claim`, headers,
       payload: { agentId: losingAgentId },
     });
     expect(duplicateClaim.statusCode).toBe(409);
     expect(duplicateClaim.json()).toMatchObject({ error: expect.stringContaining("already working on this intent") });
 
-    const otherChannel = await app.inject({
+    const otherChannel = await inject({
       method: "POST", url: `/api/servers/${serverId}/channels`, headers,
       payload: { name: "further-work", kind: "task" },
     });
     expect(otherChannel.statusCode).toBe(201);
     const otherUrl = `/api/channels/${otherChannel.json<{ id: string }>().id}/tasks`;
-    const other = await app.inject({
+    const other = await inject({
       method: "POST", url: otherUrl, headers, payload: { title: "Cross-check the implementation", intent: "Regression checks" },
     });
     expect(other.statusCode).toBe(201);
     const otherClaimUrl = `${otherUrl}/${other.json<{ id: string }>().id}/claim`;
-    const busyClaim = await app.inject({
+    const busyClaim = await inject({
       method: "POST", url: otherClaimUrl, headers, payload: { agentId: winner?.claimedByAgentId },
     });
     expect(busyClaim.statusCode).toBe(409);
     expect(busyClaim.json()).toMatchObject({ error: expect.stringContaining("active task") });
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${task.id}/resolve`, headers, payload: { resolution: "done" },
     })).statusCode).toBe(200);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: otherClaimUrl, headers, payload: { agentId: winner?.claimedByAgentId },
     })).statusCode).toBe(200);
-    const metrics = await app.inject({ url: `${url}/metrics?days=7`, headers });
+    const metrics = await inject({ url: `${url}/metrics?days=7`, headers });
     expect(metrics.statusCode).toBe(200);
     expect(metrics.json()).toMatchObject({
       days: 7, posted: 2, open: 1, inProgress: 0, completed: 1, cancelled: 0,
       meanCompletionSeconds: expect.any(Number),
       duplicateIntentAttempts: 1, busyAgentAttempts: 0, competingClaimAttempts: 1,
     });
-    const otherMetrics = await app.inject({ url: `${otherUrl}/metrics`, headers });
+    const otherMetrics = await inject({ url: `${otherUrl}/metrics`, headers });
     expect(otherMetrics.json()).toMatchObject({
       posted: 1, inProgress: 1, completed: 0, meanCompletionSeconds: null,
       duplicateIntentAttempts: 0, busyAgentAttempts: 1, competingClaimAttempts: 0,
     });
-    expect((await app.inject({ url: `${url}/metrics?days=15`, headers })).statusCode).toBe(400);
-    expect((await app.inject({ url: `${url}/metrics` })).statusCode).toBe(401);
+    expect((await inject({ url: `${url}/metrics?days=15`, headers })).statusCode).toBe(400);
+    expect((await inject({ url: `${url}/metrics` })).statusCode).toBe(401);
   }, 30_000);
 
   it("requires the task author to approve a teammate's proposed contract", async () => {
     const authorHeaders = { cookie: `session=${sessionSecret}` };
-    const workspace = await app.inject({
+    const workspace = await inject({
       method: "POST", url: "/api/servers", headers: authorHeaders, payload: { name: "Bid approvals test" },
     });
     expect(workspace.statusCode).toBe(201);
     const { id: serverId } = workspace.json<{ id: string }>();
-    const channel = await app.inject({
+    const channel = await inject({
       method: "POST", url: `/api/servers/${serverId}/channels`, headers: authorHeaders,
       payload: { name: "contracts", kind: "task" },
     });
     const url = `/api/channels/${channel.json<{ id: string }>().id}/tasks`;
-    const posted = await app.inject({
+    const posted = await inject({
       method: "POST", url, headers: authorHeaders, payload: { title: "Write a summary" },
     });
     expect(posted.statusCode).toBe(201);
@@ -726,7 +751,7 @@ integration("Postgres-backed server routes", () => {
     await db.insert(sessions).values({
       userId: bidder.id, secretHash: hashSecret(secret), expiresAt: new Date(Date.now() + 60_000),
     });
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `/api/servers/${serverId}/members`, headers: authorHeaders, payload: { userId: bidder.id },
     })).statusCode).toBe(201);
     const bidAgents = await db.insert(agents).values([
@@ -736,38 +761,38 @@ integration("Postgres-backed server routes", () => {
     expect(bidAgents).toHaveLength(2);
 
     const bidsPath = `${url}/${taskId}/bids`;
-    const [first, second] = await Promise.all(bidAgents.map(({ id: agentId }) => app.inject({
+    const [first, second] = await Promise.all(bidAgents.map(({ id: agentId }) => inject({
       method: "POST", url: bidsPath, headers: bidderHeaders,
       payload: { agentId, plan: "Summarize the source", deliverable: "A short summary", estimatedTokens: 500 },
     })));
     expect(first?.statusCode).toBe(201);
     expect(second?.statusCode).toBe(201);
     const bids = [first!, second!].map((response) => response.json<{ id: string; agentId: string }>());
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${taskId}/claim`, headers: bidderHeaders, payload: { agentId: bids[0]!.agentId },
     })).statusCode).toBe(403);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${bidsPath}/${bids[0]!.id}/approve`, headers: bidderHeaders,
     })).statusCode).toBe(403);
 
-    const results = await Promise.all(bids.map(({ id }) => app.inject({
+    const results = await Promise.all(bids.map(({ id }) => inject({
       method: "POST", url: `${bidsPath}/${id}/approve`, headers: authorHeaders,
     })));
     expect(results.map(({ statusCode }) => statusCode).sort()).toEqual([200, 409]);
     const winnerIndex = results.findIndex(({ statusCode }) => statusCode === 200);
     const winner = bids[winnerIndex]!;
     expect(results[winnerIndex]?.json()).toMatchObject({ claimedByAgentId: winner.agentId });
-    const listed = await app.inject({ url: bidsPath, headers: authorHeaders });
+    const listed = await inject({ url: bidsPath, headers: authorHeaders });
     expect(listed.json<Array<{ approvedBy: string | null; id: string }>>().filter(({ approvedBy }) => approvedBy))
       .toEqual([expect.objectContaining({ id: winner.id, approvedBy: userId })]);
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${bidsPath}/${winner.id}/approve`, headers: authorHeaders,
     })).statusCode).toBe(200);
     const resolvePath = `${url}/${taskId}/resolve`;
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: resolvePath, headers: bidderHeaders, payload: { resolution: "cancelled" },
     })).statusCode).toBe(403);
-    const completed = await app.inject({
+    const completed = await inject({
       method: "POST", url: resolvePath, headers: bidderHeaders,
       payload: { resolution: "done", result: "Shared the completed summary." },
     });
@@ -780,25 +805,25 @@ integration("Postgres-backed server routes", () => {
       .from(knowledgeSources).where(eq(knowledgeSources.sourceId, taskId));
     expect(taskSources.map(({ type }) => type).sort()).toEqual(["task.assigned", "task.completed", "task.posted"]);
     expect(JSON.stringify(taskSources)).not.toContain("Shared the completed summary.");
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: resolvePath, headers: authorHeaders, payload: { resolution: "cancelled" },
     })).statusCode).toBe(409);
 
-    const openTask = await app.inject({
+    const openTask = await inject({
       method: "POST", url, headers: authorHeaders, payload: { title: "Cancel this request" },
     });
     expect(openTask.statusCode).toBe(201);
     const openId = openTask.json<{ id: string }>().id;
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${openId}/resolve`, headers: authorHeaders, payload: { resolution: "done" },
     })).statusCode).toBe(409);
-    const cancelled = await app.inject({
+    const cancelled = await inject({
       method: "POST", url: `${url}/${openId}/resolve`, headers: authorHeaders,
       payload: { resolution: "cancelled", result: "No longer needed." },
     });
     expect(cancelled.statusCode).toBe(200);
     expect(cancelled.json()).toMatchObject({ resolution: "cancelled", claimedByAgentId: null });
-    expect((await app.inject({
+    expect((await inject({
       method: "POST", url: `${url}/${openId}/bids`, headers: bidderHeaders,
       payload: { agentId: winner.agentId, plan: "Late work", deliverable: "A late result" },
     })).statusCode).toBe(409);
@@ -806,11 +831,11 @@ integration("Postgres-backed server routes", () => {
 
   it("stores immutable graph provenance and confines it to its workspace and channel", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
-    const workspace = await app.inject({
+    const workspace = await inject({
       method: "POST", url: "/api/servers", headers, payload: { name: "Knowledge storage test" },
     });
     const { id: serverId } = workspace.json<{ id: string }>();
-    const created = await app.inject({
+    const created = await inject({
       method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "knowledge" },
     });
     const { id: channelId } = created.json<{ id: string }>();
@@ -834,8 +859,22 @@ integration("Postgres-backed server routes", () => {
     const evidence = await db.select({ id: knowledgeEdgeSources.sourceId }).from(knowledgeEdgeSources)
       .where(eq(knowledgeEdgeSources.edgeId, edges[0]!.id));
     expect(evidence.map(({ id }) => id).sort()).toEqual([first.sourceId, second.sourceId].sort());
+    const edgeId = edges[0]!.id;
+    const visibleEdges = async () => {
+      const graph = await inject({ url: `/api/servers/${serverId}/knowledge?channelId=${channelId}`, headers });
+      expect(graph.statusCode).toBe(200);
+      return graph.json<{ edges: { id: string }[] }>().edges.map(({ id }) => id);
+    };
+    await db.update(knowledgeEdges).set({ confidence: 90 }).where(eq(knowledgeEdges.id, edgeId));
+    expect(await visibleEdges()).toContain(edgeId);
+    await db.update(knowledgeEdges).set({ confidence: 89 }).where(eq(knowledgeEdges.id, edgeId));
+    expect(await visibleEdges()).not.toContain(edgeId);
+    await db.update(knowledgeEdges).set({ confidence: 100, hasConflict: true }).where(eq(knowledgeEdges.id, edgeId));
+    expect(await visibleEdges()).not.toContain(edgeId);
+    await db.update(knowledgeEdges).set({ hasConflict: false, method: "inferred" }).where(eq(knowledgeEdges.id, edgeId));
+    expect(await visibleEdges()).not.toContain(edgeId);
 
-    const other = await app.inject({
+    const other = await inject({
       method: "POST", url: "/api/servers", headers, payload: { name: "Separate knowledge workspace" },
     });
     const otherId = other.json<{ id: string }>().id;
@@ -849,7 +888,7 @@ integration("Postgres-backed server routes", () => {
 
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
-    const hostResponse = await app.inject({
+    const hostResponse = await inject({
       method: "POST",
       url: "/api/hosts",
       headers: { cookie },
@@ -860,7 +899,7 @@ integration("Postgres-backed server routes", () => {
     const storedBeforeRotation = await db.select().from(hosts).where(eq(hosts.id, createdHost.id)).limit(1);
     expect(storedBeforeRotation[0]?.tokenHash).toBe(hashSecret(createdHost.token));
 
-    const rotationResponse = await app.inject({
+    const rotationResponse = await inject({
       method: "POST",
       url: `/api/hosts/${createdHost.id}/rotate`,
       headers: { cookie },
@@ -884,13 +923,13 @@ integration("Postgres-backed server routes", () => {
     const storedStaleHost = await db.select().from(hosts).where(eq(hosts.id, staleHost.id)).limit(1);
     expect(storedStaleHost[0]?.status).toBe("offline");
 
-    const revokeResponse = await app.inject({
+    const revokeResponse = await inject({
       method: "DELETE",
       url: `/api/hosts/${createdHost.id}`,
       headers: { cookie },
     });
     expect(revokeResponse.statusCode).toBe(200);
-    const rejectedRotation = await app.inject({
+    const rejectedRotation = await inject({
       method: "POST",
       url: `/api/hosts/${createdHost.id}/rotate`,
       headers: { cookie },

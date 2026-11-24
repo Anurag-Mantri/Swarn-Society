@@ -67,5 +67,5 @@ a.primary { display: inline-block; }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
 }
 
-.workspace-view { display: flex; gap: .4rem; }
+.workspace-view { display: flex; flex-wrap: wrap; gap: .4rem; }
 .workspace-view button[aria-pressed="true"] { background: var(--active); }

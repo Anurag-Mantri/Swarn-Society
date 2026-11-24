@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { errorSchema, initSchema, messageSchema } from '@swarmroom/protocol';
+  import KnowledgeOverview from '$lib/KnowledgeOverview.svelte';
   import TaskBoard from '$lib/TaskBoard.svelte';
   import WorkspaceFiles from '$lib/WorkspaceFiles.svelte';
   import Conversation from '$lib/Conversation.svelte';
@@ -12,7 +13,7 @@
   let workspaces = $state<Workspace[]>([]);
   let channels = $state<Channel[]>([]);
   let workspaceId = $state('');
-  let view = $state<'chat' | 'files' | 'tasks'>('chat');
+  let view = $state<'chat' | 'files' | 'tasks' | 'knowledge'>('chat');
   let channelId = $state('');
   let messages = $state<Message[]>([]);
   let root = $state<Message | null>(null);
@@ -246,6 +247,7 @@
             <button type="button" aria-pressed={view === 'tasks'} onclick={() => { view = 'tasks'; }}>Tasks</button>
           {/if}
           <button type="button" aria-pressed={view === 'files'} onclick={() => { view = 'files'; }}>Files</button>
+          <button type="button" aria-pressed={view === 'knowledge'} onclick={() => { view = 'knowledge'; }}>Knowledge</button>
         </div>
         <nav aria-label="Channels">
           <h2>Channels</h2>
@@ -281,7 +283,9 @@
         {#if status === 'disconnected'}<button type="button" onclick={connect}>Reconnect</button>{/if}
       </div>
       {#if error}<div class="alert" role="alert">{error}</div>{/if}
-      {#if workspace && view === 'files'}
+      {#if workspace && view === 'knowledge'}
+        {#key workspaceId}<KnowledgeOverview {workspace} channels={availableChannels} {profile} />{/key}
+      {:else if workspace && view === 'files'}
         {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} canExport={workspace.ownerId === profile.id} />{/key}
       {:else if view === 'tasks' && channel?.kind === 'task'}
         {#key channelId}<TaskBoard {channelId} name={channel.name} currentUser={profile.id} />{/key}

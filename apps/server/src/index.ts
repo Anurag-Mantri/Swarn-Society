@@ -27,6 +27,7 @@ import { allPermissions, defaultMemberPermissions, permissions } from "./permiss
 import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
 import { storeMessage } from "./messages/storage.js";
 import { threadRootExists } from "./message-threads.js";
+import { knowledgeOverviewRoutes } from "./routes/knowledge-overview.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
 import { workspaceCollaborationRoutes } from "./routes/workspace-collaboration.js";
@@ -53,6 +54,7 @@ await app.register(websocket, {
 });
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
+await app.register(knowledgeOverviewRoutes);
 await app.register(workspaceDirectoryRoutes);
 await app.register(workspaceFileRoutes);
 await app.register(taskPostRoutes);
