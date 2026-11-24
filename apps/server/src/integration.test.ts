@@ -19,12 +19,22 @@ function connectWebSocket(url: string): Promise<WebSocket> {
   });
 }
 
-function nextWebSocketFrame(socket: WebSocket, matches: (frame: unknown) => boolean): Promise<unknown> {
+function nextWebSocketFrame(
+  socket: WebSocket,
+  description: string,
+  matches: (frame: unknown) => boolean,
+): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timed out waiting for ${description}; received ${JSON.stringify(received)}`));
+    }, 10_000);
+    const received: unknown[] = [];
+    const cleanup = () => {
+      clearTimeout(timeout);
       socket.off("message", onMessage);
-      reject(new Error("Timed out waiting for a WebSocket frame"));
-    }, 5000);
+      socket.off("close", onClose);
+    };
     const onMessage = (raw: RawData) => {
       let frame: unknown;
       try {
@@ -32,12 +42,17 @@ function nextWebSocketFrame(socket: WebSocket, matches: (frame: unknown) => bool
       } catch {
         return;
       }
+      received.push(frame);
       if (!matches(frame)) return;
-      clearTimeout(timeout);
-      socket.off("message", onMessage);
+      cleanup();
       resolve(frame);
     };
+    const onClose = (code: number, reason: Buffer) => {
+      cleanup();
+      reject(new Error(`WebSocket closed before ${description}: ${code} ${reason.toString()}`));
+    };
     socket.on("message", onMessage);
+    socket.once("close", onClose);
   });
 }
 
@@ -130,7 +145,7 @@ integration("Postgres-backed server routes", () => {
     expect(persistedUser).toHaveLength(1);
     const persistedSession = await db.select().from(sessions).where(eq(sessions.userId, persistedUser[0]!.id)).limit(1);
     expect(persistedSession[0]?.secretHash).not.toContain("mock-provider-token");
-  });
+  }, 30_000);
 
   it("creates a server and channel, then reads persisted messages only for members", async () => {
     const cookie = `session=${sessionSecret}`;
@@ -208,11 +223,42 @@ integration("Postgres-backed server routes", () => {
     });
     expect(outsiderChannel.statusCode).toBe(403);
 
+    const agentResponse = await app.inject({
+      method: "POST",
+      url: `/api/servers/${server.id}/agents`,
+      headers: { cookie },
+      payload: { name: "shared-agent" },
+    });
+    expect(agentResponse.statusCode).toBe(201);
+    const agent = agentResponse.json<{ id: string }>();
+    const outsiderHostResponse = await app.inject({
+      method: "POST",
+      url: "/api/hosts",
+      headers: { cookie: `session=${outsiderSecret}` },
+      payload: { machine: "outsider host" },
+    });
+    expect(outsiderHostResponse.statusCode).toBe(201);
+    const outsiderHost = outsiderHostResponse.json<{ id: string }>();
+    const allowHostResponse = await app.inject({
+      method: "POST",
+      url: `/api/agents/${agent.id}/hosts`,
+      headers: { cookie },
+      payload: { hostId: outsiderHost.id },
+    });
+    expect(allowHostResponse.statusCode).toBe(201);
+    const unauthorizedAllow = await app.inject({
+      method: "POST",
+      url: `/api/agents/${agent.id}/hosts`,
+      headers: { cookie: `session=${outsiderSecret}` },
+      payload: { hostId: outsiderHost.id },
+    });
+    expect(unauthorizedAllow.statusCode).toBe(403);
+
     const membership = await db.select().from(members)
       .where(and(eq(members.serverId, server.id), eq(members.userId, userId)));
     expect(membership).toHaveLength(1);
     expect((await db.select().from(channels).where(eq(channels.id, channel.id))).length).toBe(1);
-  });
+  }, 30_000);
 
   it("routes WebSocket tasks only to the registered host and persists agent replies", async () => {
     const cookie = `session=${sessionSecret}`;
@@ -245,15 +291,17 @@ integration("Postgres-backed server routes", () => {
       payload: { machine: "routing test host" },
     });
     const host = hostResponse.json<{ id: string; token: string }>();
+    const hostSockets: WebSocket[] = [];
 
     await app.listen({ port: 0, host: "127.0.0.1" });
     const address = app.server.address();
     if (!address || typeof address === "string") throw new Error("Could not read test server address");
     const url = `ws://127.0.0.1:${address.port}/ws`;
     const hostSocket = await connectWebSocket(url);
+    hostSockets.push(hostSocket);
     const userSocket = await connectWebSocket(url);
     try {
-      const registered = nextWebSocketFrame(hostSocket, (frame) =>
+      const registered = nextWebSocketFrame(hostSocket, "host registration", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host.registered");
       hostSocket.send(JSON.stringify({
         t: "host",
@@ -263,12 +311,12 @@ integration("Postgres-backed server routes", () => {
       }));
       expect(await registered).toMatchObject({ t: "host.registered", hostId: host.id });
 
-      const initialized = nextWebSocketFrame(userSocket, (frame) =>
+      const initialized = nextWebSocketFrame(userSocket, "user initialization", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "init");
       userSocket.send(JSON.stringify({ t: "hello", session: sessionSecret }));
       expect(await initialized).toMatchObject({ t: "init" });
 
-      const task = nextWebSocketFrame(hostSocket, (frame) =>
+      const task = nextWebSocketFrame(hostSocket, "agent task", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "task");
       userSocket.send(JSON.stringify({ t: "msg", channelId: channel.id, text: "@routing-agent inspect this" }));
       expect(await task).toMatchObject({
@@ -277,12 +325,36 @@ integration("Postgres-backed server routes", () => {
         agent: "routing-agent",
       });
 
-      const reply = nextWebSocketFrame(userSocket, (frame) =>
+      const reply = nextWebSocketFrame(userSocket, "agent reply", (frame) =>
         typeof frame === "object" && frame !== null && "t" in frame && frame.t === "msg" && "kind" in frame && frame.kind === "agent");
       userSocket.send(JSON.stringify({ t: "reply", channelId: channel.id, agent: "routing-agent", text: "completed" }));
       expect(await reply).toMatchObject({ t: "msg", text: "completed", from: "routing-agent", kind: "agent" });
+
+      const oldHostClosed = new Promise<number>((resolve) => {
+        hostSocket.once("close", (code) => resolve(code));
+      });
+      const rotated = await app.inject({
+        method: "POST",
+        url: `/api/hosts/${host.id}/rotate`,
+        headers: { cookie },
+      });
+      expect(rotated.statusCode).toBe(200);
+      const replacement = rotated.json<{ token: string }>();
+      expect(await oldHostClosed).toBe(1008);
+
+      const replacementSocket = await connectWebSocket(url);
+      hostSockets.push(replacementSocket);
+      const replacementRegistered = nextWebSocketFrame(replacementSocket, "rotated host registration", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host.registered");
+      replacementSocket.send(JSON.stringify({
+        t: "host",
+        token: replacement.token,
+        machine: "routing test host",
+        agents: ["routing-agent"],
+      }));
+      expect(await replacementRegistered).toMatchObject({ t: "host.registered", hostId: host.id });
     } finally {
-      hostSocket.terminate();
+      for (const socket of hostSockets) socket.terminate();
       userSocket.terminate();
     }
 
@@ -297,7 +369,7 @@ integration("Postgres-backed server routes", () => {
       expect.objectContaining({ authorKind: "user", body: "@routing-agent inspect this" }),
       expect.objectContaining({ authorKind: "agent", body: "completed" }),
     ]));
-  });
+  }, 30_000);
 
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
@@ -348,5 +420,5 @@ integration("Postgres-backed server routes", () => {
       headers: { cookie },
     });
     expect(rejectedRotation.statusCode).toBe(409);
-  });
+  }, 30_000);
 });
