@@ -2,6 +2,14 @@ import { z } from "zod";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
+export const channelKindSchema = z.enum(["text", "voice", "task"]);
+export type ChannelKind = z.infer<typeof channelKindSchema>;
+
+export const createChannelSchema = z.object({
+  name: z.string().trim().min(1),
+  kind: channelKindSchema.default("text"),
+}).strict();
+
 export const helloSchema = z.object({
   t: z.literal("hello"),
   session: text(512),
@@ -56,6 +64,7 @@ export const initSchema = z.object({
   channels: z.array(z.object({
     id: z.string(),
     name: z.string(),
+    kind: channelKindSchema.default("text"),
   })),
   agents: z.array(z.object({
     name: z.string(),

@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { hostClientFrameSchema, hostSchema, hostServerFrameSchema, inboundFrameSchema, messageSchema } from "./index.js";
+import { hostClientFrameSchema, hostSchema, hostServerFrameSchema, inboundFrameSchema, initSchema, messageSchema } from "./index.js";
 
 describe("protocol", () => {
+  it("reads older channel listings as text and preserves explicit kinds", () => {
+    const init = initSchema.parse({
+      t: "init",
+      channels: [{ id: "old", name: "General" }, { id: "new", name: "Tasks", kind: "task" }],
+      agents: [],
+    });
+    expect(init.channels.map(({ kind }) => kind)).toEqual(["text", "task"]);
+  });
+
   it("accepts valid messages", () => {
     expect(messageSchema.parse({
       t: "msg",

@@ -1,0 +1,1 @@
+ALTER TABLE "channels" ADD CONSTRAINT "channels_kind_valid" CHECK ("channels"."kind" in ('text', 'voice', 'task'));
