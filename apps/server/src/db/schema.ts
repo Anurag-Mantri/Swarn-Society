@@ -69,6 +69,7 @@ export const channels = pgTable("channels", {
   kind: text("kind").$type<ChannelKind>().notNull().default("text"),
   position: integer("position").notNull().default(0),
 }, (table) => [
+  unique("channels_server_id_id_unique").on(table.serverId, table.id),
   check("channels_kind_valid", sql`${table.kind} in ('text', 'voice', 'task')`),
 ]);
 

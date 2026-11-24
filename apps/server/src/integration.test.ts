@@ -7,6 +7,8 @@ import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
 import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
+import { knowledgeEdges, knowledgeEdgeSources, knowledgeSources } from "./db/knowledge-schema.js";
+import { storeKnowledgeEvent } from "./knowledge/storage.js";
 import { hashSecret } from "./security.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -784,6 +786,49 @@ integration("Postgres-backed server routes", () => {
       method: "POST", url: `${url}/${openId}/bids`, headers: bidderHeaders,
       payload: { agentId: winner.agentId, plan: "Late work", deliverable: "A late result" },
     })).statusCode).toBe(409);
+  }, 30_000);
+
+  it("stores immutable graph provenance and confines it to its workspace and channel", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await app.inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Knowledge storage test" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const created = await app.inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "knowledge" },
+    });
+    const { id: channelId } = created.json<{ id: string }>();
+    const event = {
+      type: "task.assigned", sourceId: "assignment:1", occurredAt: "2026-11-24T10:00:00Z",
+      serverId, channelId, assignedBy: userId,
+      taskId: "00000000-0000-4000-8000-000000000001",
+      agentId: "00000000-0000-4000-8000-000000000002",
+    };
+    const first = await storeKnowledgeEvent(event);
+    expect(first.inserted).toBe(true);
+    await expect(storeKnowledgeEvent(event)).resolves.toEqual({ sourceId: first.sourceId, inserted: false });
+    await expect(storeKnowledgeEvent({ ...event, agentId: "00000000-0000-4000-8000-000000000003" }))
+      .rejects.toThrow("identity already belongs");
+    const second = await storeKnowledgeEvent({ ...event, sourceId: "assignment:2" });
+    expect(second.inserted).toBe(true);
+    const edges = await db.select().from(knowledgeEdges).where(and(
+      eq(knowledgeEdges.serverId, serverId), eq(knowledgeEdges.relation, "assigned_to"),
+    ));
+    expect(edges).toHaveLength(1);
+    const evidence = await db.select({ id: knowledgeEdgeSources.sourceId }).from(knowledgeEdgeSources)
+      .where(eq(knowledgeEdgeSources.edgeId, edges[0]!.id));
+    expect(evidence.map(({ id }) => id).sort()).toEqual([first.sourceId, second.sourceId].sort());
+
+    const other = await app.inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Separate knowledge workspace" },
+    });
+    const otherId = other.json<{ id: string }>().id;
+    await expect(storeKnowledgeEvent({ ...event, serverId: otherId })).rejects.toThrow();
+    expect(await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, otherId))).toHaveLength(0);
+
+    await db.delete(channels).where(eq(channels.id, channelId));
+    expect(await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, serverId))).toHaveLength(0);
+    expect(await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, edges[0]!.id))).toHaveLength(0);
   }, 30_000);
 
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {

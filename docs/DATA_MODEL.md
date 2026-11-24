@@ -65,8 +65,9 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 |---|---|---|
 | `knowledge_nodes` | id, server_id, kind, label, canonical_key?, confidence | kinds: person, agent, task, decision, file, channel, team, event |
 | `knowledge_edges` | id, server_id, from_node_id, to_node_id, relation, confidence, method | `method`: deterministic or inferred |
-| `knowledge_sources` | id, node_id or edge_id, source_type, source_id, evidence | Provenance for every fact |
-| `knowledge_reviews` | id, target_kind, target_id, reviewer_id, decision, reason | Approval or rejection of low-confidence relationships |
+| `knowledge_sources` | id, server_id, channel_id?, source_type, source_id, structured event, method, occurred_at, extracted_at | Immutable source identifiers |
+| `knowledge_node_sources`, `knowledge_edge_sources` | server_id, fact ID, source ID | Many sources can support a fact. Composite foreign keys keep the fact and source in the same workspace. |
+| `knowledge_reviews` | id, server_id, edge_id, reviewer_id, decision, reason, reviewed_at | Approval or rejection of low-confidence relationships |
 
 Deterministic edges require no model call and must include an attributable source. AI-created edges remain pending below the configured confidence threshold.
 

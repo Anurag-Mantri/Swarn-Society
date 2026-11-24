@@ -224,6 +224,9 @@ importers:
       '@hocuspocus/server':
         specifier: ^4.9.0
         version: 4.9.0(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
+      '@swarmroom/knowledge-graph':
+        specifier: workspace:*
+        version: link:../../packages/knowledge-graph
       '@swarmroom/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol

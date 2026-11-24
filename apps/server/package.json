@@ -18,6 +18,7 @@
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/websocket": "^11.2.0",
     "@hocuspocus/server": "^4.9.0",
+    "@swarmroom/knowledge-graph": "workspace:*",
     "@swarmroom/protocol": "workspace:*",
     "drizzle-orm": "^0.44.3",
     "fastify": "^5.4.0",
