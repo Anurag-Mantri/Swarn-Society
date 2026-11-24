@@ -15,6 +15,8 @@ Statuses shown in the UI: idle, thinking, working, blocked (waiting on approval)
 5. The reply is tagged with the host machine so people know where it ran.
 If no host is online the server posts a system message naming the agent and its host.
 
+The first TypeScript runtime accepts one validated task on stdin and reads its provider/model/system prompt from an image-baked config at `/etc/swarmroom/agent.json`. It has no shell or workspace tools. Model calls go through the task-scoped host broker; the API key is never present in the container. Add tools only with explicit per-agent permissions, sandbox APIs and host-owner approval for high-risk actions.
+
 ## Budgets
 Per-requester token limits (hour/day/task) enforced by the daemon. The owner is exempt. When exhausted the agent replies that the budget is used up and who can raise it. Usage is reported to the server for display only; the host is the authority.
 

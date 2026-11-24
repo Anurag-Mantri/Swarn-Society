@@ -122,3 +122,10 @@ Date: 2026-11-24
 Context: Sandboxed agents need model API access without receiving host credentials or general network access.
 Decision: Mount a unique Unix socket for each Podman task. The daemon accepts only fixed OpenAI Responses, OpenAI Chat Completions and Anthropic Messages routes, injects the agent's key from the OS keychain, and enforces request, response, concurrency, timeout and output-token limits. The broker does not accept arbitrary URLs, headers, redirects or streaming requests.
 Consequences: Agent images need a small client for this socket contract. Provider and tool policy remains in the runtime; the broker only constrains egress and credential handling.
+
+### D-020: Initial agent runtime has no tools
+Status: Accepted
+Date: 2026-11-24
+Context: The message protocol carries task text but not a validated agent definition or tool permission manifest.
+Decision: The initial TypeScript runtime reads a fixed, image-baked config, sends one task to a configured model through the host broker, and returns text. It does not execute commands, access workspace tools, or load config paths from task content.
+Consequences: Runtime images are agent-specific until the control plane delivers a validated agent definition. Add tool execution only after permissions, host approval and audit boundaries are implemented.

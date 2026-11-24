@@ -183,6 +183,62 @@
       "sourceLocation": "packages/protocol/src/index.test.ts:1"
     },
     {
+      "id": "daemon::file::agent_runtime_cli",
+      "label": "agent-runtime-cli.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime-cli.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime-cli.ts:1"
+    },
+    {
+      "id": "daemon::file::agent_runtime",
+      "label": "agent-runtime.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:1"
+    },
+    {
+      "id": "daemon::agent_runtime::extracttext",
+      "label": "extractText",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:38"
+    },
+    {
+      "id": "daemon::agent_runtime::loadagentruntimeconfig",
+      "label": "loadAgentRuntimeConfig",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:60"
+    },
+    {
+      "id": "daemon::agent_runtime::runagenttask",
+      "label": "runAgentTask",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:75"
+    },
+    {
+      "id": "daemon::agent_runtime::readtaskinput",
+      "label": "readTaskInput",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:121"
+    },
+    {
+      "id": "daemon::agent_runtime::runagentruntime",
+      "label": "runAgentRuntime",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.ts:139"
+    },
+    {
+      "id": "daemon::file::agent_runtime_test",
+      "label": "agent-runtime.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/agent-runtime.test.ts",
+      "sourceLocation": "apps/daemon/src/agent-runtime.test.ts:1"
+    },
+    {
       "id": "daemon::file::audit_log",
       "label": "audit-log.ts",
       "fileType": "code",
@@ -470,6 +526,20 @@
       "sourceLocation": "apps/daemon/src/main.ts:10"
     },
     {
+      "id": "daemon::file::provider_broker_client",
+      "label": "provider-broker-client.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:1"
+    },
+    {
+      "id": "daemon::provider_broker_client::requestprovider",
+      "label": "requestProvider",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:16"
+    },
+    {
       "id": "daemon::file::provider_broker",
       "label": "provider-broker.ts",
       "fileType": "code",
@@ -748,20 +818,6 @@
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.test.ts",
       "sourceLocation": "apps/daemon/src/sandbox/runner.test.ts:1"
-    },
-    {
-      "id": "daemon::file::provider_broker_client",
-      "label": "provider-broker-client.ts",
-      "fileType": "code",
-      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:1"
-    },
-    {
-      "id": "daemon::provider_broker_client::requestprovider",
-      "label": "requestProvider",
-      "fileType": "code",
-      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:16"
     }
   ],
   "edges": [
@@ -889,6 +945,51 @@
       "confidence": "EXTRACTED",
       "sourceFile": "packages/protocol/src/index.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/packages/protocol/dist/index.js:2",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::agent_runtime",
+      "target": "daemon::agent_runtime::extracttext",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/agent-runtime.js",
+      "sourceLocation": "apps/daemon/dist/agent-runtime.js:29",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::agent_runtime",
+      "target": "daemon::agent_runtime::loadagentruntimeconfig",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/agent-runtime.js",
+      "sourceLocation": "apps/daemon/dist/agent-runtime.js:55",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::agent_runtime",
+      "target": "daemon::agent_runtime::runagenttask",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/agent-runtime.js",
+      "sourceLocation": "apps/daemon/dist/agent-runtime.js:70",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::agent_runtime",
+      "target": "daemon::agent_runtime::readtaskinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/agent-runtime.js",
+      "sourceLocation": "apps/daemon/dist/agent-runtime.js:115",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::agent_runtime",
+      "target": "daemon::agent_runtime::runagentruntime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/agent-runtime.js",
+      "sourceLocation": "apps/daemon/dist/agent-runtime.js:134",
       "weight": 1
     },
     {
@@ -1180,6 +1281,15 @@
       "weight": 1
     },
     {
+      "source": "daemon::file::provider_broker_client",
+      "target": "daemon::provider_broker_client::requestprovider",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker-client.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker-client.js:9",
+      "weight": 1
+    },
+    {
       "source": "daemon::file::provider_broker",
       "target": "daemon::provider_broker::brokererror",
       "relation": "contains",
@@ -1275,7 +1385,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:6",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:7",
       "weight": 1
     },
     {
@@ -1284,7 +1394,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:8",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:9",
       "weight": 1
     },
     {
@@ -1293,7 +1403,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:11",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:12",
       "weight": 1
     },
     {
@@ -1302,7 +1412,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:12",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:13",
       "weight": 1
     },
     {
@@ -1311,7 +1421,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:13",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:14",
       "weight": 1
     },
     {
@@ -1320,7 +1430,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:15",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:16",
       "weight": 1
     },
     {
@@ -1329,7 +1439,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.test.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:26",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:27",
       "weight": 1
     },
     {
@@ -1484,21 +1594,12 @@
       "sourceFile": "apps/daemon/dist/sandbox/runner.js",
       "sourceLocation": "apps/daemon/dist/sandbox/runner.js:6",
       "weight": 1
-    },
-    {
-      "source": "daemon::file::provider_broker_client",
-      "target": "daemon::provider_broker_client::requestprovider",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:16",
-      "weight": 1
     }
   ],
   "metadata": {
-    "files": 52,
-    "nodes": 109,
-    "edges": 81,
-    "builtAt": "2026-11-24T02:31:53.866Z"
+    "files": 31,
+    "nodes": 117,
+    "edges": 86,
+    "builtAt": "2026-11-24T18:13:00.970Z"
   }
 }
