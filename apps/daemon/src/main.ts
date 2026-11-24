@@ -3,6 +3,7 @@ import { loadDaemonConfig, loadSandboxConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
 import { SandboxRunner } from "./sandbox/runner.js";
 import { createPodmanSandboxBackend } from "./sandbox/podman.js";
+import { LocalAuditLog } from "./audit-log.js";
 
 async function main(): Promise<void> {
   const config = loadDaemonConfig(process.env);
@@ -12,7 +13,7 @@ async function main(): Promise<void> {
 
   const sandboxConfig = loadSandboxConfig(process.env, config.agents);
   const sandbox = sandboxConfig ? await createPodmanSandboxBackend(sandboxConfig) : undefined;
-  const client = new HostClient(config, token, new SandboxRunner(sandbox));
+  const client = new HostClient(config, token, new SandboxRunner(sandbox), new LocalAuditLog());
   const stop = () => client.stop();
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);

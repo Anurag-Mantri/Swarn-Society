@@ -1,14 +1,19 @@
 import { once } from "node:events";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import WebSocket, { WebSocketServer } from "ws";
 import type { DaemonConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
 import { SandboxRunner } from "./sandbox/runner.js";
+import { LocalAuditLog } from "./audit-log.js";
 
 describe("host client", () => {
   it("authenticates, sends tasks to the sandbox runner, and returns replies", async () => {
     const server = new WebSocketServer({ port: 0 });
     await once(server, "listening");
+    const auditDirectory = await mkdtemp(join(tmpdir(), "swarmroom-host-test-"));
     const address = server.address();
     if (!address || typeof address === "string") throw new Error("Test server did not bind a TCP port.");
 
@@ -38,7 +43,12 @@ describe("host client", () => {
       machine: "test machine",
       agents: ["scout"],
     };
-    const client = new HostClient(config, "host-token", new SandboxRunner({ run }));
+    const client = new HostClient(
+      config,
+      "host-token",
+      new SandboxRunner({ run }),
+      new LocalAuditLog(join(auditDirectory, "audit.jsonl")),
+    );
     const started = client.start();
 
     try {
@@ -50,10 +60,15 @@ describe("host client", () => {
         { t: "task", channelId: "channel-1", from: "user-1", agent: "scout", text: "inspect this" },
         expect.any(AbortSignal),
       );
+      const audit = await readFile(join(auditDirectory, "audit.jsonl"), "utf8");
+      expect(audit).toContain('"t":"task.started"');
+      expect(audit).toContain('"t":"task.succeeded"');
+      expect(audit).not.toContain("inspect this");
     } finally {
       client.stop();
       await started;
       await new Promise<void>((resolve) => server.close(() => resolve()));
+      await rm(auditDirectory, { recursive: true, force: true });
     }
   });
 });

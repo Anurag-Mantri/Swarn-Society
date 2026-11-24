@@ -2,6 +2,7 @@ import { hostClientFrameSchema, hostServerFrameSchema, type HostServerFrame, typ
 import WebSocket from "ws";
 import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
+import type { AuditLogger } from "./audit-log.js";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
 const RECONNECT_MIN_MS = 1_000;
@@ -17,6 +18,7 @@ export class HostClient {
     private readonly config: DaemonConfig,
     private readonly token: string,
     private readonly runner: SandboxRunner,
+    private readonly audit: AuditLogger,
   ) {}
 
   async start(): Promise<void> {
@@ -96,9 +98,20 @@ export class HostClient {
   private async handleTask(task: Task): Promise<void> {
     const controller = new AbortController();
     let text: string;
+    let started = false;
     try {
+      await this.audit.recordTask(task, "task.started");
+      started = true;
       text = await this.runner.run(task, controller.signal);
+      await this.audit.recordTask(task, "task.succeeded");
     } catch {
+      if (started) {
+        try {
+          await this.audit.recordTask(task, "task.failed");
+        } catch {
+          // Do not expose local audit storage errors to other users.
+        }
+      }
       text = "Task could not be completed in the host sandbox.";
     }
     this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text });
