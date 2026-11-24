@@ -66,6 +66,18 @@ export const errorSchema = z.object({
   message: text(1000),
 }).strict();
 
+export const hostClientFrameSchema = z.discriminatedUnion("t", [
+  hostSchema,
+  hostHeartbeatSchema,
+  replySchema,
+]);
+
+export const hostServerFrameSchema = z.discriminatedUnion("t", [
+  taskSchema,
+  hostRegisteredSchema,
+  errorSchema,
+]);
+
 export const inboundFrameSchema = z.discriminatedUnion("t", [
   helloSchema,
   hostSchema,
@@ -83,3 +95,5 @@ export type Task = z.infer<typeof taskSchema>;
 export type Init = z.infer<typeof initSchema>;
 export type HostRegistered = z.infer<typeof hostRegisteredSchema>;
 export type ErrorFrame = z.infer<typeof errorSchema>;
+export type HostClientFrame = z.infer<typeof hostClientFrameSchema>;
+export type HostServerFrame = z.infer<typeof hostServerFrameSchema>;

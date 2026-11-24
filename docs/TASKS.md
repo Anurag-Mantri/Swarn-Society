@@ -20,8 +20,9 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Mark hosts offline after missed heartbeat deadlines.
 - [x] Require both agent-owner authorization and host registration consent before cross-user routing.
 - [x] Add CI for install, typecheck, Postgres integration tests and build.
-- [ ] Port the daemon to TypeScript.
-- [ ] Store API keys and environment variables only in the OS keychain.
+- [x] Add a TypeScript host transport with OS keychain token lookup.
+- [ ] Port the agent runtime daemon to TypeScript.
+- [ ] Store provider API keys and runtime environment variables only in the OS keychain.
 - [ ] Add the sandbox module, egress allowlist and resource limits.
 - [ ] Persist per-requester token budgets on the host.
 - [ ] Add action approvals and a local audit log.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inboundFrameSchema, hostSchema, messageSchema } from "./index.js";
+import { hostClientFrameSchema, hostSchema, hostServerFrameSchema, inboundFrameSchema, messageSchema } from "./index.js";
 
 describe("protocol", () => {
   it("accepts valid messages", () => {
@@ -24,5 +24,19 @@ describe("protocol", () => {
     expect(() => inboundFrameSchema.parse({
       t: "unknown",
     })).toThrow();
+  });
+
+  it("validates host-only frames in both directions", () => {
+    expect(hostClientFrameSchema.parse({
+      t: "host.heartbeat",
+    })).toEqual({ t: "host.heartbeat" });
+    expect(hostServerFrameSchema.parse({
+      t: "task",
+      channelId: "channel-1",
+      from: "user-1",
+      agent: "scout",
+      text: "inspect this",
+    }).t).toBe("task");
+    expect(() => hostClientFrameSchema.parse({ t: "msg", channelId: "channel-1", text: "hello" })).toThrow();
   });
 });
