@@ -52,6 +52,8 @@ The server accepts usage reports only when the host is registered and enabled fo
 
 `POST /api/servers/:serverId/channels` accepts a nonempty trimmed name and an optional `kind` that defaults to `text`. Creating a channel requires the server's manage-channels permission. All three kinds support messages under the existing permissions. Voice sessions and task workflows are planned separately.
 
+`GET /api/channels/:channelId/role-restrictions` lists restrictions as `{roleId, denied}` records. `PUT /api/channels/:channelId/role-restrictions/:roleId` accepts `{denied}`, with bits 1 for read, 2 for send and 4 for invoking agents. A zero mask removes the restriction. Both routes require server permissions to manage roles and channels. The role must belong to the same server as the channel.
+
 ## Planned additions
 | `t` | Direction | Purpose |
 |---|---|---|

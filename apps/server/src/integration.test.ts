@@ -223,6 +223,53 @@ integration("Postgres-backed server routes", () => {
     });
     expect(outsiderChannel.statusCode).toBe(403);
 
+    const readerRoleResponse = await app.inject({
+      method: "POST",
+      url: `/api/servers/${server.id}/roles`,
+      headers: { cookie },
+      payload: { name: "Reader", permissions: 1 },
+    });
+    expect(readerRoleResponse.statusCode).toBe(201);
+    const readerRole = readerRoleResponse.json<{ id: string }>();
+    const addReader = await app.inject({
+      method: "POST",
+      url: `/api/servers/${server.id}/members`,
+      headers: { cookie },
+      payload: { userId: outsider.id, roleId: readerRole.id },
+    });
+    expect(addReader.statusCode).toBe(201);
+    const outsiderHeaders = { cookie: `session=${outsiderSecret}` };
+    const historyUrl = `/api/channels/${channel.id}/messages`;
+    const restrictionsUrl = `/api/channels/${channel.id}/role-restrictions`;
+    const restrictionUrl = `${restrictionsUrl}/${role.id}`;
+    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
+    expect((await app.inject({
+      method: "PUT", url: restrictionUrl, headers: outsiderHeaders, payload: { denied: 1 },
+    })).statusCode).toBe(403);
+    expect((await app.inject({
+      method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 8 },
+    })).statusCode).toBe(400);
+    expect((await app.inject({
+      method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 1 },
+    })).statusCode).toBe(200);
+    const listed = await app.inject({ url: restrictionsUrl, headers: { cookie } });
+    expect(listed.json()).toEqual([{ roleId: role.id, denied: 1 }]);
+    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(403);
+    expect((await app.inject({ url: historyUrl, headers: { cookie } })).statusCode).toBe(200);
+    const restrictedSocket = await app.injectWS("/ws");
+    try {
+      const initialized = nextWebSocketFrame(restrictedSocket, "restricted channel listing", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "init");
+      restrictedSocket.send(JSON.stringify({ t: "hello", session: outsiderSecret }));
+      expect(await initialized).toMatchObject({ t: "init", channels: [] });
+    } finally {
+      restrictedSocket.terminate();
+    }
+    expect((await app.inject({
+      method: "PUT", url: restrictionUrl, headers: { cookie }, payload: { denied: 0 },
+    })).statusCode).toBe(200);
+    expect((await app.inject({ url: historyUrl, headers: outsiderHeaders })).statusCode).toBe(200);
+
     const agentResponse = await app.inject({
       method: "POST",
       url: `/api/servers/${server.id}/agents`,

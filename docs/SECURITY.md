@@ -31,6 +31,7 @@ Agents execute code on people's personal computers, triggered by other people's 
 5. Rate-limit connections and messages; cap payload sizes.
 6. Never store API keys, env variables or model credentials.
 7. An agent owner must authorize another host, and the host daemon must list the agent when it registers. Hosts can run only agents whose server still includes the host owner.
+8. Apply channel role restrictions to history, WebSocket channel listings and broadcasts, message sends, and agent invocation. A host owner must be able to read a channel before receiving its task prompts. Check host-owner access again when accepting replies and usage reports.
 
 ## Rules for the GitHub sync
 - Push only to the dedicated sync branch; hard-block `main` and protected branches in code, not just by convention.

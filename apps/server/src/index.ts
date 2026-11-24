@@ -24,7 +24,9 @@ import {
   users,
   servers,
 } from "./db/schema.js";
-import { allPermissions, defaultMemberPermissions, includesPermission, permissions } from "./permissions.js";
+import { allPermissions, defaultMemberPermissions, permissions } from "./permissions.js";
+import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
+import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
@@ -40,6 +42,7 @@ await app.register(rateLimit, {
 await app.register(websocket, {
   options: { maxPayload: 16 * 1024 },
 });
+await app.register(channelRestrictionRoutes);
 
 type HostConnection = {
   socket: WebSocket;
@@ -93,29 +96,6 @@ const hostAssignmentInputSchema = z.object({
   priority: z.number().int().min(0).max(10_000).default(100),
 }).strict();
 
-async function hasServerPermission(serverId: string, userId: string, permission: number): Promise<boolean> {
-  const serverRows = await db.select({ ownerId: servers.ownerId }).from(servers)
-    .where(eq(servers.id, serverId)).limit(1);
-  const server = serverRows[0];
-  if (!server) return false;
-  if (server.ownerId === userId) return true;
-
-  const assignments = await db.select({ granted: roles.permissions })
-    .from(memberRoles)
-    .innerJoin(members, and(
-      eq(members.serverId, memberRoles.serverId),
-      eq(members.userId, memberRoles.userId),
-    ))
-    .innerJoin(roles, eq(memberRoles.roleId, roles.id))
-    .where(and(
-      eq(memberRoles.serverId, serverId),
-      eq(memberRoles.userId, userId),
-      eq(roles.serverId, serverId),
-    ));
-  const grants = assignments.reduce((combined, assignment) => combined | assignment.granted, 0);
-  return includesPermission(grants, permission);
-}
-
 export async function expireStaleHosts(now = new Date()): Promise<string[]> {
   const cutoff = new Date(now.getTime() - config.hostHeartbeatTimeoutMs);
   const expired = await db.update(hosts).set({ status: "offline" })
@@ -144,7 +124,7 @@ async function broadcastChannel(channelId: string, payload: unknown, excludedUse
   for (const recipient of userConnections) {
     if (recipient.socket.readyState !== 1) continue;
     if (recipient.userId === excludedUserId || !memberIds.has(recipient.userId)) continue;
-    if (!await hasServerPermission(channel.serverId, recipient.userId, permissions.readMessages)) continue;
+    if (!await hasChannelPermission(channel, recipient.userId, permissions.readMessages)) continue;
     recipient.socket.send(encoded);
   }
 }
@@ -437,7 +417,7 @@ app.get("/api/channels/:channelId/messages", async (request, reply) => {
   const params = request.params as { channelId: string };
   const channel = await db.select().from(channels).where(eq(channels.id, params.channelId)).limit(1);
   if (!channel[0]) return reply.code(404).send({ error: "Channel not found" });
-  if (!await hasServerPermission(channel[0].serverId, user.id, permissions.readMessages)) {
+  if (!await hasChannelPermission(channel[0], user.id, permissions.readMessages)) {
     return reply.code(403).send({ error: "Not allowed to read channel messages" });
   }
   const rows = await db.select().from(messages)
@@ -580,7 +560,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           .where(eq(members.userId, user.id));
         const readableChannels = [];
         for (const channel of channelRows) {
-          if (await hasServerPermission(channel.serverId, user.id, permissions.readMessages)) {
+          if (await hasChannelPermission(channel, user.id, permissions.readMessages)) {
             readableChannels.push({ id: channel.id, name: channel.name, kind: channel.kind });
           }
         }
@@ -677,7 +657,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
       if (frame.t === "agent.usage") {
         if (!("hostId" in connection)) return;
-        const routes = await db.select({ agentId: agents.id, serverId: agents.serverId })
+        const routes = await db.select({ agentId: agents.id, id: channels.id, serverId: agents.serverId, ownerId: hosts.ownerId })
           .from(agents)
           .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
           .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
@@ -699,7 +679,9 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           ))
           .limit(1);
         const route = routes[0];
-        if (!route || !await hasServerPermission(route.serverId, frame.requesterId, permissions.invokeAgents)) {
+        if (!route ||
+            !await hasChannelPermission(route, route.ownerId, permissions.readMessages) ||
+            !await hasChannelPermission(route, frame.requesterId, permissions.invokeAgents)) {
           socket.send(JSON.stringify({
             t: "error",
             code: "unauthorized_usage",
@@ -723,7 +705,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         const channelRows = await db.select().from(channels).where(eq(channels.id, frame.channelId)).limit(1);
         const channel = channelRows[0];
         if (!channel) return;
-        if (!await hasServerPermission(channel.serverId, connection.userId, permissions.sendMessages)) return;
+        if (!await hasChannelPermission(channel, connection.userId, permissions.sendMessages)) return;
         await db.insert(messages).values({
           channelId: frame.channelId,
           authorKind: "user",
@@ -736,12 +718,12 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           text: frame.text,
         }, connection.userId);
 
-        if (!await hasServerPermission(channel.serverId, connection.userId, permissions.invokeAgents)) return;
+        if (!await hasChannelPermission(channel, connection.userId, permissions.invokeAgents)) return;
         const mentions = [...frame.text.matchAll(/(?:^|\s)@([a-zA-Z0-9_-]+)/g)]
           .map((match) => match[1])
           .filter((name): name is string => Boolean(name));
         for (const agentName of mentions) {
-          const routes = await db.select({ hostId: agentHosts.hostId })
+          const routes = await db.select({ hostId: agentHosts.hostId, ownerId: hosts.ownerId })
             .from(agents)
             .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
             .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
@@ -752,9 +734,14 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
               eq(agentHosts.enabled, true),
               eq(hosts.status, "online"),
             ))
-            .orderBy(agentHosts.priority)
-            .limit(1);
-          const route = routes[0];
+            .orderBy(agentHosts.priority, agentHosts.hostId);
+          let route: (typeof routes)[number] | undefined;
+          for (const candidate of routes) {
+            if (await hasChannelPermission(channel, candidate.ownerId, permissions.readMessages)) {
+              route = candidate;
+              break;
+            }
+          }
           if (!route) continue;
           for (const hostConnection of hostConnections) {
             if (hostConnection.hostId !== route.hostId || hostConnection.socket.readyState !== 1) continue;
@@ -772,7 +759,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
       if (frame.t === "reply") {
         if (!("hostId" in connection)) return;
-        const routes = await db.select({ agentId: agents.id })
+        const routes = await db.select({ id: channels.id, serverId: agents.serverId, ownerId: hosts.ownerId })
           .from(agents)
           .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
           .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
@@ -787,7 +774,8 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
             eq(channels.id, frame.channelId),
           ))
           .limit(1);
-        if (!routes[0]) {
+        const route = routes[0];
+        if (!route || !await hasChannelPermission(route, route.ownerId, permissions.readMessages)) {
           socket.send(JSON.stringify({
             t: "error",
             code: "unauthorized_reply",

@@ -29,6 +29,13 @@
       "when": 1795547719257,
       "tag": "0003_channel_kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795548438865,
+      "tag": "0004_channel_role_restrictions",
+      "breakpoints": true
     }
   ]
 }

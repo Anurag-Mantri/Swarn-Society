@@ -1,6 +1,7 @@
 import { boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { ChannelKind } from "@swarmroom/protocol";
+import { channelPermissions } from "../permissions.js";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -57,6 +58,15 @@ export const channels = pgTable("channels", {
   position: integer("position").notNull().default(0),
 }, (table) => [
   check("channels_kind_valid", sql`${table.kind} in ('text', 'voice', 'task')`),
+]);
+
+export const channelRoleRestrictions = pgTable("channel_role_restrictions", {
+  channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  roleId: uuid("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
+  denied: integer("denied").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.channelId, table.roleId] }),
+  check("channel_role_restrictions_denied_valid", sql`${table.denied} between 1 and ${sql.raw(String(channelPermissions))}`),
 ]);
 
 export const messages = pgTable("messages", {

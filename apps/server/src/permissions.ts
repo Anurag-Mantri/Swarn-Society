@@ -12,6 +12,7 @@ export const allPermissions = Object.values(permissions).reduce((all, value) => 
 export const defaultMemberPermissions = permissions.readMessages
   | permissions.sendMessages
   | permissions.invokeAgents;
+export const channelPermissions = defaultMemberPermissions;
 
 export function includesPermission(grants: number, required: number): boolean {
   return (grants & required) === required;
