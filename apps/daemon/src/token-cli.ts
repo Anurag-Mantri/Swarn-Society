@@ -1,11 +1,11 @@
-import { createSystemHostTokenKeychain } from "./keychain.js";
+import { createSystemAgentSecretKeychain, createSystemHostTokenKeychain } from "./keychain.js";
 import { loadDaemonConfig } from "./config.js";
 
-async function readSecret(): Promise<string> {
+async function readSecret(prompt: string): Promise<string> {
   if (!process.stdin.isTTY || !process.stdin.setRawMode) {
     throw new Error("Run the token command in an interactive terminal so the token can be entered without echo.");
   }
-  process.stderr.write("Host token (input hidden): ");
+  process.stderr.write(`${prompt} (input hidden): `);
   process.stdin.setRawMode(true);
   process.stdin.resume();
   return new Promise((resolve, reject) => {
@@ -19,7 +19,7 @@ async function readSecret(): Promise<string> {
       for (const character of chunk.toString("utf8")) {
         if (character === "\u0003") {
           restore();
-          process.stderr.write("\nToken entry cancelled.\n");
+          process.stderr.write("\nSecret entry cancelled.\n");
           reject(new Error("Token entry cancelled."));
           return;
         }
@@ -41,15 +41,30 @@ async function main(): Promise<void> {
   const action = process.argv[2];
   const config = loadDaemonConfig(process.env);
   const account = config.controlPlaneUrl.host;
-  const keychain = await createSystemHostTokenKeychain(account);
   if (action === "set") {
-    keychain.store(await readSecret());
+    const keychain = await createSystemHostTokenKeychain(account);
+    keychain.store(await readSecret("Host token"));
     process.stdout.write("Host token saved in the OS keychain.\n");
   } else if (action === "delete") {
+    const keychain = await createSystemHostTokenKeychain(account);
     keychain.delete();
     process.stdout.write("Host token removed from the OS keychain.\n");
+  } else if (action === "secret") {
+    const operation = process.argv[3];
+    const agent = process.argv[4] ?? "";
+    const name = process.argv[5] ?? "";
+    const keychain = await createSystemAgentSecretKeychain(account);
+    if (operation === "set") {
+      keychain.store(agent, name, await readSecret(`${agent} ${name}`));
+      process.stdout.write("Agent secret saved in the OS keychain.\n");
+    } else if (operation === "delete") {
+      keychain.delete(agent, name);
+      process.stdout.write("Agent secret removed from the OS keychain.\n");
+    } else {
+      throw new Error("Use `token secret set <agent> <ENV_NAME>` or `token secret delete <agent> <ENV_NAME>`.");
+    }
   } else {
-    throw new Error("Use `pnpm --filter @swarmroom/daemon token set` or `token delete`.");
+    throw new Error("Use `token set|delete` or `token secret set|delete <agent> <ENV_NAME>`.");
   }
 }
 

@@ -12,6 +12,8 @@ pnpm --filter @swarmroom/daemon token set
 
 Enter the token at the hidden prompt. It is stored in the OS keychain, scoped to the control plane host. Linux requires Secret Service to be available. Remove it with `pnpm --filter @swarmroom/daemon token delete`.
 
+Store an agent provider credential with `pnpm --filter @swarmroom/daemon token secret set scout OPENAI_API_KEY`. The credential is entered at a hidden prompt and scoped in the OS keychain by control plane, agent and variable name. Remove it with `token secret delete scout OPENAI_API_KEY`. Credential values are never accepted as command arguments or environment variables.
+
 Start the daemon with `pnpm --filter @swarmroom/daemon dev` after setting the non-secret configuration variables.
 
 ## Rootless Podman sandbox
@@ -20,4 +22,4 @@ On Linux, task execution can be enabled by setting both `SWARMROOM_SANDBOX_IMAGE
 
 Each invocation runs with networking disabled, a read-only container filesystem, all Linux capabilities dropped, `no-new-privileges`, a 64 process limit, 512 MiB memory, one CPU, a 64 MiB temporary filesystem, and a 120 second wall-time limit. Only the configured workspace is mounted read/write. Standard output is capped at 32 KB and the reply is capped at 8,000 characters. The Podman CLI receives only a small allowlist of host environment variables; daemon credentials and provider keys are not passed into the container.
 
-Networking is currently disabled entirely. The agent image cannot call model providers until a separate egress broker and host-side API credential integration are implemented. macOS and Windows sandbox support also remain open. Without a sandbox configuration, the daemon connects but fails tasks closed.
+Networking is currently disabled entirely. Stored provider credentials are not loaded into containers; the agent image cannot call model providers until a separate egress broker and host-side credential integration are implemented. macOS and Windows sandbox support also remain open. Without a sandbox configuration, the daemon connects but fails tasks closed.

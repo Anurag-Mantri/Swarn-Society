@@ -22,7 +22,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add CI for install, typecheck, Postgres integration tests and build.
 - [x] Add a TypeScript host transport with OS keychain token lookup.
 - [ ] Port the agent runtime daemon to TypeScript.
-- [ ] Store provider API keys and runtime environment variables only in the OS keychain.
+- [x] Store host tokens and agent-scoped provider secret values only in the OS keychain.
+- [ ] Inject approved provider credentials into the agent runtime through the host-side broker.
 - [x] Add a rootless Podman sandbox with explicit workspace mounts, default-deny networking and resource limits.
 - [ ] Add an allowlisted host-side model API egress broker for sandboxed agents.
 - [ ] Persist per-requester token budgets on the host.
