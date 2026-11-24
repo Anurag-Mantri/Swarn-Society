@@ -30,6 +30,7 @@ describe("local audit log", () => {
     expect(records).toHaveLength(2);
     expect(records[0]).toMatchObject({ t: "task.started", agent: "scout", requesterId: "user-1", channelId: "channel-1" });
     expect(records[1]?.t).toBe("task.succeeded");
+    expect(records[1]?.taskId).toBe(records[0]?.taskId);
     expect(contents).not.toContain(task.text);
     expect(Object.keys(records[0] ?? {})).not.toContain("text");
     if (process.platform !== "win32") {

@@ -1,4 +1,5 @@
 import { constants } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { chmod, mkdir, open } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -6,6 +7,7 @@ import { z } from "zod";
 import type { Task } from "@swarmroom/protocol";
 
 const auditEventSchema = z.object({
+  taskId: z.string().uuid(),
   t: z.enum(["task.started", "task.succeeded", "task.failed"]),
   at: z.string().datetime(),
   agent: z.string().trim().min(1).max(100),
@@ -34,11 +36,16 @@ function defaultAuditPath(): string {
 
 export class LocalAuditLog implements AuditLogger {
   private pending: Promise<void> = Promise.resolve();
+  private readonly taskIds = new WeakMap<Task, string>();
 
   constructor(private readonly path = defaultAuditPath()) {}
 
   recordTask(task: Task, state: TaskAuditState): Promise<void> {
+    const taskId = state === "task.started" ? randomUUID() : this.taskIds.get(task) ?? randomUUID();
+    if (state === "task.started") this.taskIds.set(task, taskId);
+    else this.taskIds.delete(task);
     const parsed = auditEventSchema.parse({
+      taskId,
       t: state,
       at: new Date().toISOString(),
       agent: task.agent,
