@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const uuid = z.string().uuid().transform((value) => value.toLowerCase());
+const ids = (limit: number) => z.array(uuid).max(limit).default([])
+  .transform((values) => [...new Set(values)].sort());
 const actor = z.object({ kind: z.enum(["person", "agent"]), id: uuid }).strict();
 const common = {
   sourceId: z.string().min(1).max(200).regex(/^[A-Za-z0-9._:-]+$/),
@@ -15,7 +17,7 @@ export const knowledgeEventSchema = z.discriminatedUnion("type", [
     type: z.literal("message.posted"),
     messageId: uuid,
     author: actor.optional(),
-    mentionedAgentIds: z.array(uuid).max(100).default([]),
+    mentionedAgentIds: ids(100),
   }).strict(),
   z.object({
     ...channel,
@@ -55,7 +57,7 @@ export const knowledgeEventSchema = z.discriminatedUnion("type", [
     repositoryId: z.string().regex(/^[1-9]\d{0,19}$/),
     commitSha: z.string().regex(/^[a-f0-9]{40}$/i).transform((value) => value.toLowerCase()),
     actor,
-    fileIds: z.array(uuid).max(200).default([]),
+    fileIds: ids(200),
   }).strict(),
   z.object({
     ...common,
