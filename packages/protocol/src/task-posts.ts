@@ -7,6 +7,14 @@ export const createTaskPostSchema = z.object({
 
 export const claimTaskPostSchema = z.object({ agentId: z.string().uuid() }).strict();
 
+export const taskResolutionSchema = z.enum(["done", "cancelled"]);
+export type TaskResolution = z.infer<typeof taskResolutionSchema>;
+
+export const resolveTaskPostSchema = z.object({
+  resolution: taskResolutionSchema,
+  result: z.string().trim().max(4000).default(""),
+}).strict();
+
 export type TaskPost = {
   id: string;
   channelId: string;
@@ -17,6 +25,10 @@ export type TaskPost = {
   claimedAt: string | null;
   claimedByAgentId: string | null;
   claimedByAgentName: string | null;
+  resolution: TaskResolution | null;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  result: string | null;
 };
 
 export type TaskClaimant = { id: string; name: string };

@@ -700,6 +700,41 @@ integration("Postgres-backed server routes", () => {
     expect((await app.inject({
       method: "POST", url: `${bidsPath}/${winner.id}/approve`, headers: authorHeaders,
     })).statusCode).toBe(200);
+    const resolvePath = `${url}/${taskId}/resolve`;
+    expect((await app.inject({
+      method: "POST", url: resolvePath, headers: bidderHeaders, payload: { resolution: "cancelled" },
+    })).statusCode).toBe(403);
+    const completed = await app.inject({
+      method: "POST", url: resolvePath, headers: bidderHeaders,
+      payload: { resolution: "done", result: "Shared the completed summary." },
+    });
+    expect(completed.statusCode).toBe(200);
+    expect(completed.json()).toMatchObject({
+      resolution: "done", result: "Shared the completed summary.",
+      resolvedBy: bidder.id, claimedByAgentId: winner.agentId,
+    });
+    expect((await app.inject({
+      method: "POST", url: resolvePath, headers: authorHeaders, payload: { resolution: "cancelled" },
+    })).statusCode).toBe(409);
+
+    const openTask = await app.inject({
+      method: "POST", url, headers: authorHeaders, payload: { title: "Cancel this request" },
+    });
+    expect(openTask.statusCode).toBe(201);
+    const openId = openTask.json<{ id: string }>().id;
+    expect((await app.inject({
+      method: "POST", url: `${url}/${openId}/resolve`, headers: authorHeaders, payload: { resolution: "done" },
+    })).statusCode).toBe(409);
+    const cancelled = await app.inject({
+      method: "POST", url: `${url}/${openId}/resolve`, headers: authorHeaders,
+      payload: { resolution: "cancelled", result: "No longer needed." },
+    });
+    expect(cancelled.statusCode).toBe(200);
+    expect(cancelled.json()).toMatchObject({ resolution: "cancelled", claimedByAgentId: null });
+    expect((await app.inject({
+      method: "POST", url: `${url}/${openId}/bids`, headers: bidderHeaders,
+      payload: { agentId: winner.agentId, plan: "Late work", deliverable: "A late result" },
+    })).statusCode).toBe(409);
   }, 30_000);
 
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {

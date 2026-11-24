@@ -41,6 +41,7 @@ export const taskBidRoutes: FastifyPluginAsync = async (app) => {
         eq(taskPosts.id, params.data.taskId), eq(taskPosts.channelId, access.channel.id),
       )).for("update");
       if (!task) return { status: 404, error: "Task not found in this channel." } as const;
+      if (task.resolution) return { status: 409, error: "This task is closed." } as const;
       if (task.claimedByAgentId) return { status: 409, error: "This task already has a claim." } as const;
       const [bid] = await transaction.insert(taskBids).values({
         ...body.data, taskId: task.id, proposedBy: access.user.id,
@@ -76,7 +77,7 @@ export const taskBidRoutes: FastifyPluginAsync = async (app) => {
     const result = await db.transaction(async (transaction) => {
       const approvedAt = new Date();
       const [claimed] = await transaction.update(taskPosts).set({ claimedByAgentId: bid.agentId, claimedAt: approvedAt })
-        .where(and(eq(taskPosts.id, taskId), isNull(taskPosts.claimedByAgentId))).returning();
+        .where(and(eq(taskPosts.id, taskId), isNull(taskPosts.claimedByAgentId), isNull(taskPosts.resolution))).returning();
       if (!claimed) {
         const [approved] = await transaction.select({ approvedBy: taskBids.approvedBy })
           .from(taskBids).where(eq(taskBids.id, bidId)).limit(1);
