@@ -56,7 +56,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add measurable duplicate-work and task-completion metrics.
 
 ## Phase 4: Knowledge graph
-- [ ] Define deterministic node and edge extractors.
+- [x] Define deterministic node and edge extractors.
 - [ ] Add node, edge, source and review tables.
 - [ ] Import message, task, file and commit events.
 - [ ] Store extraction method, confidence and provenance.
