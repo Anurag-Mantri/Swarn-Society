@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
+const threadId = z.string().uuid().optional();
+export const threadedHostProtocolVersion = 2;
 
 export const channelKindSchema = z.enum(["text", "voice", "task"]);
 export type ChannelKind = z.infer<typeof channelKindSchema>;
@@ -33,6 +35,7 @@ export const messageSchema = z.object({
   t: z.literal("msg"),
   channelId: text(100),
   text: text(4000),
+  threadId,
 }).strict();
 
 export const replySchema = z.object({
@@ -40,6 +43,7 @@ export const replySchema = z.object({
   channelId: text(100),
   agent: text(100),
   text: text(8000),
+  threadId,
 }).strict();
 
 export const agentUsageSchema = z.object({
@@ -57,6 +61,7 @@ export const taskSchema = z.object({
   from: text(100),
   agent: text(100),
   text: text(4000),
+  threadId,
 }).strict();
 
 export const initSchema = z.object({

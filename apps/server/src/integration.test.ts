@@ -376,6 +376,7 @@ integration("Postgres-backed server routes", () => {
         token: host.token,
         machine: "routing test host",
         agents: ["routing-agent"],
+        version: 2,
       }));
       expect(await registered).toMatchObject({ t: "host.registered", hostId: host.id });
 
@@ -455,6 +456,36 @@ integration("Postgres-backed server routes", () => {
       expect(usageRows).toHaveLength(1);
       expect(usageRows[0]).toMatchObject({ tokensIn: 321, tokensOut: 87, hostId: host.id });
 
+      const [root] = await db.select({ id: messages.id }).from(messages)
+        .where(and(eq(messages.channelId, channel.id), eq(messages.authorKind, "user")));
+      if (!root) throw new Error("Thread root was not persisted");
+      const invalidThread = nextWebSocketFrame(userSocket, "cross-channel thread rejection", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "error");
+      userSocket.send(JSON.stringify({
+        t: "msg", channelId: typedChannels[0]!.id, threadId: root.id, text: "wrong channel",
+      }));
+      expect(await invalidThread).toMatchObject({ code: "invalid_thread" });
+
+      const threadedTask = nextWebSocketFrame(hostSocket, "threaded task", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "task");
+      userSocket.send(JSON.stringify({
+        t: "msg", channelId: channel.id, threadId: root.id, text: "@routing-agent follow up",
+      }));
+      expect(await threadedTask).toMatchObject({ channelId: channel.id, threadId: root.id });
+
+      const threadedReply = nextWebSocketFrame(userSocket, "threaded reply", (frame) =>
+        typeof frame === "object" && frame !== null && "threadId" in frame && frame.threadId === root.id);
+      hostSocket.send(JSON.stringify({
+        t: "reply", channelId: channel.id, threadId: root.id, agent: "routing-agent", text: "thread complete",
+      }));
+      expect(await threadedReply).toMatchObject({ t: "msg", id: expect.any(String), text: "thread complete" });
+      const threadHistory = await app.inject({
+        url: `/api/channels/${channel.id}/messages?threadId=${root.id}`, headers: { cookie },
+      });
+      expect(threadHistory.statusCode).toBe(200);
+      expect(threadHistory.json<Array<{ body: string }>>().map(({ body }) => body))
+        .toEqual(["@routing-agent follow up", "thread complete"]);
+
       const oldHostClosed = new Promise<number>((resolve) => {
         hostSocket.once("close", (code) => resolve(code));
       });
@@ -490,6 +521,7 @@ integration("Postgres-backed server routes", () => {
     });
     expect(history.statusCode).toBe(200);
     const persistedMessages = history.json<Array<{ body: string; authorKind: string }>>();
+    expect(persistedMessages).toHaveLength(2);
     expect(persistedMessages).toEqual(expect.arrayContaining([
       expect.objectContaining({ authorKind: "user", body: "@routing-agent inspect this" }),
       expect.objectContaining({ authorKind: "agent", body: "completed" }),

@@ -1,8 +1,8 @@
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
-import { createChannelSchema, inboundFrameSchema } from "@swarmroom/protocol";
-import { eq, and, desc, lt, ne } from "drizzle-orm";
+import { createChannelSchema, inboundFrameSchema, threadedHostProtocolVersion } from "@swarmroom/protocol";
+import { eq, and, lt, ne } from "drizzle-orm";
 import Fastify from "fastify";
 import type { WebSocket } from "ws";
 import { z } from "zod";
@@ -26,6 +26,8 @@ import {
 } from "./db/schema.js";
 import { allPermissions, defaultMemberPermissions, permissions } from "./permissions.js";
 import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
+import { threadRootExists } from "./message-threads.js";
+import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
 import { createSecret, hashSecret } from "./security.js";
 
@@ -43,11 +45,13 @@ await app.register(websocket, {
   options: { maxPayload: 16 * 1024 },
 });
 await app.register(channelRestrictionRoutes);
+await app.register(messageHistoryRoutes);
 
 type HostConnection = {
   socket: WebSocket;
   hostId: string;
   tokenHash: string;
+  supportsThreads: boolean;
 };
 
 type UserConnection = {
@@ -411,22 +415,6 @@ app.post("/api/agents/:agentId/hosts", async (request, reply) => {
   return reply.code(201).send({ agentId: agent.id, hostId: host.id, priority: parsed.data.priority });
 });
 
-app.get("/api/channels/:channelId/messages", async (request, reply) => {
-  const user = await requireUser(request, reply);
-  if (!user) return;
-  const params = request.params as { channelId: string };
-  const channel = await db.select().from(channels).where(eq(channels.id, params.channelId)).limit(1);
-  if (!channel[0]) return reply.code(404).send({ error: "Channel not found" });
-  if (!await hasChannelPermission(channel[0], user.id, permissions.readMessages)) {
-    return reply.code(403).send({ error: "Not allowed to read channel messages" });
-  }
-  const rows = await db.select().from(messages)
-    .where(eq(messages.channelId, params.channelId))
-    .orderBy(desc(messages.createdAt))
-    .limit(100);
-  return reply.send(rows.reverse());
-});
-
 app.post("/api/hosts", async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -633,7 +621,10 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           ));
           return;
         }
-        connection = { socket, hostId: host.id, tokenHash: host.tokenHash };
+        connection = {
+          socket, hostId: host.id, tokenHash: host.tokenHash,
+          supportsThreads: (frame.version ?? 1) >= threadedHostProtocolVersion,
+        };
         hostConnections.add(connection);
         socket.send(JSON.stringify({ t: "host.registered", hostId: host.id }));
         return;
@@ -706,15 +697,23 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         const channel = channelRows[0];
         if (!channel) return;
         if (!await hasChannelPermission(channel, connection.userId, permissions.sendMessages)) return;
-        await db.insert(messages).values({
+        if (frame.threadId && !await threadRootExists(frame.channelId, frame.threadId)) {
+          socket.send(JSON.stringify({ t: "error", code: "invalid_thread", message: "Thread root not found in this channel" }));
+          return;
+        }
+        const [message] = await db.insert(messages).values({
           channelId: frame.channelId,
+          threadId: frame.threadId,
           authorKind: "user",
           authorId: connection.userId,
           body: frame.text,
-        });
+        }).returning({ id: messages.id });
+        if (!message) throw new Error("Message insert did not return an ID");
         await broadcastChannel(frame.channelId, {
           t: "msg",
+          id: message.id,
           channelId: frame.channelId,
+          threadId: frame.threadId,
           text: frame.text,
         }, connection.userId);
 
@@ -737,17 +736,21 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
             .orderBy(agentHosts.priority, agentHosts.hostId);
           let route: (typeof routes)[number] | undefined;
           for (const candidate of routes) {
-            if (await hasChannelPermission(channel, candidate.ownerId, permissions.readMessages)) {
+            const connected = [...hostConnections].find((host) => host.hostId === candidate.hostId
+              && host.socket.readyState === 1 && (!frame.threadId || host.supportsThreads));
+            if (connected && await hasChannelPermission(channel, candidate.ownerId, permissions.readMessages)) {
               route = candidate;
               break;
             }
           }
           if (!route) continue;
           for (const hostConnection of hostConnections) {
-            if (hostConnection.hostId !== route.hostId || hostConnection.socket.readyState !== 1) continue;
+            if (hostConnection.hostId !== route.hostId || hostConnection.socket.readyState !== 1 ||
+                (frame.threadId && !hostConnection.supportsThreads)) continue;
             hostConnection.socket.send(JSON.stringify({
               t: "task",
               channelId: frame.channelId,
+              threadId: frame.threadId,
               from: connection.userId,
               agent: agentName,
               text: frame.text,
@@ -783,16 +786,24 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           }));
           return;
         }
-        await db.insert(messages).values({
+        if (frame.threadId && !await threadRootExists(frame.channelId, frame.threadId)) {
+          socket.send(JSON.stringify({ t: "error", code: "invalid_thread", message: "Thread root not found in this channel" }));
+          return;
+        }
+        const [message] = await db.insert(messages).values({
           channelId: frame.channelId,
+          threadId: frame.threadId,
           authorKind: "agent",
           authorId: frame.agent,
           hostId: connection.hostId,
           body: frame.text,
-        });
+        }).returning({ id: messages.id });
+        if (!message) throw new Error("Message insert did not return an ID");
         await broadcastChannel(frame.channelId, {
           t: "msg",
+          id: message.id,
           channelId: frame.channelId,
+          threadId: frame.threadId,
           text: frame.text,
           from: frame.agent,
           kind: "agent",

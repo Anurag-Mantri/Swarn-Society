@@ -150,3 +150,10 @@ Date: 2026-11-24
 Context: Teams need private and read-only channels inside a server.
 Decision: A channel can deny read, send, or invoke permissions for individual server roles. Combine grants and denials independently across assigned roles, then subtract the denials. The server owner keeps full access. Managing restrictions requires both server role and channel management permissions.
 Consequences: Existing channels inherit server permissions. Reading is required to send or invoke in a channel. A daemon's host owner must be allowed to read the channel before the server sends it a task.
+
+### D-024: A thread is identified by its root message
+Status: Accepted
+Date: 2026-11-24
+Context: Human and agent replies need a shared thread identity and the same access rules as their channel.
+Decision: Store a nullable thread ID on every message. Replies point to a top-level message in the same channel. Channel permissions apply to both roots and replies.
+Consequences: Existing messages remain top-level. The daemon keeps the thread ID for routing replies while sending the existing task format to sandbox images.

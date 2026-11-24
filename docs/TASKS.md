@@ -35,7 +35,7 @@ Keep each pull request on one task or a tightly related task group.
 ## Phase 2: Team workspace
 - [x] Add text, voice and task channel types.
 - [x] Add role-based channel permissions.
-- [ ] Add message threads.
+- [x] Add message threads.
 - [ ] Replace the textarea with Monaco and Yjs.
 - [ ] Add presence cursors and conflict-free file editing.
 - [ ] Add GitHub App integration.

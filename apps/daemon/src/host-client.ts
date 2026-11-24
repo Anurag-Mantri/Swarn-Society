@@ -1,4 +1,4 @@
-import { hostClientFrameSchema, hostServerFrameSchema, type HostServerFrame, type Task } from "@swarmroom/protocol";
+import { hostClientFrameSchema, hostServerFrameSchema, threadedHostProtocolVersion, type HostServerFrame, type Task } from "@swarmroom/protocol";
 import WebSocket from "ws";
 import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
@@ -67,6 +67,7 @@ export class HostClient {
       socket.on("open", () => {
         const frame = hostClientFrameSchema.parse({
           t: "host", token: this.token, machine: this.config.machine, agents: this.config.agents,
+          version: threadedHostProtocolVersion,
         });
         socket.send(JSON.stringify(frame));
       });
@@ -100,6 +101,8 @@ export class HostClient {
   }
 
   private async handleTask(task: Task, socket: WebSocket): Promise<void> {
+    // The daemon keeps reply routing metadata so older sandbox images can still run tasks.
+    const { threadId, ...executionTask } = task;
     const controller = new AbortController();
     this.activeTasks.add(controller);
     let text: string;
@@ -108,7 +111,7 @@ export class HostClient {
     try {
       await this.audit.recordTask(task, "task.started");
       started = true;
-      const result = await this.runner.run(task, controller.signal);
+      const result = await this.runner.run(executionTask, controller.signal);
       text = result.text;
       usage = result.usage;
       await this.audit.recordTask(task, "task.succeeded");
@@ -137,7 +140,7 @@ export class HostClient {
         tokensOut: usage.outputTokens,
       }, socket);
     }
-    this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text }, socket);
+    this.send({ t: "reply", channelId: task.channelId, threadId, agent: task.agent, text }, socket);
   }
 
   private abortActiveTasks(): void {
