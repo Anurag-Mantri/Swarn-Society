@@ -41,3 +41,16 @@ export SWARMROOM_AGENT_BUDGETS='{"scout":{"ownerId":"user-id","taskTokens":20000
 Before each upstream model call, the host reserves a conservative amount based on the serialized request size, output-token cap and provider framing allowance. It settles that reservation with provider-reported usage. If usage is absent or a request fails after dispatch, the full reservation stays charged. Usage metadata is persisted in a mode-0600 `budget-usage.jsonl` file; prompts and credentials are never stored. If no policy variable is set, existing agents run without requester-specific budgets.
 
 The daemon sends provider-reported input and output counts to the control plane for display. The host ledger independently enforces requester budgets.
+
+## GitHub App installation
+
+Install a GitHub App on the approved repository with Contents read permission. On the host, import the downloaded App PEM into the OS keychain:
+
+```sh
+pnpm --filter @swarmroom/daemon github-app key-import <app-id> <pem-file>
+pnpm --filter @swarmroom/daemon github-app verify <app-id> <installation-id> <repository-id>
+```
+
+Verification prints the repository's ID, full name, and default branch. The daemon signs app authentication locally, requests an installation token scoped to one repository with read access, and discards the token when the command exits. Delete the imported key with `github-app key-delete <app-id>`. Keep the downloaded PEM on the host and remove it after import.
+
+Snapshot publishing is a separate operation. The verification command reads repository metadata.

@@ -164,3 +164,10 @@ Date: 2026-11-24
 Context: Teams need shared text files and concurrent editing before GitHub snapshot sync.
 Decision: Store metadata and Yjs state in PostgreSQL, and use a file UUID as the Hocuspocus document name. The control plane authenticates collaboration under the same origin as chat. Workspace read and send permissions control file reads and edits.
 Consequences: Paths are logical repository paths. Presence stays in memory. Run one control-plane instance for live collaboration until cross-instance document and awareness synchronization is added.
+
+### D-026: GitHub App credentials live on the host
+Status: Accepted
+Date: 2026-11-24
+Context: GitHub workspace sync requires installation tokens while the daemon remains the credential boundary.
+Decision: Import the App private key into the host OS keychain. The daemon signs the app JWT and requests short-lived installation tokens scoped to a single repository ID and the permissions needed for each operation.
+Consequences: The control plane can exchange repository and sync metadata without receiving GitHub App private keys or installation tokens. Setup requires an App installed on the approved repository.
