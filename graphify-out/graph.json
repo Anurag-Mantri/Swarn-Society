@@ -736,7 +736,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:13",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:15",
       "weight": 1
     },
     {
@@ -745,7 +745,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:24",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:26",
       "weight": 1
     },
     {
@@ -754,7 +754,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:27",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:30",
       "weight": 1
     },
     {
@@ -763,7 +763,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:30",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:33",
       "weight": 1
     },
     {
@@ -1158,6 +1158,6 @@
     "files": 25,
     "nodes": 86,
     "edges": 61,
-    "builtAt": "2026-11-24T01:24:00Z"
+    "builtAt": "2026-11-24T01:30:00Z"
   }
 }
