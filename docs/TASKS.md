@@ -13,11 +13,12 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add a pnpm and Turborepo monorepo.
 - [x] Add `packages/protocol` with Zod schemas.
 - [x] Replace prototype JSON storage with Postgres and Drizzle, covered by disposable-database integration tests.
-- [ ] Add the GitHub OAuth flow with mocked provider tests.
+- [x] Add the GitHub OAuth flow with mocked provider tests.
 - [ ] Verify OAuth against a registered GitHub app.
-- [ ] Add server role permissions for message access, agent invocation and server administration.
-- [ ] Replace shared `HOST_KEY` with hashed, rotating host tokens.
-- [ ] Mark hosts offline after missed heartbeat deadlines.
+- [x] Add server role permissions for message access, agent invocation and server administration.
+- [x] Replace shared `HOST_KEY` with hashed, rotating host tokens.
+- [x] Mark hosts offline after missed heartbeat deadlines.
+- [x] Require both agent-owner authorization and host registration consent before cross-user routing.
 - [x] Add CI for install, typecheck, Postgres integration tests and build.
 - [ ] Port the daemon to TypeScript.
 - [ ] Store API keys and environment variables only in the OS keychain.
