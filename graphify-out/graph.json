@@ -467,7 +467,140 @@
       "label": "main",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/main.ts",
-      "sourceLocation": "apps/daemon/src/main.ts:8"
+      "sourceLocation": "apps/daemon/src/main.ts:10"
+    },
+    {
+      "id": "daemon::file::provider_broker",
+      "label": "provider-broker.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:1"
+    },
+    {
+      "id": "daemon::provider_broker::brokererror",
+      "label": "BrokerError",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:66"
+    },
+    {
+      "id": "daemon::provider_broker::brokererror::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:67"
+    },
+    {
+      "id": "daemon::provider_broker::sendjson",
+      "label": "sendJson",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:72"
+    },
+    {
+      "id": "daemon::provider_broker::readrequestbody",
+      "label": "readRequestBody",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:77"
+    },
+    {
+      "id": "daemon::provider_broker::readresponsebody",
+      "label": "readResponseBody",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:92"
+    },
+    {
+      "id": "daemon::provider_broker::prepareproviderbody",
+      "label": "prepareProviderBody",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:115"
+    },
+    {
+      "id": "daemon::provider_broker::localprovideregressbroker",
+      "label": "LocalProviderEgressBroker",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:130"
+    },
+    {
+      "id": "daemon::provider_broker::localprovideregressbroker::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:131"
+    },
+    {
+      "id": "daemon::provider_broker::localprovideregressbroker::openforagent",
+      "label": ".openForAgent",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:136"
+    },
+    {
+      "id": "daemon::provider_broker::localprovideregressbroker::handlerequest",
+      "label": ".handleRequest",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:190"
+    },
+    {
+      "id": "daemon::file::provider_broker_test",
+      "label": "provider-broker.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:1"
+    },
+    {
+      "id": "daemon::provider_broker_test::memoryentry",
+      "label": "MemoryEntry",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:7"
+    },
+    {
+      "id": "daemon::provider_broker_test::memoryentry::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:8"
+    },
+    {
+      "id": "daemon::provider_broker_test::memoryentry::getpassword",
+      "label": ".getPassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:9"
+    },
+    {
+      "id": "daemon::provider_broker_test::memoryentry::setpassword",
+      "label": ".setPassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:10"
+    },
+    {
+      "id": "daemon::provider_broker_test::memoryentry::deletepassword",
+      "label": ".deletePassword",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:11"
+    },
+    {
+      "id": "daemon::provider_broker_test::secretstore",
+      "label": "secretStore",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:14"
+    },
+    {
+      "id": "daemon::provider_broker_test::requestbroker",
+      "label": "requestBroker",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker.test.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:25"
     },
     {
       "id": "daemon::file::podman",
@@ -481,70 +614,70 @@
       "label": "childEnvironment",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:28"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:29"
     },
     {
       "id": "daemon::podman::spawnoptions",
       "label": "spawnOptions",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:40"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:41"
     },
     {
       "id": "daemon::podman::collectprocessoutput",
       "label": "collectProcessOutput",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:44"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:45"
     },
     {
       "id": "daemon::podman::assertrootlesspodmaninfo",
       "label": "assertRootlessPodmanInfo",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:86"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:87"
     },
     {
       "id": "daemon::podman::buildrunarguments",
       "label": "buildRunArguments",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:102"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:103"
     },
     {
       "id": "daemon::podman::resolveworkspaces",
       "label": "resolveWorkspaces",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:116"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:120"
     },
     {
       "id": "daemon::podman::podmansandboxbackend",
       "label": "PodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:151"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:155"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:154"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:158"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::run",
       "label": ".run",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:160"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:165"
     },
     {
       "id": "daemon::podman::createpodmansandboxbackend",
       "label": "createPodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:186"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:197"
     },
     {
       "id": "daemon::file::podman_test",
@@ -558,21 +691,28 @@
       "label": "workspace",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:20"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:21"
+    },
+    {
+      "id": "daemon::podman_test::fakebroker",
+      "label": "fakeBroker",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:27"
     },
     {
       "id": "daemon::podman_test::fakechild",
       "label": "fakeChild",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:26"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:31"
     },
     {
       "id": "daemon::podman.test::launch",
       "label": "launch",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:46"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:54"
     },
     {
       "id": "daemon::file::runner",
@@ -742,8 +882,8 @@
       "target": "daemon::audit_log::defaultauditpath",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:15",
+      "sourceFile": "apps/daemon/dist/audit-log.js",
+      "sourceLocation": "apps/daemon/dist/audit-log.js:15",
       "weight": 1
     },
     {
@@ -751,8 +891,8 @@
       "target": "daemon::audit_log::localauditlog",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:26",
+      "sourceFile": "apps/daemon/dist/audit-log.js",
+      "sourceLocation": "apps/daemon/dist/audit-log.js:26",
       "weight": 1
     },
     {
@@ -760,8 +900,8 @@
       "target": "daemon::audit_log::localauditlog::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:30",
+      "sourceFile": "apps/daemon/dist/audit-log.js",
+      "sourceLocation": "apps/daemon/dist/audit-log.js:30",
       "weight": 1
     },
     {
@@ -769,8 +909,8 @@
       "target": "daemon::audit_log::localauditlog::recordtask",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/audit-log.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:33",
+      "sourceFile": "apps/daemon/dist/audit-log.js",
+      "sourceLocation": "apps/daemon/dist/audit-log.js:33",
       "weight": 1
     },
     {
@@ -778,8 +918,8 @@
       "target": "daemon::config::loaddaemonconfig",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/config.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/config.js:8",
+      "sourceFile": "apps/daemon/dist/config.js",
+      "sourceLocation": "apps/daemon/dist/config.js:8",
       "weight": 1
     },
     {
@@ -787,8 +927,8 @@
       "target": "daemon::config::loadsandboxconfig",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/config.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/config.js:30",
+      "sourceFile": "apps/daemon/dist/config.js",
+      "sourceLocation": "apps/daemon/dist/config.js:30",
       "weight": 1
     },
     {
@@ -796,8 +936,8 @@
       "target": "daemon::host_client::hostclient",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:6",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:6",
       "weight": 1
     },
     {
@@ -805,8 +945,8 @@
       "target": "daemon::host_client::hostclient::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:16",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:16",
       "weight": 1
     },
     {
@@ -814,8 +954,8 @@
       "target": "daemon::host_client::hostclient::start",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:22",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:22",
       "weight": 1
     },
     {
@@ -823,8 +963,8 @@
       "target": "daemon::host_client::hostclient::stop",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:38",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:38",
       "weight": 1
     },
     {
@@ -832,8 +972,8 @@
       "target": "daemon::host_client::hostclient::connectonce",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:50",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:50",
       "weight": 1
     },
     {
@@ -841,8 +981,8 @@
       "target": "daemon::host_client::hostclient::handletask",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:99",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:99",
       "weight": 1
     },
     {
@@ -850,8 +990,8 @@
       "target": "daemon::host_client::hostclient::abortactivetasks",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:126",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:126",
       "weight": 1
     },
     {
@@ -859,8 +999,8 @@
       "target": "daemon::host_client::hostclient::send",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:130",
+      "sourceFile": "apps/daemon/dist/host-client.js",
+      "sourceLocation": "apps/daemon/dist/host-client.js:130",
       "weight": 1
     },
     {
@@ -868,8 +1008,8 @@
       "target": "daemon::keychain::hosttokenkeychain",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:1",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:1",
       "weight": 1
     },
     {
@@ -877,8 +1017,8 @@
       "target": "daemon::keychain::hosttokenkeychain::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:3",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:3",
       "weight": 1
     },
     {
@@ -886,8 +1026,8 @@
       "target": "daemon::keychain::hosttokenkeychain::load",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:6",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:6",
       "weight": 1
     },
     {
@@ -895,8 +1035,8 @@
       "target": "daemon::keychain::hosttokenkeychain::store",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:9",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:9",
       "weight": 1
     },
     {
@@ -904,8 +1044,8 @@
       "target": "daemon::keychain::hosttokenkeychain::delete",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:14",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:14",
       "weight": 1
     },
     {
@@ -913,8 +1053,8 @@
       "target": "daemon::keychain::agentsecretkeychain",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:18",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:18",
       "weight": 1
     },
     {
@@ -922,8 +1062,8 @@
       "target": "daemon::keychain::agentsecretkeychain::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:21",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:21",
       "weight": 1
     },
     {
@@ -931,8 +1071,8 @@
       "target": "daemon::keychain::agentsecretkeychain::store",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:25",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:25",
       "weight": 1
     },
     {
@@ -940,8 +1080,8 @@
       "target": "daemon::keychain::agentsecretkeychain::load",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:30",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:30",
       "weight": 1
     },
     {
@@ -949,8 +1089,8 @@
       "target": "daemon::keychain::agentsecretkeychain::delete",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:33",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:33",
       "weight": 1
     },
     {
@@ -958,8 +1098,8 @@
       "target": "daemon::keychain::agentsecretkeychain::entry",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:36",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:36",
       "weight": 1
     },
     {
@@ -967,8 +1107,8 @@
       "target": "daemon::keychain::createsystemhosttokenkeychain",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:44",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:44",
       "weight": 1
     },
     {
@@ -976,8 +1116,8 @@
       "target": "daemon::keychain::createsystemagentsecretkeychain",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:50",
+      "sourceFile": "apps/daemon/dist/keychain.js",
+      "sourceLocation": "apps/daemon/dist/keychain.js:50",
       "weight": 1
     },
     {
@@ -985,8 +1125,8 @@
       "target": "daemon::keychain_test::memoryentry",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:3",
+      "sourceFile": "apps/daemon/dist/keychain.test.js",
+      "sourceLocation": "apps/daemon/dist/keychain.test.js:3",
       "weight": 1
     },
     {
@@ -994,8 +1134,8 @@
       "target": "daemon::keychain_test::memoryentry::getpassword",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:5",
+      "sourceFile": "apps/daemon/dist/keychain.test.js",
+      "sourceLocation": "apps/daemon/dist/keychain.test.js:5",
       "weight": 1
     },
     {
@@ -1003,8 +1143,8 @@
       "target": "daemon::keychain_test::memoryentry::setpassword",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:6",
+      "sourceFile": "apps/daemon/dist/keychain.test.js",
+      "sourceLocation": "apps/daemon/dist/keychain.test.js:6",
       "weight": 1
     },
     {
@@ -1012,8 +1152,8 @@
       "target": "daemon::keychain_test::memoryentry::deletepassword",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/keychain.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.test.js:7",
+      "sourceFile": "apps/daemon/dist/keychain.test.js",
+      "sourceLocation": "apps/daemon/dist/keychain.test.js:7",
       "weight": 1
     },
     {
@@ -1021,8 +1161,161 @@
       "target": "daemon::main::main",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/main.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/main.js:7",
+      "sourceFile": "apps/daemon/dist/main.js",
+      "sourceLocation": "apps/daemon/dist/main.js:9",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::brokererror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:41",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker::brokererror",
+      "target": "daemon::provider_broker::brokererror::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:43",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::sendjson",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:48",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::readrequestbody",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:52",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::readresponsebody",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:66",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::prepareproviderbody",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:91",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker",
+      "target": "daemon::provider_broker::localprovideregressbroker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:103",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker::localprovideregressbroker",
+      "target": "daemon::provider_broker::localprovideregressbroker::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:106",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker::localprovideregressbroker",
+      "target": "daemon::provider_broker::localprovideregressbroker::openforagent",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:110",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker::localprovideregressbroker",
+      "target": "daemon::provider_broker::localprovideregressbroker::handlerequest",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:163",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker_test",
+      "target": "daemon::provider_broker_test::memoryentry",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:6",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker_test::memoryentry",
+      "target": "daemon::provider_broker_test::memoryentry::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:8",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker_test::memoryentry",
+      "target": "daemon::provider_broker_test::memoryentry::getpassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:11",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker_test::memoryentry",
+      "target": "daemon::provider_broker_test::memoryentry::setpassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:12",
+      "weight": 1
+    },
+    {
+      "source": "daemon::provider_broker_test::memoryentry",
+      "target": "daemon::provider_broker_test::memoryentry::deletepassword",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:13",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker_test",
+      "target": "daemon::provider_broker_test::secretstore",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:15",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker_test",
+      "target": "daemon::provider_broker_test::requestbroker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/provider-broker.test.js",
+      "sourceLocation": "apps/daemon/dist/provider-broker.test.js:26",
       "weight": 1
     },
     {
@@ -1030,8 +1323,8 @@
       "target": "daemon::podman::childenvironment",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:16",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:16",
       "weight": 1
     },
     {
@@ -1039,8 +1332,8 @@
       "target": "daemon::podman::spawnoptions",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:28",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:28",
       "weight": 1
     },
     {
@@ -1048,8 +1341,8 @@
       "target": "daemon::podman::collectprocessoutput",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:31",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:31",
       "weight": 1
     },
     {
@@ -1057,8 +1350,8 @@
       "target": "daemon::podman::assertrootlesspodmaninfo",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:71",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:71",
       "weight": 1
     },
     {
@@ -1066,8 +1359,8 @@
       "target": "daemon::podman::buildrunarguments",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:87",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:87",
       "weight": 1
     },
     {
@@ -1075,8 +1368,8 @@
       "target": "daemon::podman::resolveworkspaces",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:100",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:103",
       "weight": 1
     },
     {
@@ -1084,8 +1377,8 @@
       "target": "daemon::podman::podmansandboxbackend",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:135",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:138",
       "weight": 1
     },
     {
@@ -1093,8 +1386,8 @@
       "target": "daemon::podman::podmansandboxbackend::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:140",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:144",
       "weight": 1
     },
     {
@@ -1102,8 +1395,8 @@
       "target": "daemon::podman::podmansandboxbackend::run",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:145",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:150",
       "weight": 1
     },
     {
@@ -1111,8 +1404,8 @@
       "target": "daemon::podman::createpodmansandboxbackend",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.js:176",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:189",
       "weight": 1
     },
     {
@@ -1120,8 +1413,17 @@
       "target": "daemon::podman_test::workspace",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.test.js:10",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:10",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::podman_test",
+      "target": "daemon::podman_test::fakebroker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:15",
       "weight": 1
     },
     {
@@ -1129,8 +1431,8 @@
       "target": "daemon::podman_test::fakechild",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.test.js:15",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:18",
       "weight": 1
     },
     {
@@ -1138,8 +1440,8 @@
       "target": "daemon::podman.test::launch",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/podman.test.js:33",
+      "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:39",
       "weight": 1
     },
     {
@@ -1147,8 +1449,8 @@
       "target": "daemon::runner::sandboxrunner",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:1",
+      "sourceFile": "apps/daemon/dist/sandbox/runner.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:1",
       "weight": 1
     },
     {
@@ -1156,8 +1458,8 @@
       "target": "daemon::runner::sandboxrunner::constructor",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:3",
+      "sourceFile": "apps/daemon/dist/sandbox/runner.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:3",
       "weight": 1
     },
     {
@@ -1165,15 +1467,15 @@
       "target": "daemon::runner::sandboxrunner::run",
       "relation": "method",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/sandbox/runner.js:6",
+      "sourceFile": "apps/daemon/dist/sandbox/runner.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:6",
       "weight": 1
     }
   ],
   "metadata": {
-    "files": 25,
-    "nodes": 87,
-    "edges": 62,
-    "builtAt": "2026-11-24T01:34:00Z"
+    "files": 52,
+    "nodes": 107,
+    "edges": 80,
+    "builtAt": "2026-11-24T02:27:55.081Z"
   }
 }

@@ -112,6 +112,13 @@ Consequences: The server routes only to enabled assignments. Host registrations 
 ### D-018: Sandboxed task execution starts with no network
 Status: Accepted
 Date: 2026-11-24
-Context: Agent prompts and tools are untrusted, while a safe provider egress broker and allowlist have not been implemented.
+Context: Agent prompts and tools are untrusted, so they must not receive general network access.
 Decision: The initial Linux sandbox uses local rootless Podman, a digest-pinned image, explicit per-agent workspace mounts, and no network. It applies CPU, memory, process, wall-time and output limits. Tasks remain unexecuted if no compatible sandbox is configured.
-Consequences: Sandboxed agents cannot call model providers yet. Add provider access only through a host-side broker that enforces an explicit egress allowlist; do not enable general container networking.
+Consequences: Provider access can be added only through a host-side broker that enforces an explicit egress allowlist; do not enable general container networking.
+
+### D-019: Provider egress uses a task-scoped host broker
+Status: Accepted
+Date: 2026-11-24
+Context: Sandboxed agents need model API access without receiving host credentials or general network access.
+Decision: Mount a unique Unix socket for each Podman task. The daemon accepts only fixed OpenAI Responses, OpenAI Chat Completions and Anthropic Messages routes, injects the agent's key from the OS keychain, and enforces request, response, concurrency, timeout and output-token limits. The broker does not accept arbitrary URLs, headers, redirects or streaming requests.
+Consequences: Agent images need a small client for this socket contract. Provider and tool policy remains in the runtime; the broker only constrains egress and credential handling.
