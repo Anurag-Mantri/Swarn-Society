@@ -183,6 +183,48 @@
       "sourceLocation": "packages/protocol/src/index.test.ts:1"
     },
     {
+      "id": "daemon::file::audit_log",
+      "label": "audit-log.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.ts:1"
+    },
+    {
+      "id": "daemon::audit_log::defaultauditpath",
+      "label": "defaultAuditPath",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.ts:23"
+    },
+    {
+      "id": "daemon::audit_log::localauditlog",
+      "label": "LocalAuditLog",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.ts:35"
+    },
+    {
+      "id": "daemon::audit_log::localauditlog::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.ts:38"
+    },
+    {
+      "id": "daemon::audit_log::localauditlog::recordtask",
+      "label": ".recordTask",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.ts:40"
+    },
+    {
+      "id": "daemon::file::audit_log_test",
+      "label": "audit-log.test.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/audit-log.test.ts",
+      "sourceLocation": "apps/daemon/src/audit-log.test.ts:1"
+    },
+    {
       "id": "daemon::file::config",
       "label": "config.ts",
       "fileType": "code",
@@ -222,49 +264,49 @@
       "label": "HostClient",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:10"
+      "sourceLocation": "apps/daemon/src/host-client.ts:11"
     },
     {
       "id": "daemon::host_client::hostclient::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:16"
+      "sourceLocation": "apps/daemon/src/host-client.ts:17"
     },
     {
       "id": "daemon::host_client::hostclient::start",
       "label": ".start",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:22"
+      "sourceLocation": "apps/daemon/src/host-client.ts:24"
     },
     {
       "id": "daemon::host_client::hostclient::stop",
       "label": ".stop",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:38"
+      "sourceLocation": "apps/daemon/src/host-client.ts:40"
     },
     {
       "id": "daemon::host_client::hostclient::connectonce",
       "label": ".connectOnce",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:49"
+      "sourceLocation": "apps/daemon/src/host-client.ts:51"
     },
     {
       "id": "daemon::host_client::hostclient::handletask",
       "label": ".handleTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:96"
+      "sourceLocation": "apps/daemon/src/host-client.ts:98"
     },
     {
       "id": "daemon::host_client::hostclient::send",
       "label": ".send",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:107"
+      "sourceLocation": "apps/daemon/src/host-client.ts:120"
     },
     {
       "id": "daemon::file::host_client_test",
@@ -418,7 +460,7 @@
       "label": "main",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/main.ts",
-      "sourceLocation": "apps/daemon/src/main.ts:7"
+      "sourceLocation": "apps/daemon/src/main.ts:8"
     },
     {
       "id": "daemon::file::podman",
@@ -689,6 +731,42 @@
       "weight": 1
     },
     {
+      "source": "daemon::file::audit_log",
+      "target": "daemon::audit_log::defaultauditpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:13",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::audit_log",
+      "target": "daemon::audit_log::localauditlog",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:24",
+      "weight": 1
+    },
+    {
+      "source": "daemon::audit_log::localauditlog",
+      "target": "daemon::audit_log::localauditlog::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:27",
+      "weight": 1
+    },
+    {
+      "source": "daemon::audit_log::localauditlog",
+      "target": "daemon::audit_log::localauditlog::recordtask",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/audit-log.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/audit-log.js:30",
+      "weight": 1
+    },
+    {
       "source": "daemon::file::config",
       "target": "daemon::config::loaddaemonconfig",
       "relation": "contains",
@@ -721,7 +799,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:14",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:15",
       "weight": 1
     },
     {
@@ -730,7 +808,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:19",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:21",
       "weight": 1
     },
     {
@@ -739,7 +817,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:35",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:37",
       "weight": 1
     },
     {
@@ -748,7 +826,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:46",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:48",
       "weight": 1
     },
     {
@@ -757,7 +835,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:94",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:96",
       "weight": 1
     },
     {
@@ -766,7 +844,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:105",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:119",
       "weight": 1
     },
     {
@@ -928,7 +1006,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/main.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/main.js:6",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/main.js:7",
       "weight": 1
     },
     {
@@ -1077,9 +1155,9 @@
     }
   ],
   "metadata": {
-    "files": 23,
-    "nodes": 80,
-    "edges": 57,
-    "builtAt": "2026-11-24T01:12:00Z"
+    "files": 25,
+    "nodes": 86,
+    "edges": 61,
+    "builtAt": "2026-11-24T01:20:00Z"
   }
 }
