@@ -99,7 +99,7 @@ export class HostClient {
     try {
       text = await this.runner.run(task, controller.signal);
     } catch {
-      text = "Task was not run because a sandbox backend is not available on this host.";
+      text = "Task could not be completed in the host sandbox.";
     }
     this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text });
   }

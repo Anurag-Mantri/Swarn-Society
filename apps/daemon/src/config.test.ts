@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadDaemonConfig } from "./config.js";
+import { loadDaemonConfig, loadSandboxConfig } from "./config.js";
 
 describe("daemon configuration", () => {
   it("parses a secure websocket URL and unique agent names", () => {
@@ -40,5 +40,26 @@ describe("daemon configuration", () => {
       SWARMROOM_MACHINE: "laptop",
       SWARMROOM_AGENTS: "scout",
     })).toThrow();
+  });
+});
+
+describe("sandbox configuration", () => {
+  it("requires a digest-pinned image and one absolute workspace per agent", () => {
+    const image = `registry.example/agent@sha256:${"a".repeat(64)}`;
+    expect(loadSandboxConfig({
+      SWARMROOM_SANDBOX_IMAGE: image,
+      SWARMROOM_AGENT_WORKSPACES: JSON.stringify({ scout: "/tmp/scout-workspace" }),
+    }, ["scout"])).toEqual({ image, workspaces: new Map([["scout", "/tmp/scout-workspace"]]) });
+  });
+
+  it("rejects unpinned images and missing workspaces", () => {
+    expect(() => loadSandboxConfig({
+      SWARMROOM_SANDBOX_IMAGE: "registry.example/agent:latest",
+      SWARMROOM_AGENT_WORKSPACES: JSON.stringify({ scout: "/tmp/scout-workspace" }),
+    }, ["scout"])).toThrow();
+    expect(() => loadSandboxConfig({
+      SWARMROOM_SANDBOX_IMAGE: `registry.example/agent@sha256:${"a".repeat(64)}`,
+      SWARMROOM_AGENT_WORKSPACES: JSON.stringify({ scout: "/tmp/scout-workspace", other: "/tmp/other" }),
+    }, ["scout"])).toThrow();
   });
 });

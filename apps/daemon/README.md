@@ -13,3 +13,11 @@ pnpm --filter @swarmroom/daemon token set
 Enter the token at the hidden prompt. It is stored in the OS keychain, scoped to the control plane host. Linux requires Secret Service to be available. Remove it with `pnpm --filter @swarmroom/daemon token delete`.
 
 Start the daemon with `pnpm --filter @swarmroom/daemon dev` after setting the non-secret configuration variables.
+
+## Rootless Podman sandbox
+
+On Linux, task execution can be enabled by setting both `SWARMROOM_SANDBOX_IMAGE` and `SWARMROOM_AGENT_WORKSPACES`. The image must use an immutable `@sha256:` digest and provide `/usr/local/bin/swarmroom-agent`; that executable reads one JSON task from stdin and writes the agent reply to stdout. The workspace variable is a JSON object mapping each configured agent name to its absolute workspace directory. The daemon checks that Podman is local and rootless, that each workspace exists, and that the workspace does not contain the user's entire home directory.
+
+Each invocation runs with networking disabled, a read-only container filesystem, all Linux capabilities dropped, `no-new-privileges`, a 64 process limit, 512 MiB memory, one CPU, a 64 MiB temporary filesystem, and a 120 second wall-time limit. Only the configured workspace is mounted read/write. Standard output is capped at 32 KB and the reply is capped at 8,000 characters. The Podman CLI receives only a small allowlist of host environment variables; daemon credentials and provider keys are not passed into the container.
+
+Networking is currently disabled entirely. The agent image cannot call model providers until a separate egress broker and host-side API credential integration are implemented. macOS and Windows sandbox support also remain open. Without a sandbox configuration, the daemon connects but fails tasks closed.

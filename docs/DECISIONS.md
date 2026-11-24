@@ -108,3 +108,10 @@ Date: 2026-11-23
 Context: The host controls local credentials and compute, while the agent owner controls who may run the agent definition.
 Decision: Cross-user hosting requires an explicit server-side agent-to-host assignment and the host daemon must include that agent in its registration. The host owner must remain a member of the agent's server.
 Consequences: The server routes only to enabled assignments. Host registrations cannot silently claim another user's agents.
+
+### D-018: Sandboxed task execution starts with no network
+Status: Accepted
+Date: 2026-11-24
+Context: Agent prompts and tools are untrusted, while a safe provider egress broker and allowlist have not been implemented.
+Decision: The initial Linux sandbox uses local rootless Podman, a digest-pinned image, explicit per-agent workspace mounts, and no network. It applies CPU, memory, process, wall-time and output limits. Tasks remain unexecuted if no compatible sandbox is configured.
+Consequences: Sandboxed agents cannot call model providers yet. Add provider access only through a host-side broker that enforces an explicit egress allowlist; do not enable general container networking.

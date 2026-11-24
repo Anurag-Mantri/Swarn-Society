@@ -23,7 +23,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add a TypeScript host transport with OS keychain token lookup.
 - [ ] Port the agent runtime daemon to TypeScript.
 - [ ] Store provider API keys and runtime environment variables only in the OS keychain.
-- [ ] Add the sandbox module, egress allowlist and resource limits.
+- [x] Add a rootless Podman sandbox with explicit workspace mounts, default-deny networking and resource limits.
+- [ ] Add an allowlisted host-side model API egress broker for sandboxed agents.
 - [ ] Persist per-requester token budgets on the host.
 - [ ] Add action approvals and a local audit log.
 - [ ] Build signed desktop installers with Tauri.

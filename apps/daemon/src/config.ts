@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isAbsolute } from "node:path";
 
 const environmentSchema = z.object({
   SWARMROOM_CONTROL_PLANE_URL: z.string().url(),
@@ -10,6 +11,11 @@ export interface DaemonConfig {
   controlPlaneUrl: URL;
   machine: string;
   agents: string[];
+}
+
+export interface SandboxConfig {
+  image: string;
+  workspaces: Map<string, string>;
 }
 
 export function loadDaemonConfig(env: NodeJS.ProcessEnv): DaemonConfig {
@@ -36,4 +42,31 @@ export function loadDaemonConfig(env: NodeJS.ProcessEnv): DaemonConfig {
   }
 
   return { controlPlaneUrl, machine: parsed.data.SWARMROOM_MACHINE, agents };
+}
+
+export function loadSandboxConfig(env: NodeJS.ProcessEnv, agents: string[]): SandboxConfig | undefined {
+  const image = env.SWARMROOM_SANDBOX_IMAGE?.trim();
+  const workspacesText = env.SWARMROOM_AGENT_WORKSPACES?.trim();
+  if (!image && !workspacesText) return undefined;
+  if (!image || !workspacesText || !/^[a-zA-Z0-9][a-zA-Z0-9._/:+-]*@sha256:[a-f0-9]{64}$/.test(image)) {
+    throw new Error("Sandbox configuration requires an image pinned by SHA-256 digest and agent workspace paths.");
+  }
+
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(workspacesText) as unknown;
+  } catch {
+    throw new Error("SWARMROOM_AGENT_WORKSPACES must be a JSON object mapping agent names to absolute paths.");
+  }
+  const workspaces = z.record(z.string(), z.string().trim().min(1)).safeParse(decoded);
+  if (!workspaces.success || Object.keys(workspaces.data).length !== agents.length ||
+      agents.some((agent) => !Object.prototype.hasOwnProperty.call(workspaces.data, agent) ||
+        !isAbsolute(workspaces.data[agent] ?? "")) ||
+      Object.keys(workspaces.data).some((agent) => !agents.includes(agent))) {
+    throw new Error("SWARMROOM_AGENT_WORKSPACES must map every configured agent exactly once to an absolute path.");
+  }
+  if (Object.values(workspaces.data).some((workspace) => /[,\r\n]/.test(workspace))) {
+    throw new Error("Sandbox workspace paths cannot contain commas or line breaks.");
+  }
+  return { image, workspaces: new Map(Object.entries(workspaces.data)) };
 }
