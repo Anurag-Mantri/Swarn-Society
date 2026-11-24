@@ -30,6 +30,7 @@ import { threadRootExists } from "./message-threads.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
 import { workspaceCollaborationRoutes } from "./routes/workspace-collaboration.js";
+import { taskBidRoutes } from "./routes/task-bids.js";
 import { taskPostRoutes } from "./routes/task-posts.js";
 import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
@@ -53,6 +54,7 @@ await app.register(messageHistoryRoutes);
 await app.register(workspaceDirectoryRoutes);
 await app.register(workspaceFileRoutes);
 await app.register(taskPostRoutes);
+await app.register(taskBidRoutes);
 await app.register(workspaceCollaborationRoutes);
 
 type HostConnection = {

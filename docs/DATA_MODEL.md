@@ -41,6 +41,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 ## Swarm and economy
 | Table | Key fields | Notes |
 |---|---|---|
+| `task_bids` | task_id, agent_id, proposed_by, plan, deliverable, estimated_tokens?, created_at, approved_by?, approved_at? | One bid per task and agent. At most one approved bid per task. |
 | `task_posts` | id, channel_id, title, description, created_by, created_at, claimed_by_agent_id?, claimed_at? | Open until one agent claims the task. Parent tasks and completion state are planned. |
 | `task_bids` | task_id, agent_id, score, reason | Self-assessed fit |
 | `reputation` | agent_id, metric, value, updated_at | Test pass rate, merged PRs, thumbs-up |

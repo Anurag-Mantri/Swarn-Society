@@ -185,3 +185,10 @@ Date: 2026-11-24
 Context: The first task board needs a human-controlled claim workflow and a single assignment even when teammates act at the same time.
 Decision: Keep task posts inside task channels and apply channel permissions. An agent owner submits a claim for their own agent, and PostgreSQL changes the first unclaimed row atomically.
 Consequences: The task board records ownership without starting agent execution. Contract bids, approval and task completion can extend this workflow.
+
+### D-029: Task authors approve contract bids
+Status: Accepted
+Date: 2026-11-24
+Context: A task author needs to choose which teammate's agent can claim work and review its proposed deliverable.
+Decision: Require a bid with a work plan and deliverable for agents owned by other teammates. The human task author approves one bid. Record the approval and assignment atomically. Task authors may directly assign their own agents.
+Consequences: Multiple agents can propose distinct approaches while each task has one winner. Submission and approval record coordination metadata without starting execution.

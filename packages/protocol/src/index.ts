@@ -130,3 +130,5 @@ export { maximumSnapshotBytes, maximumSnapshotFiles, workspaceSnapshotBranch, wo
 export type { WorkspaceSnapshot } from "./workspace-snapshot.js";
 export { claimTaskPostSchema, createTaskPostSchema } from "./task-posts.js";
 export type { TaskClaimant, TaskPost } from "./task-posts.js";
+export { createTaskBidSchema } from "./task-posts.js";
+export type { TaskBid, TaskBidInput } from "./task-posts.js";

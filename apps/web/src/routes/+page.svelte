@@ -284,7 +284,7 @@
       {#if workspace && view === 'files'}
         {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} canExport={workspace.ownerId === profile.id} />{/key}
       {:else if view === 'tasks' && channel?.kind === 'task'}
-        {#key channelId}<TaskBoard {channelId} name={channel.name} />{/key}
+        {#key channelId}<TaskBoard {channelId} name={channel.name} currentUser={profile.id} />{/key}
       {:else if channel}
         <div class="chat-layout" class:thread-open={root !== null}>
           {#key channelId}

@@ -2,11 +2,13 @@
   import { onMount } from 'svelte';
   import type { TaskClaimant, TaskPost } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
+  import TaskBids from './TaskBids.svelte';
 
-  let { channelId, name }: { channelId: string; name: string } = $props();
+  let { channelId, name, currentUser }: { channelId: string; name: string; currentUser: string } = $props();
   let tasks = $state<TaskPost[]>([]);
   let agents = $state<TaskClaimant[]>([]);
   let selectedAgent = $state('');
+  let openBids = $state<string | null>(null);
   let title = $state('');
   let description = $state('');
   let error = $state('');
@@ -46,11 +48,15 @@
     error = '';
     try {
       const claimed = await api.claimTask(channelId, taskId, selectedAgent);
-      tasks = tasks.map((task) => task.id === taskId ? claimed : task);
+      applyClaim(claimed);
     } catch (problem) {
       showError(problem);
       if (problem instanceof ApiError && problem.status === 409) await refresh();
     } finally { busy = false; }
+  }
+
+  function applyClaim(claimed: TaskPost) {
+    tasks = tasks.map((task) => task.id === claimed.id ? claimed : task);
   }
 
   onMount(() => { void refresh(); });
@@ -71,7 +77,7 @@
   </form>
   {#if agents.length}
     <div class="agent-choice">
-      <label for="claim-agent">Claim tasks with</label>
+      <label for="claim-agent">Your agent</label>
       <select id="claim-agent" bind:value={selectedAgent} disabled={busy}>
         {#each agents as agent (agent.id)}<option value={agent.id}>{agent.name}</option>{/each}
       </select>
@@ -89,10 +95,19 @@
         {#if task.description}<p class="description">{task.description}</p>{/if}
         {#if task.claimedByAgentId}
           <p>Claimed by {task.claimedByAgentName ?? 'an agent'}</p>
-        {:else if selectedAgent}
+        {:else if selectedAgent && task.createdBy === currentUser}
           <button type="button" disabled={busy || loading} onclick={() => claim(task.id)}>Claim task</button>
         {:else}
           <p>Open for claims</p>
+        {/if}
+        <button type="button" aria-expanded={openBids === task.id}
+          onclick={() => { openBids = openBids === task.id ? null : task.id; }}>
+          {openBids === task.id ? 'Hide bids' : 'View bids'}
+        </button>
+        {#if openBids === task.id}
+          {#key task.id}
+            <TaskBids {task} {currentUser} {selectedAgent} onClaim={applyClaim} />
+          {/key}
         {/if}
       </li>
     {/each}
@@ -113,5 +128,5 @@
   h2 { font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
   p { color: var(--muted); }
   .description { white-space: pre-wrap; overflow-wrap: anywhere; }
-  li button { margin-top: .65rem; }
+  li > button { margin-top: .65rem; margin-right: .4rem; }
 </style>
