@@ -558,49 +558,49 @@
       "label": "MemoryEntry",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:7"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:8"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:8"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:9"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::getpassword",
       "label": ".getPassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:9"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:10"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::setpassword",
       "label": ".setPassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:10"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:11"
     },
     {
       "id": "daemon::provider_broker_test::memoryentry::deletepassword",
       "label": ".deletePassword",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:11"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:12"
     },
     {
       "id": "daemon::provider_broker_test::secretstore",
       "label": "secretStore",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:14"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:15"
     },
     {
       "id": "daemon::provider_broker_test::requestbroker",
       "label": "requestBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.test.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:25"
+      "sourceLocation": "apps/daemon/src/provider-broker.test.ts:26"
     },
     {
       "id": "daemon::file::podman",
@@ -748,6 +748,20 @@
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.test.ts",
       "sourceLocation": "apps/daemon/src/sandbox/runner.test.ts:1"
+    },
+    {
+      "id": "daemon::file::provider_broker_client",
+      "label": "provider-broker-client.ts",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:1"
+    },
+    {
+      "id": "daemon::provider_broker_client::requestprovider",
+      "label": "requestProvider",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:16"
     }
   ],
   "edges": [
@@ -1470,12 +1484,21 @@
       "sourceFile": "apps/daemon/dist/sandbox/runner.js",
       "sourceLocation": "apps/daemon/dist/sandbox/runner.js:6",
       "weight": 1
+    },
+    {
+      "source": "daemon::file::provider_broker_client",
+      "target": "daemon::provider_broker_client::requestprovider",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/provider-broker-client.ts",
+      "sourceLocation": "apps/daemon/src/provider-broker-client.ts:16",
+      "weight": 1
     }
   ],
   "metadata": {
     "files": 52,
-    "nodes": 107,
-    "edges": 80,
-    "builtAt": "2026-11-24T02:27:55.081Z"
+    "nodes": 109,
+    "edges": 81,
+    "builtAt": "2026-11-24T02:31:53.866Z"
   }
 }

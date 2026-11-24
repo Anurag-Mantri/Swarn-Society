@@ -2,6 +2,7 @@ import { request as httpRequest } from "node:http";
 import { stat } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
 import { AgentSecretKeychain, type PasswordEntry } from "./keychain.js";
+import { requestProvider } from "./provider-broker-client.js";
 import { LocalProviderEgressBroker, type ProviderBrokerLease } from "./provider-broker.js";
 
 class MemoryEntry implements PasswordEntry {
@@ -48,6 +49,23 @@ function requestBroker(
 }
 
 describe("local provider egress broker", () => {
+  it("supports the constrained Node client used by agent images", async () => {
+    const fetcher: typeof fetch = vi.fn(async () => new Response(JSON.stringify({ id: "chat-1" }), { status: 200 }));
+    const lease = await new LocalProviderEgressBroker(secretStore("host-only-api-key"), fetcher)
+      .openForAgent("scout");
+    try {
+      const result = await requestProvider<{ id: string }>(
+        "/openai/chat/completions",
+        { model: "test-model", messages: [{ role: "user", content: "hello" }] },
+        lease.socketPath,
+      );
+      expect(result).toEqual({ id: "chat-1" });
+      expect(fetcher).toHaveBeenCalledOnce();
+    } finally {
+      await lease.close();
+    }
+  });
+
   it("routes only the fixed OpenAI endpoint and injects the key on the host", async () => {
     const calls: Array<{ url: URL; init: RequestInit }> = [];
     const fetcher: typeof fetch = vi.fn(async (input, init) => {
