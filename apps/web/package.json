@@ -9,7 +9,11 @@
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@swarmroom/protocol": "workspace:*"
+    "@hocuspocus/provider": "^4.9.0",
+    "@swarmroom/protocol": "workspace:*",
+    "monaco-editor": "0.52.2",
+    "y-monaco": "^0.1.6",
+    "yjs": "^13.6.33"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.9",

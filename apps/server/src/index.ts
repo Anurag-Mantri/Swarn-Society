@@ -29,6 +29,8 @@ import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
 import { threadRootExists } from "./message-threads.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
+import { workspaceCollaborationRoutes } from "./routes/workspace-collaboration.js";
+import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
 import { createSecret, hashSecret } from "./security.js";
 
@@ -43,11 +45,13 @@ await app.register(rateLimit, {
   timeWindow: "1 minute",
 });
 await app.register(websocket, {
-  options: { maxPayload: 16 * 1024 },
+  options: { maxPayload: 256 * 1024 },
 });
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
 await app.register(workspaceDirectoryRoutes);
+await app.register(workspaceFileRoutes);
+await app.register(workspaceCollaborationRoutes);
 
 type HostConnection = {
   socket: WebSocket;
@@ -515,6 +519,10 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
   socket.on("message", (raw) => {
     void (async () => {
+      if (Buffer.byteLength(raw.toString()) > 16 * 1024) {
+        socket.close(1009, "Chat frame is too large");
+        return;
+      }
       let value: unknown;
       try {
         value = JSON.parse(raw.toString());

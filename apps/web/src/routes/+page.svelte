@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { errorSchema, initSchema, messageSchema } from '@swarmroom/protocol';
+  import WorkspaceFiles from '$lib/WorkspaceFiles.svelte';
   import Conversation from '$lib/Conversation.svelte';
   import { api, ApiError, type Channel, type Message, type Profile, type Workspace } from '$lib/api';
   import '../workspace.css';
@@ -10,6 +11,7 @@
   let workspaces = $state<Workspace[]>([]);
   let channels = $state<Channel[]>([]);
   let workspaceId = $state('');
+  let view = $state<'chat' | 'files'>('chat');
   let channelId = $state('');
   let messages = $state<Message[]>([]);
   let root = $state<Message | null>(null);
@@ -236,11 +238,15 @@
         </div>
       {/if}
       {#if workspace}
+        <div class="workspace-view" aria-label="Workspace view">
+          <button type="button" aria-pressed={view === 'chat'} onclick={() => { view = 'chat'; }}>Chat</button>
+          <button type="button" aria-pressed={view === 'files'} onclick={() => { view = 'files'; }}>Files</button>
+        </div>
         <nav aria-label="Channels">
           <h2>Channels</h2>
           {#each availableChannels as item (item.id)}
             <button type="button" class:active={channelId === item.id}
-              aria-current={channelId === item.id ? 'true' : undefined} onclick={() => chooseChannel(item.id)}>
+              aria-current={channelId === item.id ? 'true' : undefined} onclick={() => { view = 'chat'; chooseChannel(item.id); }}>
               <span>{item.name}</span><small>{item.kind}</small>
             </button>
           {/each}
@@ -270,7 +276,9 @@
         {#if status === 'disconnected'}<button type="button" onclick={connect}>Reconnect</button>{/if}
       </div>
       {#if error}<div class="alert" role="alert">{error}</div>{/if}
-      {#if channel}
+      {#if workspace && view === 'files'}
+        {#key workspaceId}<WorkspaceFiles {workspaceId} handle={profile.handle} />{/key}
+      {:else if channel}
         <div class="chat-layout" class:thread-open={root !== null}>
           {#key channelId}
             <Conversation title={channel.name} {messages} currentUser={profile.id} connected={status === 'connected'}

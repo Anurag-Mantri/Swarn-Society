@@ -232,6 +232,24 @@ integration("Postgres-backed server routes", () => {
     });
     expect(memberResponse.statusCode).toBe(201);
 
+    const filesUrl = `/api/servers/${server.id}/files`;
+    const file = await app.inject({
+      method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "src/main.ts" },
+    });
+    expect(file.statusCode).toBe(201);
+    expect(file.json()).toMatchObject({ path: "src/main.ts" });
+    const fileList = await app.inject({ url: filesUrl, headers: { cookie } });
+    expect(fileList.json()).toEqual([file.json()]);
+    expect((await app.inject({
+      method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "SRC" },
+    })).statusCode).toBe(409);
+    expect((await app.inject({
+      method: "POST", url: filesUrl, headers: { cookie }, payload: { path: "../private.txt" },
+    })).statusCode).toBe(400);
+    expect((await app.inject({
+      url: filesUrl, headers: { cookie: `session=${outsiderSecret}` },
+    })).statusCode).toBe(403);
+
     const outsiderHistory = await app.inject({
       method: "GET",
       url: `/api/channels/${channel.id}/messages`,

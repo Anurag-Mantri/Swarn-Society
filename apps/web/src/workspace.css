@@ -66,3 +66,6 @@ a.primary { display: inline-block; }
   .workspace-shell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
 }
+
+.workspace-view { display: flex; gap: .4rem; }
+.workspace-view button[aria-pressed="true"] { background: var(--active); }

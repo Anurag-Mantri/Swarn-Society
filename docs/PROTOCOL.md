@@ -67,7 +67,6 @@ Hosts advertise `version: 2` in their `host` frame to receive threaded tasks. Ho
 | `agent.budget` | host -> server | Usage per requester |
 | `task.post` / `task.claim` / `task.decline` / `task.done` | all | Swarm coordination |
 | `host.heartbeat` | host -> server | Liveness for failover |
-| `ws.sync` | client <-> collab | Yjs updates (handled by Hocuspocus) |
 | `git.status` | server -> client | ahead/behind for the sync branch |
 
 ## Rules
@@ -82,3 +81,9 @@ Hosts advertise `version: 2` in their `host` frame to receive threaded tasks. Ho
 Browser clients send a `hello` frame without `session`. The server reads the HttpOnly session cookie from the upgrade and requires an exact `Origin` match to the configured GitHub OAuth callback origin. Clients may still send an explicit session as before. Cookie-authenticated sockets also receive the message broadcast for their own posts. Initialization includes `serverId` on each readable channel so clients can group channels by workspace.
 
 `GET /api/servers` lists the signed-in user's workspaces as `{id, name, ownerId}` records. Unauthenticated requests receive HTTP 401.
+
+## Shared workspace files
+
+`GET /api/servers/:serverId/files` lists file IDs and repository-relative paths. `POST` on the same route accepts `{path}` and returns `{id, path}` for the new file. Members with server read permission can list files. Members need both read and send permissions to create or edit them.
+
+`/collaboration` carries binary Hocuspocus messages using workspace file UUIDs as document names. The upgrade requires an authenticated session cookie and the configured public origin. Hocuspocus authorizes each document against its workspace. Clients with read permission can sync in read-only mode. Clients with edit permission can update the shared Yjs text named `content`. Editor cursors are ephemeral awareness data. The server caps each collaboration frame at 256 KiB and the encoded document state at 192 KiB.

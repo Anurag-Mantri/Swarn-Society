@@ -10,8 +10,8 @@ The SvelteKit client uses Fastify for sign-in, workspace and channel management,
 4. Start the server on port 3000 with `pnpm --filter @swarmroom/server dev`.
 5. Run `pnpm --filter @swarmroom/protocol build`, then `pnpm --filter @swarmroom/web dev`. Open `http://localhost:5173`.
 
-Vite proxies `/api`, `/auth`, and `/ws` to Fastify. The browser uses its HttpOnly cookie to authenticate the WebSocket.
+Vite proxies `/api`, `/auth`, `/ws`, and `/collaboration` to Fastify. The browser uses its HttpOnly cookie to authenticate the WebSocket.
 
 ## Build
 
-Run `pnpm build`. Serve `apps/web/dist` and route `/api`, `/auth`, and `/ws` to Fastify under the same public origin. Configure `GITHUB_CALLBACK_URL` with that public origin and enable WebSocket upgrades for `/ws`.
+Run `pnpm build`. Serve `apps/web/dist` and route `/api`, `/auth`, `/ws`, and `/collaboration` to Fastify under the same public origin. Configure `GITHUB_CALLBACK_URL` with that public origin and enable WebSocket upgrades for `/ws` and `/collaboration`.
