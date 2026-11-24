@@ -28,7 +28,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `agent_runtimes` | agent_id, host_id, status, started_at | Where it is running now |
 | `agent_permissions` | agent_id, role_id or user_id, can_invoke, tools_allowed (json) | Who may call it and with what |
 | `budgets` | agent_id, requester_id, window (`hour`/`day`/`task`), token_limit | Enforced on the host; mirrored for display |
-| `usage` | id, agent_id, requester_id, host_id, tokens_in, tokens_out, at | Reported by daemons |
+| `agent_usage` | id, agent_id, requester_id, host_id, tokens_in, tokens_out, reported_at | Display usage reported by authorized daemons; host budgets remain authoritative |
 
 **Never stored:** API keys, env variables, model credentials.
 

@@ -1,186 +1,165 @@
 {
   "nodes": [
     {
-      "id": "server::server::file::auth",
+      "id": "server::file::auth",
       "label": "auth.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:1"
     },
     {
-      "id": "server::server::auth::getsessionuser",
+      "id": "server::auth::getsessionuser",
       "label": "getSessionUser",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:7"
     },
     {
-      "id": "server::server::auth::requireuser",
+      "id": "server::auth::requireuser",
       "label": "requireUser",
       "fileType": "code",
       "sourceFile": "apps/server/src/auth.ts",
       "sourceLocation": "apps/server/src/auth.ts:25"
     },
     {
-      "id": "server::server::file::config",
+      "id": "server::file::config",
       "label": "config.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/config.ts",
       "sourceLocation": "apps/server/src/config.ts:1"
     },
     {
-      "id": "server::server::file::index",
+      "id": "server::file::index",
       "label": "index.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
       "sourceLocation": "apps/server/src/index.ts:1"
     },
     {
-      "id": "server::server::file::schema",
+      "id": "server::file::schema",
       "label": "schema.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/db/schema.ts",
       "sourceLocation": "apps/server/src/db/schema.ts:1"
     },
     {
-      "id": "server::server::index::flushhoststatusupdates",
+      "id": "server::index::flushhoststatusupdates",
       "label": "flushHostStatusUpdates",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "apps/server/src/index.ts:57"
+      "sourceLocation": "apps/server/src/index.ts:61"
     },
     {
-      "id": "server::server::index::hasserverpermission",
+      "id": "server::index::hasserverpermission",
       "label": "hasServerPermission",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "apps/server/src/index.ts:92"
+      "sourceLocation": "apps/server/src/index.ts:96"
     },
     {
-      "id": "server::server::index::expirestalehosts",
+      "id": "server::index::expirestalehosts",
       "label": "expireStaleHosts",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "apps/server/src/index.ts:115"
+      "sourceLocation": "apps/server/src/index.ts:119"
     },
     {
-      "id": "server::server::index::broadcastchannel",
+      "id": "server::index::broadcastchannel",
       "label": "broadcastChannel",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "apps/server/src/index.ts:131"
+      "sourceLocation": "apps/server/src/index.ts:135"
     },
     {
-      "id": "server::server::index::close",
+      "id": "server::index::close",
       "label": "close",
       "fileType": "code",
       "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "apps/server/src/index.ts:525"
+      "sourceLocation": "apps/server/src/index.ts:529"
     },
     {
-      "id": "server::server::file::integration_test",
+      "id": "server::file::integration_test",
       "label": "integration.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:1"
     },
     {
-      "id": "server::server::integration_test::connectwebsocket",
+      "id": "server::integration_test::connectwebsocket",
       "label": "connectWebSocket",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:14"
     },
     {
-      "id": "server::server::integration_test::nextwebsocketframe",
+      "id": "server::integration_test::nextwebsocketframe",
       "label": "nextWebSocketFrame",
       "fileType": "code",
       "sourceFile": "apps/server/src/integration.test.ts",
       "sourceLocation": "apps/server/src/integration.test.ts:22"
     },
     {
-      "id": "server::server::file::main",
+      "id": "server::file::main",
       "label": "main.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/main.ts",
       "sourceLocation": "apps/server/src/main.ts:1"
     },
     {
-      "id": "server::server::file::permissions",
+      "id": "server::file::permissions",
       "label": "permissions.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.ts",
       "sourceLocation": "apps/server/src/permissions.ts:1"
     },
     {
-      "id": "server::server::permissions::includespermission",
+      "id": "server::permissions::includespermission",
       "label": "includesPermission",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.ts",
       "sourceLocation": "apps/server/src/permissions.ts:16"
     },
     {
-      "id": "server::server::file::permissions_test",
+      "id": "server::file::permissions_test",
       "label": "permissions.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/permissions.test.ts",
       "sourceLocation": "apps/server/src/permissions.test.ts:1"
     },
     {
-      "id": "server::server::file::security",
+      "id": "server::file::security",
       "label": "security.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:1"
     },
     {
-      "id": "server::server::security::hashsecret",
+      "id": "server::security::hashsecret",
       "label": "hashSecret",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:3"
     },
     {
-      "id": "server::server::security::createsecret",
+      "id": "server::security::createsecret",
       "label": "createSecret",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:7"
     },
     {
-      "id": "server::server::security::secretsequal",
+      "id": "server::security::secretsequal",
       "label": "secretsEqual",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.ts",
       "sourceLocation": "apps/server/src/security.ts:11"
     },
     {
-      "id": "server::server::file::security_test",
+      "id": "server::file::security_test",
       "label": "security.test.ts",
       "fileType": "code",
       "sourceFile": "apps/server/src/security.test.ts",
       "sourceLocation": "apps/server/src/security.test.ts:1"
-    },
-    {
-      "id": "protocol::file::index",
-      "label": "index.ts",
-      "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "packages/protocol/src/index.ts:1"
-    },
-    {
-      "id": "protocol::index::text",
-      "label": "text",
-      "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "packages/protocol/src/index.ts:3"
-    },
-    {
-      "id": "protocol::file::index_test",
-      "label": "index.test.ts",
-      "fileType": "code",
-      "sourceFile": "packages/protocol/src/index.test.ts",
-      "sourceLocation": "packages/protocol/src/index.test.ts:1"
     },
     {
       "id": "daemon::file::agent_runtime_cli",
@@ -488,14 +467,14 @@
       "label": ".abortActiveTasks",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:129"
+      "sourceLocation": "apps/daemon/src/host-client.ts:143"
     },
     {
       "id": "daemon::host_client::hostclient::send",
       "label": ".send",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:133"
+      "sourceLocation": "apps/daemon/src/host-client.ts:147"
     },
     {
       "id": "daemon::file::host_client_test",
@@ -677,77 +656,77 @@
       "label": "BrokerError",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:70"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:76"
     },
     {
       "id": "daemon::provider_broker::brokererror::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:71"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:77"
     },
     {
       "id": "daemon::provider_broker::sendjson",
       "label": "sendJson",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:76"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:82"
     },
     {
       "id": "daemon::provider_broker::readrequestbody",
       "label": "readRequestBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:81"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:87"
     },
     {
       "id": "daemon::provider_broker::readresponsebody",
       "label": "readResponseBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:96"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:102"
     },
     {
       "id": "daemon::provider_broker::prepareproviderbody",
       "label": "prepareProviderBody",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:119"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:125"
     },
     {
       "id": "daemon::provider_broker::providerusage",
       "label": "providerUsage",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:134"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:140"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker",
       "label": "LocalProviderEgressBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:154"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:161"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:155"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:162"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker::openfortask",
       "label": ".openForTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:161"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:168"
     },
     {
       "id": "daemon::provider_broker::localprovideregressbroker::handlerequest",
       "label": ".handleRequest",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/provider-broker.ts",
-      "sourceLocation": "apps/daemon/src/provider-broker.ts:218"
+      "sourceLocation": "apps/daemon/src/provider-broker.ts:231"
     },
     {
       "id": "daemon::file::provider_broker_test",
@@ -817,70 +796,70 @@
       "label": "childEnvironment",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:30"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:29"
     },
     {
       "id": "daemon::podman::spawnoptions",
       "label": "spawnOptions",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:42"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:41"
     },
     {
       "id": "daemon::podman::collectprocessoutput",
       "label": "collectProcessOutput",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:46"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:45"
     },
     {
       "id": "daemon::podman::assertrootlesspodmaninfo",
       "label": "assertRootlessPodmanInfo",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:88"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:87"
     },
     {
       "id": "daemon::podman::buildrunarguments",
       "label": "buildRunArguments",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:104"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:103"
     },
     {
       "id": "daemon::podman::resolveworkspaces",
       "label": "resolveWorkspaces",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:121"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:120"
     },
     {
       "id": "daemon::podman::podmansandboxbackend",
       "label": "PodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:156"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:155"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:159"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:158"
     },
     {
       "id": "daemon::podman::podmansandboxbackend::run",
       "label": ".run",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:166"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:165"
     },
     {
       "id": "daemon::podman::createpodmansandboxbackend",
       "label": "createPodmanSandboxBackend",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:202"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.ts:203"
     },
     {
       "id": "daemon::file::podman_test",
@@ -894,28 +873,28 @@
       "label": "workspace",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:22"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:21"
     },
     {
       "id": "daemon::podman_test::fakebroker",
       "label": "fakeBroker",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:28"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:27"
     },
     {
       "id": "daemon::podman_test::fakechild",
       "label": "fakeChild",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:32"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:36"
     },
     {
       "id": "daemon::podman.test::launch",
       "label": "launch",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/podman.test.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:55"
+      "sourceLocation": "apps/daemon/src/sandbox/podman.test.ts:59"
     },
     {
       "id": "daemon::file::runner",
@@ -925,25 +904,39 @@
       "sourceLocation": "apps/daemon/src/sandbox/runner.ts:1"
     },
     {
+      "id": "daemon::runner::sandboxexecutionerror",
+      "label": "SandboxExecutionError",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:13"
+    },
+    {
+      "id": "daemon::runner::sandboxexecutionerror::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/sandbox/runner.ts",
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:14"
+    },
+    {
       "id": "daemon::runner::sandboxrunner",
       "label": "SandboxRunner",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:7"
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:27"
     },
     {
       "id": "daemon::runner::sandboxrunner::constructor",
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:8"
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:28"
     },
     {
       "id": "daemon::runner::sandboxrunner::run",
       "label": ".run",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.ts",
-      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:10"
+      "sourceLocation": "apps/daemon/src/sandbox/runner.ts:30"
     },
     {
       "id": "daemon::file::runner_test",
@@ -951,133 +944,145 @@
       "fileType": "code",
       "sourceFile": "apps/daemon/src/sandbox/runner.test.ts",
       "sourceLocation": "apps/daemon/src/sandbox/runner.test.ts:1"
+    },
+    {
+      "id": "protocol::file::index",
+      "label": "index.ts",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:1"
+    },
+    {
+      "id": "protocol::index::text",
+      "label": "text",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.ts",
+      "sourceLocation": "packages/protocol/src/index.ts:3"
+    },
+    {
+      "id": "protocol::file::index_test",
+      "label": "index.test.ts",
+      "fileType": "code",
+      "sourceFile": "packages/protocol/src/index.test.ts",
+      "sourceLocation": "packages/protocol/src/index.test.ts:1"
     }
   ],
   "edges": [
     {
-      "source": "server::server::file::auth",
-      "target": "server::server::auth::getsessionuser",
+      "source": "server::file::auth",
+      "target": "server::auth::getsessionuser",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/auth.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js:5",
+      "sourceFile": "apps/server/dist/auth.js",
+      "sourceLocation": "apps/server/dist/auth.js:5",
       "weight": 1
     },
     {
-      "source": "server::server::file::auth",
-      "target": "server::server::auth::requireuser",
+      "source": "server::file::auth",
+      "target": "server::auth::requireuser",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/auth.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/auth.js:17",
+      "sourceFile": "apps/server/dist/auth.js",
+      "sourceLocation": "apps/server/dist/auth.js:17",
       "weight": 1
     },
     {
-      "source": "server::server::file::index",
-      "target": "server::server::index::flushhoststatusupdates",
+      "source": "server::file::index",
+      "target": "server::index::flushhoststatusupdates",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:29",
+      "sourceFile": "apps/server/dist/index.js",
+      "sourceLocation": "apps/server/dist/index.js:32",
       "weight": 1
     },
     {
-      "source": "server::server::file::index",
-      "target": "server::server::index::hasserverpermission",
+      "source": "server::file::index",
+      "target": "server::index::hasserverpermission",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:57",
+      "sourceFile": "apps/server/dist/index.js",
+      "sourceLocation": "apps/server/dist/index.js:60",
       "weight": 1
     },
     {
-      "source": "server::server::file::index",
-      "target": "server::server::index::expirestalehosts",
+      "source": "server::file::index",
+      "target": "server::index::expirestalehosts",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:73",
+      "sourceFile": "apps/server/dist/index.js",
+      "sourceLocation": "apps/server/dist/index.js:76",
       "weight": 1
     },
     {
-      "source": "server::server::file::index",
-      "target": "server::server::index::broadcastchannel",
+      "source": "server::file::index",
+      "target": "server::index::broadcastchannel",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:89",
+      "sourceFile": "apps/server/dist/index.js",
+      "sourceLocation": "apps/server/dist/index.js:92",
       "weight": 1
     },
     {
-      "source": "server::server::file::index",
-      "target": "server::server::index::close",
+      "source": "server::file::index",
+      "target": "server::index::close",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/index.js:494",
+      "sourceFile": "apps/server/dist/index.js",
+      "sourceLocation": "apps/server/dist/index.js:497",
       "weight": 1
     },
     {
-      "source": "server::server::file::integration_test",
-      "target": "server::server::integration_test::connectwebsocket",
+      "source": "server::file::integration_test",
+      "target": "server::integration_test::connectwebsocket",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/integration.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js:12",
+      "sourceFile": "apps/server/dist/integration.test.js",
+      "sourceLocation": "apps/server/dist/integration.test.js:12",
       "weight": 1
     },
     {
-      "source": "server::server::file::integration_test",
-      "target": "server::server::integration_test::nextwebsocketframe",
+      "source": "server::file::integration_test",
+      "target": "server::integration_test::nextwebsocketframe",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/integration.test.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/integration.test.js:19",
+      "sourceFile": "apps/server/dist/integration.test.js",
+      "sourceLocation": "apps/server/dist/integration.test.js:19",
       "weight": 1
     },
     {
-      "source": "server::server::file::permissions",
-      "target": "server::server::permissions::includespermission",
+      "source": "server::file::permissions",
+      "target": "server::permissions::includespermission",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/permissions.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/permissions.js:14",
+      "sourceFile": "apps/server/dist/permissions.js",
+      "sourceLocation": "apps/server/dist/permissions.js:14",
       "weight": 1
     },
     {
-      "source": "server::server::file::security",
-      "target": "server::server::security::hashsecret",
+      "source": "server::file::security",
+      "target": "server::security::hashsecret",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/security.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:2",
+      "sourceFile": "apps/server/dist/security.js",
+      "sourceLocation": "apps/server/dist/security.js:2",
       "weight": 1
     },
     {
-      "source": "server::server::file::security",
-      "target": "server::server::security::createsecret",
+      "source": "server::file::security",
+      "target": "server::security::createsecret",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/security.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:5",
+      "sourceFile": "apps/server/dist/security.js",
+      "sourceLocation": "apps/server/dist/security.js:5",
       "weight": 1
     },
     {
-      "source": "server::server::file::security",
-      "target": "server::server::security::secretsequal",
+      "source": "server::file::security",
+      "target": "server::security::secretsequal",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "sourceFile": "apps/server/src/security.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/server/dist/security.js:8",
-      "weight": 1
-    },
-    {
-      "source": "protocol::file::index",
-      "target": "protocol::index::text",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "sourceFile": "packages/protocol/src/index.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/packages/protocol/dist/index.js:2",
+      "sourceFile": "apps/server/dist/security.js",
+      "sourceLocation": "apps/server/dist/security.js:8",
       "weight": 1
     },
     {
@@ -1383,7 +1388,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:129",
+      "sourceLocation": "apps/daemon/dist/host-client.js:144",
       "weight": 1
     },
     {
@@ -1392,7 +1397,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/host-client.js",
-      "sourceLocation": "apps/daemon/dist/host-client.js:133",
+      "sourceLocation": "apps/daemon/dist/host-client.js:148",
       "weight": 1
     },
     {
@@ -1635,7 +1640,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:128",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:130",
       "weight": 1
     },
     {
@@ -1644,7 +1649,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:132",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:134",
       "weight": 1
     },
     {
@@ -1653,7 +1658,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:137",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:139",
       "weight": 1
     },
     {
@@ -1662,7 +1667,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/provider-broker.js",
-      "sourceLocation": "apps/daemon/dist/provider-broker.js:193",
+      "sourceLocation": "apps/daemon/dist/provider-broker.js:201",
       "weight": 1
     },
     {
@@ -1815,7 +1820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:197",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.js:198",
       "weight": 1
     },
     {
@@ -1824,7 +1829,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:11",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:10",
       "weight": 1
     },
     {
@@ -1833,7 +1838,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:16",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:15",
       "weight": 1
     },
     {
@@ -1842,7 +1847,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:19",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:23",
       "weight": 1
     },
     {
@@ -1851,7 +1856,25 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/podman.test.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:40",
+      "sourceLocation": "apps/daemon/dist/sandbox/podman.test.js:44",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::runner",
+      "target": "daemon::runner::sandboxexecutionerror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/sandbox/runner.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:1",
+      "weight": 1
+    },
+    {
+      "source": "daemon::runner::sandboxexecutionerror",
+      "target": "daemon::runner::sandboxexecutionerror::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/dist/sandbox/runner.js",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:4",
       "weight": 1
     },
     {
@@ -1860,7 +1883,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/runner.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:1",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:10",
       "weight": 1
     },
     {
@@ -1869,7 +1892,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/runner.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:3",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:12",
       "weight": 1
     },
     {
@@ -1878,14 +1901,23 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/dist/sandbox/runner.js",
-      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:6",
+      "sourceLocation": "apps/daemon/dist/sandbox/runner.js:15",
+      "weight": 1
+    },
+    {
+      "source": "protocol::file::index",
+      "target": "protocol::index::text",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "packages/protocol/dist/index.js",
+      "sourceLocation": "packages/protocol/dist/index.js:2",
       "weight": 1
     }
   ],
   "metadata": {
     "files": 33,
-    "nodes": 136,
-    "edges": 103,
-    "builtAt": "2026-11-24T18:42:57.148Z"
+    "nodes": 138,
+    "edges": 105,
+    "builtAt": "2026-11-24T18:58:53.856Z"
   }
 }

@@ -43,8 +43,11 @@ Connection roles are decided by the first message: `hello` makes a **user** conn
 | `hello` | client -> server | `session`, optional `version` | Authenticate a user by its HTTP session secret |
 | `host` | host -> server | `token`, `machine`, `agents[]`, optional `version` | Register a host and its agent names |
 | `host.heartbeat` | host -> server | optional `at` | Mark the host as active |
+| `agent.usage` | host -> server; server -> channel members | `channelId`, `agent`, `requesterId`, `tokensIn`, `tokensOut` | Report provider token usage for display; host budgets remain authoritative |
 | `reply` | host -> server | `channelId`, `agent`, `text` | Store and broadcast an agent reply |
 | `host.registered` | server -> host | `hostId` | Confirm host registration |
+
+The server accepts usage reports only when the host is registered and enabled for the named agent, the channel belongs to that agent's server, and the requester is a server member allowed to invoke agents. Valid reports are stored and broadcast to channel members. They are display data; the host remains the authority for budget enforcement.
 
 ## Planned additions
 | `t` | Direction | Purpose |

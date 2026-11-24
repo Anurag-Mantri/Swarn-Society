@@ -136,3 +136,10 @@ Date: 2026-11-24
 Context: Requester budgets must be enforced locally without trusting usage claims from the sandbox or storing prompts.
 Decision: Configure owner IDs and per-task/hour/day token limits on the host. Before each provider request, reserve tokens using serialized request bytes, the output cap and a framing allowance. Settle with usage returned by the fixed provider API; if usage is missing or the request fails after dispatch, retain the full reservation. Persist only agent/requester IDs, timestamps, task IDs and token counts.
 Consequences: Budget enforcement is opt-in per host configuration to preserve existing daemon setups. Missing policy means no requester-specific budget is applied; usage estimates can conservatively deny a call before dispatch.
+
+### D-022: Server-reported usage is display-only
+Status: Accepted
+Date: 2026-11-24
+Context: Teams need usage visibility, but host-side budgets must remain enforceable without server availability or trust in the control plane.
+Decision: The daemon reports provider-reported input and output token counts after a task. The server validates the host's agent assignment, requester membership and invoke permission before persisting and broadcasting the report. Server usage never changes the host's budget decisions.
+Consequences: Usage can be missing when a provider call fails or a sandbox exits before reporting. The server treats reports as host-provided display data, not billing records.
