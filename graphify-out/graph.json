@@ -316,11 +316,60 @@
       "sourceLocation": "apps/daemon/src/keychain.ts:19"
     },
     {
+      "id": "daemon::keychain::agentsecretkeychain",
+      "label": "AgentSecretKeychain",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:24"
+    },
+    {
+      "id": "daemon::keychain::agentsecretkeychain::constructor",
+      "label": ".constructor",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:25"
+    },
+    {
+      "id": "daemon::keychain::agentsecretkeychain::store",
+      "label": ".store",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:30"
+    },
+    {
+      "id": "daemon::keychain::agentsecretkeychain::load",
+      "label": ".load",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:35"
+    },
+    {
+      "id": "daemon::keychain::agentsecretkeychain::delete",
+      "label": ".delete",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:39"
+    },
+    {
+      "id": "daemon::keychain::agentsecretkeychain::entry",
+      "label": ".entry",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:43"
+    },
+    {
       "id": "daemon::keychain::createsystemhosttokenkeychain",
       "label": "createSystemHostTokenKeychain",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/keychain.ts",
-      "sourceLocation": "apps/daemon/src/keychain.ts:24"
+      "sourceLocation": "apps/daemon/src/keychain.ts:52"
+    },
+    {
+      "id": "daemon::keychain::createsystemagentsecretkeychain",
+      "label": "createSystemAgentSecretKeychain",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "apps/daemon/src/keychain.ts:59"
     },
     {
       "id": "daemon::file::keychain_test",
@@ -767,11 +816,74 @@
     },
     {
       "source": "daemon::file::keychain",
-      "target": "daemon::keychain::createsystemhosttokenkeychain",
+      "target": "daemon::keychain::agentsecretkeychain",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/keychain.ts",
       "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:18",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::agentsecretkeychain",
+      "target": "daemon::keychain::agentsecretkeychain::constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:21",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::agentsecretkeychain",
+      "target": "daemon::keychain::agentsecretkeychain::store",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:25",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::agentsecretkeychain",
+      "target": "daemon::keychain::agentsecretkeychain::load",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:30",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::agentsecretkeychain",
+      "target": "daemon::keychain::agentsecretkeychain::delete",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:33",
+      "weight": 1
+    },
+    {
+      "source": "daemon::keychain::agentsecretkeychain",
+      "target": "daemon::keychain::agentsecretkeychain::entry",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:36",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::keychain",
+      "target": "daemon::keychain::createsystemhosttokenkeychain",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:44",
+      "weight": 1
+    },
+    {
+      "source": "daemon::file::keychain",
+      "target": "daemon::keychain::createsystemagentsecretkeychain",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/keychain.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/keychain.js:50",
       "weight": 1
     },
     {
@@ -966,8 +1078,8 @@
   ],
   "metadata": {
     "files": 23,
-    "nodes": 73,
-    "edges": 50,
-    "builtAt": "2026-11-24T01:05:00Z"
+    "nodes": 80,
+    "edges": 57,
+    "builtAt": "2026-11-24T01:12:00Z"
   }
 }
