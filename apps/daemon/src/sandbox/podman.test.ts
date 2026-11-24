@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxConfig } from "../config.js";
 import { createPodmanSandboxBackend, type PodmanSpawnFunction } from "./podman.js";
 import type { ProviderEgressBroker } from "../provider-broker.js";
-import { BudgetExceededError } from "../budget-ledger.js";
 
 const image = `registry.example/swarmroom-agent@sha256:${"a".repeat(64)}`;
 const workspaces: string[] = [];
@@ -26,7 +25,12 @@ async function workspace(): Promise<string> {
 }
 
 function fakeBroker(socketPath: string, close = vi.fn(async () => undefined)): ProviderEgressBroker {
-  return { openForTask: async () => ({ socketPath, budgetExceeded: () => false, close }) };
+  return { openForTask: async () => ({
+    socketPath,
+    budgetExceeded: () => false,
+    usage: () => ({ inputTokens: 0, outputTokens: 0 }),
+    close,
+  }) };
 }
 
 function fakeChild(): FakeChild {
@@ -72,7 +76,10 @@ describe("rootless Podman sandbox", () => {
     const config: SandboxConfig = { image, workspaces: new Map([["scout", cwd]]) };
     const backend = await createPodmanSandboxBackend(config, fakeBroker(brokerSocket, closeBroker), launch);
     const task = { t: "task" as const, channelId: "c1", from: "u1", agent: "scout", text: "$(touch /tmp/unsafe)" };
-    await expect(backend.run(task, new AbortController().signal)).resolves.toBe("sandbox response");
+    await expect(backend.run(task, new AbortController().signal)).resolves.toEqual({
+      text: "sandbox response",
+      usage: { inputTokens: 0, outputTokens: 0 },
+    });
 
     expect(calls).toHaveLength(2);
     expect(calls[1]?.command).toBe("podman");
@@ -97,6 +104,7 @@ describe("rootless Podman sandbox", () => {
       openForTask: async () => ({
         socketPath: "/tmp/provider.sock",
         budgetExceeded: () => true,
+        usage: () => ({ inputTokens: 15, outputTokens: 7 }),
         close: async () => undefined,
       }),
     };
@@ -114,7 +122,7 @@ describe("rootless Podman sandbox", () => {
     const backend = await createPodmanSandboxBackend({ image, workspaces: new Map([["scout", cwd]]) }, broker, launch);
     await expect(backend.run({
       t: "task", channelId: "channel", from: "requester", agent: "scout", text: "hello",
-    }, new AbortController().signal)).rejects.toBeInstanceOf(BudgetExceededError);
+    }, new AbortController().signal)).rejects.toMatchObject({ budgetExceeded: true, usage: { inputTokens: 15, outputTokens: 7 } });
   });
 
   it("rejects rootful or remote Podman runtimes", async () => {

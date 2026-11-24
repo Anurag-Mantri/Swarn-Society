@@ -5,9 +5,8 @@ import { realpath, stat } from "node:fs/promises";
 import type { ChildProcessWithoutNullStreams, SpawnOptions } from "node:child_process";
 import type { Task } from "@swarmroom/protocol";
 import type { SandboxConfig } from "../config.js";
-import type { SandboxBackend } from "./runner.js";
+import { SandboxExecutionError, type SandboxBackend, type SandboxResult } from "./runner.js";
 import type { ProviderEgressBroker, ProviderBrokerLease } from "../provider-broker.js";
-import { BudgetExceededError } from "../budget-ledger.js";
 
 const CONTAINER_COMMAND = ["/usr/local/bin/swarmroom-agent"] as const;
 const MAX_WALL_TIME_MS = 120_000;
@@ -163,7 +162,7 @@ class PodmanSandboxBackend implements SandboxBackend {
     private readonly launch: PodmanSpawnFunction,
   ) {}
 
-  async run(task: Task, signal: AbortSignal): Promise<string> {
+  async run(task: Task, signal: AbortSignal): Promise<SandboxResult> {
     if (signal.aborted) throw new Error("Sandbox task was cancelled.");
     if (this.busy) throw new Error("Sandbox is busy.");
     const workspace = this.workspaces.get(task.agent);
@@ -180,13 +179,15 @@ class PodmanSandboxBackend implements SandboxBackend {
           child.stdin.on("error", () => undefined);
           child.stdin.end(JSON.stringify(task));
           const output = await collectProcessOutput(child, MAX_OUTPUT_BYTES, MAX_WALL_TIME_MS);
-          if (brokerLease.budgetExceeded()) throw new BudgetExceededError();
+          if (brokerLease.budgetExceeded()) {
+            throw new SandboxExecutionError("Requester token budget exceeded.", brokerLease.usage(), true);
+          }
           const text = output.toString("utf8").trim();
           if (!text) throw new Error("Sandbox returned an empty response.");
-          return text.slice(0, 8_000);
+          return { text: text.slice(0, 8_000), usage: brokerLease.usage() };
         } catch (error) {
-          if (brokerLease.budgetExceeded()) throw new BudgetExceededError();
-          throw error;
+          if (error instanceof SandboxExecutionError) throw error;
+          throw new SandboxExecutionError("Sandbox execution failed.", brokerLease.usage(), brokerLease.budgetExceeded());
         } finally {
           signal.removeEventListener("abort", abort);
         }

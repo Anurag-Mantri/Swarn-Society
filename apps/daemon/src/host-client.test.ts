@@ -6,9 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 import WebSocket, { WebSocketServer } from "ws";
 import type { DaemonConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
-import { SandboxRunner } from "./sandbox/runner.js";
+import { SandboxExecutionError, SandboxRunner } from "./sandbox/runner.js";
 import { LocalAuditLog } from "./audit-log.js";
-import { BudgetExceededError } from "./budget-ledger.js";
 
 describe("host client", () => {
   it("authenticates, sends tasks to the sandbox runner, and returns replies", async () => {
@@ -28,7 +27,7 @@ describe("host client", () => {
           if (typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host") {
             socket.send(JSON.stringify({ t: "host.registered", hostId: "host-1" }));
             socket.send(JSON.stringify({
-              t: "task", channelId: "channel-1", from: "user-1", agent: "scout", text: "inspect this",
+              t: "task", channelId: "channel-1", from: "00000000-0000-4000-8000-000000000001", agent: "scout", text: "inspect this",
             }));
           } else if (typeof frame === "object" && frame !== null && "t" in frame && frame.t === "reply") {
             clearTimeout(timeout);
@@ -38,7 +37,7 @@ describe("host client", () => {
       });
     });
 
-    const run = vi.fn(async () => "sandbox result");
+    const run = vi.fn(async () => ({ text: "sandbox result", usage: { inputTokens: 123, outputTokens: 45 } }));
     const config: DaemonConfig = {
       controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`),
       machine: "test machine",
@@ -58,13 +57,21 @@ describe("host client", () => {
       });
       expect(hostFrames[0]).toMatchObject({ t: "host", token: "host-token", machine: "test machine", agents: ["scout"] });
       expect(run).toHaveBeenCalledWith(
-        { t: "task", channelId: "channel-1", from: "user-1", agent: "scout", text: "inspect this" },
+        { t: "task", channelId: "channel-1", from: "00000000-0000-4000-8000-000000000001", agent: "scout", text: "inspect this" },
         expect.any(AbortSignal),
       );
       const audit = await readFile(join(auditDirectory, "audit.jsonl"), "utf8");
       expect(audit).toContain('"t":"task.started"');
       expect(audit).toContain('"t":"task.succeeded"');
       expect(audit).not.toContain("inspect this");
+      expect(hostFrames).toContainEqual({
+        t: "agent.usage",
+        channelId: "channel-1",
+        agent: "scout",
+        requesterId: "00000000-0000-4000-8000-000000000001",
+        tokensIn: 123,
+        tokensOut: 45,
+      });
     } finally {
       client.stop();
       await started;
@@ -97,7 +104,7 @@ describe("host client", () => {
         });
       });
     });
-    const run = vi.fn(async () => "must not run");
+    const run = vi.fn(async () => ({ text: "must not run", usage: { inputTokens: 0, outputTokens: 0 } }));
     const audit = { recordTask: vi.fn(async () => { throw new Error("audit store unavailable"); }) };
     const config: DaemonConfig = {
       controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`),
@@ -144,7 +151,9 @@ describe("host client", () => {
         });
       });
     });
-    const run = vi.fn(async () => { throw new BudgetExceededError(); });
+    const run = vi.fn(async () => {
+      throw new SandboxExecutionError("budget exceeded", { inputTokens: 0, outputTokens: 0 }, true);
+    });
     const config: DaemonConfig = {
       controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`),
       machine: "test machine",
@@ -174,7 +183,7 @@ describe("host client", () => {
     let serverSocket: WebSocket | undefined;
     let signalStarted: ((signal: AbortSignal) => void) | undefined;
     const runnerStarted = new Promise<AbortSignal>((resolve) => { signalStarted = resolve; });
-    const run = vi.fn((_task: unknown, signal: AbortSignal) => new Promise<string>((_resolve, reject) => {
+    const run = vi.fn((_task: unknown, signal: AbortSignal) => new Promise<{ text: string; usage: { inputTokens: number; outputTokens: number } }>((_resolve, reject) => {
       signalStarted?.(signal);
       signal.addEventListener("abort", () => reject(new Error("sandbox stopped")), { once: true });
     }));

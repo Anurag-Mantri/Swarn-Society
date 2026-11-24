@@ -39,4 +39,23 @@ describe("protocol", () => {
     }).t).toBe("task");
     expect(() => hostClientFrameSchema.parse({ t: "msg", channelId: "channel-1", text: "hello" })).toThrow();
   });
+
+  it("validates bounded host-reported token usage", () => {
+    expect(hostClientFrameSchema.parse({
+      t: "agent.usage",
+      channelId: "channel-1",
+      agent: "scout",
+      requesterId: "00000000-0000-4000-8000-000000000001",
+      tokensIn: 400,
+      tokensOut: 120,
+    })).toMatchObject({ t: "agent.usage", tokensIn: 400, tokensOut: 120 });
+    expect(() => hostClientFrameSchema.parse({
+      t: "agent.usage",
+      channelId: "channel-1",
+      agent: "scout",
+      requesterId: "user-1",
+      tokensIn: -1,
+      tokensOut: 0,
+    })).toThrow();
+  });
 });

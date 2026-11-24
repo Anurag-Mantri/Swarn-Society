@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { db, pool } from "./db/index.js";
-import { agentHosts, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
+import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
 import { hashSecret } from "./security.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -67,7 +67,7 @@ integration("Postgres-backed server routes", () => {
       throw new Error("Refusing to truncate a database whose name does not end in _test");
     }
     await migrate(db, { migrationsFolder: new URL("../drizzle", import.meta.url).pathname });
-    await pool.query("TRUNCATE TABLE agent_hosts, agents, messages, channels, member_roles, members, roles, hosts, sessions, servers, users CASCADE");
+    await pool.query("TRUNCATE TABLE agent_usage, agent_hosts, agents, messages, channels, member_roles, members, roles, hosts, sessions, servers, users CASCADE");
     const [user] = await db.insert(users).values({ githubId: "integration-user", handle: "integration" }).returning();
     if (!user) throw new Error("Could not seed integration user");
     userId = user.id;
@@ -362,6 +362,24 @@ integration("Postgres-backed server routes", () => {
       } else {
         expect(replyResult.frame).toMatchObject({ t: "error", code: "unauthorized_reply" });
       }
+
+      const usageBroadcast = nextWebSocketFrame(userSocket, "agent usage broadcast", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "agent.usage");
+      hostSocket.send(JSON.stringify({
+        t: "agent.usage",
+        channelId: channel.id,
+        agent: "routing-agent",
+        requesterId: userId,
+        tokensIn: 321,
+        tokensOut: 87,
+      }));
+      expect(await usageBroadcast).toMatchObject({
+        t: "agent.usage", channelId: channel.id, agent: "routing-agent", requesterId: userId,
+        tokensIn: 321, tokensOut: 87,
+      });
+      const usageRows = await db.select().from(agentUsage).where(eq(agentUsage.requesterId, userId));
+      expect(usageRows).toHaveLength(1);
+      expect(usageRows[0]).toMatchObject({ tokensIn: 321, tokensOut: 87, hostId: host.id });
 
       const oldHostClosed = new Promise<number>((resolve) => {
         hostSocket.once("close", (code) => resolve(code));

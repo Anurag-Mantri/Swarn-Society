@@ -58,7 +58,13 @@ const providerRoutes: Record<string, ProviderRoute> = {
 export interface ProviderBrokerLease {
   socketPath: string;
   budgetExceeded(): boolean;
+  usage(): ProviderTokenUsage;
   close(): Promise<void>;
+}
+
+export interface ProviderTokenUsage {
+  inputTokens: number;
+  outputTokens: number;
 }
 
 export interface ProviderEgressBroker {
@@ -131,7 +137,7 @@ function prepareProviderBody(route: ProviderRoute, value: Record<string, unknown
   return JSON.stringify(body);
 }
 
-function providerUsage(route: string, body: Buffer): number | undefined {
+function providerUsage(route: string, body: Buffer): ProviderTokenUsage | undefined {
   let decoded: unknown;
   try {
     decoded = JSON.parse(body.toString("utf8")) as unknown;
@@ -148,7 +154,8 @@ function providerUsage(route: string, body: Buffer): number | undefined {
   const output = usage[outputField];
   if (typeof input !== "number" || !Number.isSafeInteger(input) || input < 0 ||
       typeof output !== "number" || !Number.isSafeInteger(output) || output < 0) return undefined;
-  return input + output;
+  if (!Number.isSafeInteger(input + output)) return undefined;
+  return { inputTokens: input, outputTokens: output };
 }
 
 export class LocalProviderEgressBroker implements ProviderEgressBroker {
@@ -165,8 +172,13 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     let requestCount = 0;
     let busy = false;
     let budgetExceeded = false;
+    let inputTokens = 0;
+    let outputTokens = 0;
     const server = createServer((request, response) => {
-      void this.handleRequest(task.agent, budget, request, response, () => { budgetExceeded = true; }, () => {
+      void this.handleRequest(task.agent, budget, request, response, () => { budgetExceeded = true; }, (usage) => {
+        inputTokens += usage.inputTokens;
+        outputTokens += usage.outputTokens;
+      }, () => {
         requestCount += 1;
         return requestCount;
       }, () => {
@@ -204,6 +216,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     return {
       socketPath,
       budgetExceeded: () => budgetExceeded,
+      usage: () => ({ inputTokens, outputTokens }),
       close: async () => {
         await new Promise<void>((resolve, reject) => {
           server.close((error) => error ? reject(error) : resolve());
@@ -221,6 +234,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     request: IncomingMessage,
     response: ServerResponse,
     markBudgetExceeded: () => void,
+    recordUsage: (usage: ProviderTokenUsage) => void,
     countRequest: () => number,
     beginRequest: () => boolean,
     endRequest: () => void,
@@ -278,9 +292,11 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
           throw new BrokerError(502, "Provider request failed.");
         }
         const output = await readResponseBody(upstream);
+        const usage = providerUsage(request.url ?? "", output);
+        if (usage) recordUsage(usage);
         return {
           value: { status: upstream.status, output },
-          actualTokens: providerUsage(request.url ?? "", output),
+          actualTokens: usage ? usage.inputTokens + usage.outputTokens : undefined,
         };
       });
       response.writeHead(result.status, { "content-type": "application/json", connection: "close" });

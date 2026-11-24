@@ -2,8 +2,8 @@ import { hostClientFrameSchema, hostServerFrameSchema, type HostServerFrame, typ
 import WebSocket from "ws";
 import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
+import { SandboxExecutionError } from "./sandbox/runner.js";
 import type { AuditLogger } from "./audit-log.js";
-import { BudgetExceededError } from "./budget-ledger.js";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
 const RECONNECT_MIN_MS = 1_000;
@@ -103,13 +103,17 @@ export class HostClient {
     const controller = new AbortController();
     this.activeTasks.add(controller);
     let text: string;
+    let usage: { inputTokens: number; outputTokens: number } | undefined;
     let started = false;
     try {
       await this.audit.recordTask(task, "task.started");
       started = true;
-      text = await this.runner.run(task, controller.signal);
+      const result = await this.runner.run(task, controller.signal);
+      text = result.text;
+      usage = result.usage;
       await this.audit.recordTask(task, "task.succeeded");
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof SandboxExecutionError) usage = error.usage;
       if (started) {
         try {
           await this.audit.recordTask(task, "task.failed");
@@ -117,11 +121,21 @@ export class HostClient {
           // Do not expose local audit storage errors to other users.
         }
       }
-      text = error instanceof BudgetExceededError
+      text = error instanceof SandboxExecutionError && error.budgetExceeded
         ? "This task would exceed your token budget. Ask the agent owner to raise the limit or try a shorter task."
         : "Task could not be completed in the host sandbox.";
     } finally {
       this.activeTasks.delete(controller);
+    }
+    if (usage && (usage.inputTokens > 0 || usage.outputTokens > 0)) {
+      this.send({
+        t: "agent.usage",
+        channelId: task.channelId,
+        agent: task.agent,
+        requesterId: task.from,
+        tokensIn: usage.inputTokens,
+        tokensOut: usage.outputTokens,
+      }, socket);
     }
     this.send({ t: "reply", channelId: task.channelId, agent: task.agent, text }, socket);
   }

@@ -6,11 +6,13 @@ import { eq, and, desc, lt, ne } from "drizzle-orm";
 import Fastify from "fastify";
 import type { WebSocket } from "ws";
 import { z } from "zod";
+import { alias } from "drizzle-orm/pg-core";
 import { requireUser, getSessionUser } from "./auth.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
 import {
   agents,
+  agentUsage,
   agentHosts,
   channels,
   hosts,
@@ -53,6 +55,8 @@ type UserConnection = {
 const hostConnections = new Set<HostConnection>();
 const userConnections = new Set<UserConnection>();
 const pendingHostStatusUpdates = new Set<Promise<unknown>>();
+const usageRequesterMembers = alias(members, "usage_requester_members");
+const usageHostMembers = alias(members, "usage_host_members");
 
 export async function flushHostStatusUpdates(): Promise<void> {
   await Promise.all(pendingHostStatusUpdates);
@@ -666,6 +670,49 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
             eq(hosts.tokenHash, connection.tokenHash),
             eq(hosts.status, "online"),
           ));
+        return;
+      }
+
+      if (frame.t === "agent.usage") {
+        if (!("hostId" in connection)) return;
+        const routes = await db.select({ agentId: agents.id, serverId: agents.serverId })
+          .from(agents)
+          .innerJoin(agentHosts, eq(agentHosts.agentId, agents.id))
+          .innerJoin(hosts, eq(hosts.id, agentHosts.hostId))
+          .innerJoin(channels, and(eq(channels.serverId, agents.serverId), eq(channels.id, frame.channelId)))
+          .innerJoin(usageRequesterMembers, and(
+            eq(usageRequesterMembers.serverId, agents.serverId),
+            eq(usageRequesterMembers.userId, frame.requesterId),
+          ))
+          .innerJoin(usageHostMembers, and(
+            eq(usageHostMembers.serverId, agents.serverId),
+            eq(usageHostMembers.userId, hosts.ownerId),
+          ))
+          .where(and(
+            eq(agents.name, frame.agent),
+            eq(agentHosts.hostId, connection.hostId),
+            eq(agentHosts.enabled, true),
+            eq(hosts.tokenHash, connection.tokenHash),
+            eq(hosts.status, "online"),
+          ))
+          .limit(1);
+        const route = routes[0];
+        if (!route || !await hasServerPermission(route.serverId, frame.requesterId, permissions.invokeAgents)) {
+          socket.send(JSON.stringify({
+            t: "error",
+            code: "unauthorized_usage",
+            message: "Host is not authorized to report usage for this requester and agent",
+          }));
+          return;
+        }
+        await db.insert(agentUsage).values({
+          agentId: route.agentId,
+          requesterId: frame.requesterId,
+          hostId: connection.hostId,
+          tokensIn: frame.tokensIn,
+          tokensOut: frame.tokensOut,
+        });
+        await broadcastChannel(frame.channelId, frame);
         return;
       }
 
