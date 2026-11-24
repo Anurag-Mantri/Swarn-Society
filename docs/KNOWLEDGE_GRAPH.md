@@ -34,6 +34,8 @@ Deterministic edges use confidence 100% unless the source has conflicting eviden
 
 Live capture records new messages, posted and assigned tasks, completed tasks, file creation, and collaborative edits. Message and task records commit with their graph sources. File edits are aggregated by file, editor, and UTC minute and recorded when Yjs state is saved. The graph consumes identifiers and timestamps from these operations, while their text stays in the original application records.
 
+The workspace Knowledge view lists deterministic relationships supported by the 20 most recent visible sources. Automatic acceptance requires a confidence of at least 90% and a relationship with no recorded conflict. Inferred relationships remain outside automatic acceptance. Readers can filter by a channel they can read and inspect which sources support each relationship.
+
 ## AI-assisted extraction
 AI may extract possible relationships from transcripts and free-text logs.
 AI-created edges start as pending hypotheses.

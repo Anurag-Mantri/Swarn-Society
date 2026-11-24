@@ -1,4 +1,4 @@
-import type { ChannelKind, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { ChannelKind, KnowledgeOverview, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -70,6 +70,9 @@ export const api = {
     post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/resolve`, { resolution, result }),
   taskMetrics: (channelId: string, days: string) => request<TaskCoordinationMetrics>(
     `/api/channels/${encodeURIComponent(channelId)}/tasks/metrics?days=${encodeURIComponent(days)}`
+  ),
+  knowledge: (serverId: string, channelId?: string) => request<KnowledgeOverview>(
+    `/api/servers/${encodeURIComponent(serverId)}/knowledge${channelId ? `?channelId=${encodeURIComponent(channelId)}` : ''}`
   ),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

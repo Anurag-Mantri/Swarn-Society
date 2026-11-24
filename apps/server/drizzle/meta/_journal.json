@@ -92,6 +92,13 @@
       "when": 1795551470003,
       "tag": "0012_knowledge_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795551833301,
+      "tag": "0013_knowledge_visibility",
+      "breakpoints": true
     }
   ]
 }

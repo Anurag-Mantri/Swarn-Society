@@ -61,7 +61,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Import new message, task, and workspace file events.
 - [ ] Import GitHub commit receipts and backfill historical sources.
 - [x] Store extraction method, confidence and provenance.
-- [ ] Add a 90% automatic acceptance threshold.
+- [x] Add a 90% automatic acceptance threshold and a permission-scoped knowledge view.
 - [ ] Add human approval for low-confidence and conflicting edges.
 - [ ] Rebuild graph state from source events.
 - [ ] Add AI-assisted extraction behind explicit review.

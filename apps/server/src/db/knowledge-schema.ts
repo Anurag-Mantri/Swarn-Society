@@ -1,6 +1,6 @@
 import type { KnowledgeEvent, NodeKind, Relation } from "@swarmroom/knowledge-graph";
 import { sql } from "drizzle-orm";
-import { check, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { channels, servers, users } from "./schema.js";
 
 export const knowledgeNodes = pgTable("knowledge_nodes", {
@@ -23,6 +23,7 @@ export const knowledgeEdges = pgTable("knowledge_edges", {
   relation: text("relation").$type<Relation>().notNull(),
   confidence: integer("confidence").notNull().default(100),
   method: text("method").$type<"deterministic" | "inferred">().notNull(),
+  hasConflict: boolean("has_conflict").notNull().default(false),
 }, (table) => [
   unique("knowledge_edges_scoped_id").on(table.serverId, table.id),
   unique("knowledge_edges_relationship").on(table.serverId, table.fromId, table.relation, table.toId),
