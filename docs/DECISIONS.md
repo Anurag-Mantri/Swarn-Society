@@ -143,3 +143,10 @@ Date: 2026-11-24
 Context: Teams need usage visibility, but host-side budgets must remain enforceable without server availability or trust in the control plane.
 Decision: The daemon reports provider-reported input and output token counts after a task. The server validates the host's agent assignment, requester membership and invoke permission before persisting and broadcasting the report. Server usage never changes the host's budget decisions.
 Consequences: Usage can be missing when a provider call fails or a sandbox exits before reporting. The server treats reports as host-provided display data, not billing records.
+
+### D-023: Channel roles restrict inherited server permissions
+Status: Accepted
+Date: 2026-11-24
+Context: Teams need private and read-only channels inside a server.
+Decision: A channel can deny read, send, or invoke permissions for individual server roles. Combine grants and denials independently across assigned roles, then subtract the denials. The server owner keeps full access. Managing restrictions requires both server role and channel management permissions.
+Consequences: Existing channels inherit server permissions. Reading is required to send or invoke in a channel. A daemon's host owner must be allowed to read the channel before the server sends it a task.
