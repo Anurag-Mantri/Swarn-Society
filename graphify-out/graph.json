@@ -271,42 +271,49 @@
       "label": ".constructor",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:17"
+      "sourceLocation": "apps/daemon/src/host-client.ts:18"
     },
     {
       "id": "daemon::host_client::hostclient::start",
       "label": ".start",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:24"
+      "sourceLocation": "apps/daemon/src/host-client.ts:25"
     },
     {
       "id": "daemon::host_client::hostclient::stop",
       "label": ".stop",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:40"
+      "sourceLocation": "apps/daemon/src/host-client.ts:41"
     },
     {
       "id": "daemon::host_client::hostclient::connectonce",
       "label": ".connectOnce",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:51"
+      "sourceLocation": "apps/daemon/src/host-client.ts:53"
     },
     {
       "id": "daemon::host_client::hostclient::handletask",
       "label": ".handleTask",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:98"
+      "sourceLocation": "apps/daemon/src/host-client.ts:101"
+    },
+    {
+      "id": "daemon::host_client::hostclient::abortactivetasks",
+      "label": ".abortActiveTasks",
+      "fileType": "code",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "apps/daemon/src/host-client.ts:126"
     },
     {
       "id": "daemon::host_client::hostclient::send",
       "label": ".send",
       "fileType": "code",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "apps/daemon/src/host-client.ts:120"
+      "sourceLocation": "apps/daemon/src/host-client.ts:130"
     },
     {
       "id": "daemon::file::host_client_test",
@@ -799,7 +806,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:15",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:16",
       "weight": 1
     },
     {
@@ -808,7 +815,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:21",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:22",
       "weight": 1
     },
     {
@@ -817,7 +824,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:37",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:38",
       "weight": 1
     },
     {
@@ -826,7 +833,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:48",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:50",
       "weight": 1
     },
     {
@@ -835,7 +842,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:96",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:99",
+      "weight": 1
+    },
+    {
+      "source": "daemon::host_client::hostclient",
+      "target": "daemon::host_client::hostclient::abortactivetasks",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "sourceFile": "apps/daemon/src/host-client.ts",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:126",
       "weight": 1
     },
     {
@@ -844,7 +860,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "sourceFile": "apps/daemon/src/host-client.ts",
-      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:119",
+      "sourceLocation": "/mnt/c/users/anura/projects/swarm-slack/apps/daemon/dist/host-client.js:130",
       "weight": 1
     },
     {
@@ -1156,8 +1172,8 @@
   ],
   "metadata": {
     "files": 25,
-    "nodes": 86,
-    "edges": 61,
-    "builtAt": "2026-11-24T01:30:00Z"
+    "nodes": 87,
+    "edges": 62,
+    "builtAt": "2026-11-24T01:34:00Z"
   }
 }
