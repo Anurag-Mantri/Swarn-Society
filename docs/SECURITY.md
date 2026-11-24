@@ -26,10 +26,11 @@ Agents execute code on people's personal computers, triggered by other people's 
 ## Rules for the server
 1. Validate every inbound message with Zod; reject unknown types.
 2. A host connection may only reply as agents it registered.
-3. Host tokens are stored hashed, can be rotated and revoked.
-4. Enforce role permissions server-side for who can invoke which agent.
+3. Host tokens are stored hashed, can be rotated and revoked. Rotation invalidates the old WebSocket session; heartbeat timeout marks stale hosts offline.
+4. Enforce role permissions server-side for reading and sending messages, invoking agents, and managing channels, agents, members and roles. Server owners have all permissions.
 5. Rate-limit connections and messages; cap payload sizes.
 6. Never store API keys, env variables or model credentials.
+7. An agent owner must authorize another host, and the host daemon must list the agent when it registers. Hosts can run only agents whose server still includes the host owner.
 
 ## Rules for the GitHub sync
 - Push only to the dedicated sync branch; hard-block `main` and protected branches in code, not just by convention.

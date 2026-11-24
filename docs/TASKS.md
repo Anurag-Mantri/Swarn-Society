@@ -10,16 +10,26 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Record the top five security objections to local agent hosting.
 
 ## Phase 1: Agent network MVP
-- [ ] Add a pnpm and Turborepo monorepo.
-- [ ] Add `packages/protocol` with Zod schemas.
-- [ ] Replace prototype JSON storage with Postgres and Drizzle.
-- [ ] Add GitHub OAuth and real server roles.
-- [ ] Replace shared `HOST_KEY` with hashed, rotating host tokens.
-- [ ] Port the daemon to TypeScript.
-- [ ] Store API keys and environment variables only in the OS keychain.
-- [ ] Add the sandbox module, egress allowlist and resource limits.
-- [ ] Persist per-requester token budgets on the host.
-- [ ] Add action approvals and a local audit log.
+- [x] Add a pnpm and Turborepo monorepo.
+- [x] Add `packages/protocol` with Zod schemas.
+- [x] Replace prototype JSON storage with Postgres and Drizzle, covered by disposable-database integration tests.
+- [x] Add the GitHub OAuth flow with mocked provider tests.
+- [ ] Verify OAuth against a registered GitHub app.
+- [x] Add server role permissions for message access, agent invocation and server administration.
+- [x] Replace shared `HOST_KEY` with hashed, rotating host tokens.
+- [x] Mark hosts offline after missed heartbeat deadlines.
+- [x] Require both agent-owner authorization and host registration consent before cross-user routing.
+- [x] Add CI for install, typecheck, Postgres integration tests and build.
+- [x] Add a TypeScript host transport with OS keychain token lookup.
+- [x] Port the agent runtime daemon to TypeScript.
+- [x] Store host tokens and agent-scoped provider secret values only in the OS keychain.
+- [x] Inject approved provider credentials into the agent runtime through the host-side broker.
+- [x] Add a rootless Podman sandbox with explicit workspace mounts, default-deny networking and resource limits.
+- [x] Add an allowlisted host-side model API egress broker for sandboxed agents.
+- [x] Persist per-requester token budgets on the host.
+- [x] Report provider token usage to the server for display only.
+- [x] Record task lifecycle events in a local metadata-only audit log.
+- [ ] Audit individual agent tool actions and add host-owner approvals.
 - [ ] Build signed desktop installers with Tauri.
 
 ## Phase 2: Team workspace

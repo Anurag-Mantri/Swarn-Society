@@ -94,3 +94,52 @@ Status: Accepted
 Context: The project starts with no budget.
 Decision: Core development and local operation use free or locally hosted tools only.
 Consequences: Paid hosting, code signing, observability and billing can be launch gates instead of dependencies.
+
+### D-016: Server roles use permission bits
+Status: Accepted
+Date: 2026-11-23
+Context: Server membership alone is too broad for channel, agent and administration actions.
+Decision: Server roles grant independent permission bits for reading and sending messages, invoking agents, and managing channels, agents, members and roles. Server owners always have all permissions; new members receive the default member role.
+Consequences: Every server API and WebSocket action must check the relevant permission at the server boundary. Agent-specific tool permissions remain a later layer.
+
+### D-017: Hosting a shared agent requires both owners' consent
+Status: Accepted
+Date: 2026-11-23
+Context: The host controls local credentials and compute, while the agent owner controls who may run the agent definition.
+Decision: Cross-user hosting requires an explicit server-side agent-to-host assignment and the host daemon must include that agent in its registration. The host owner must remain a member of the agent's server.
+Consequences: The server routes only to enabled assignments. Host registrations cannot silently claim another user's agents.
+
+### D-018: Sandboxed task execution starts with no network
+Status: Accepted
+Date: 2026-11-24
+Context: Agent prompts and tools are untrusted, so they must not receive general network access.
+Decision: The initial Linux sandbox uses local rootless Podman, a digest-pinned image, explicit per-agent workspace mounts, and no network. It applies CPU, memory, process, wall-time and output limits. Tasks remain unexecuted if no compatible sandbox is configured.
+Consequences: Provider access can be added only through a host-side broker that enforces an explicit egress allowlist; do not enable general container networking.
+
+### D-019: Provider egress uses a task-scoped host broker
+Status: Accepted
+Date: 2026-11-24
+Context: Sandboxed agents need model API access without receiving host credentials or general network access.
+Decision: Mount a unique Unix socket for each Podman task. The daemon accepts only fixed OpenAI Responses, OpenAI Chat Completions and Anthropic Messages routes, injects the agent's key from the OS keychain, and enforces request, response, concurrency, timeout and output-token limits. The broker does not accept arbitrary URLs, headers, redirects or streaming requests.
+Consequences: Agent images need a small client for this socket contract. Provider and tool policy remains in the runtime; the broker only constrains egress and credential handling.
+
+### D-020: Initial agent runtime has no tools
+Status: Accepted
+Date: 2026-11-24
+Context: The message protocol carries task text but not a validated agent definition or tool permission manifest.
+Decision: The initial TypeScript runtime reads a fixed, image-baked config, sends one task to a configured model through the host broker, and returns text. It does not execute commands, access workspace tools, or load config paths from task content.
+Consequences: Runtime images are agent-specific until the control plane delivers a validated agent definition. Add tool execution only after permissions, host approval and audit boundaries are implemented.
+
+### D-021: Host budgets reserve before provider calls
+Status: Accepted
+Date: 2026-11-24
+Context: Requester budgets must be enforced locally without trusting usage claims from the sandbox or storing prompts.
+Decision: Configure owner IDs and per-task/hour/day token limits on the host. Before each provider request, reserve tokens using serialized request bytes, the output cap and a framing allowance. Settle with usage returned by the fixed provider API; if usage is missing or the request fails after dispatch, retain the full reservation. Persist only agent/requester IDs, timestamps, task IDs and token counts.
+Consequences: Budget enforcement is opt-in per host configuration to preserve existing daemon setups. Missing policy means no requester-specific budget is applied; usage estimates can conservatively deny a call before dispatch.
+
+### D-022: Server-reported usage is display-only
+Status: Accepted
+Date: 2026-11-24
+Context: Teams need usage visibility, but host-side budgets must remain enforceable without server availability or trust in the control plane.
+Decision: The daemon reports provider-reported input and output token counts after a task. The server validates the host's agent assignment, requester membership and invoke permission before persisting and broadcasting the report. Server usage never changes the host's budget decisions.
+Consequences: Usage can be missing when a provider call fails or a sandbox exits before reporting. The server treats reports as host-provided display data, not billing records.

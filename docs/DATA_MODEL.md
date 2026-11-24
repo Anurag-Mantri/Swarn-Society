@@ -7,7 +7,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 |---|---|---|
 | `users` | id, github_id, handle, avatar_url | From GitHub OAuth |
 | `servers` | id, name, owner_id | A workspace/team |
-| `roles` | id, server_id, name, permissions (bitset) | |
+| `roles` | id, server_id, name, permissions (bitset) | Bits cover reading/sending messages, invoking agents, and managing channels, agents, members and roles. Server owners have all permissions. |
 | `members` | server_id, user_id | PK (server_id, user_id) |
 | `member_roles` | server_id, user_id, role_id | |
 
@@ -24,11 +24,11 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 |---|---|---|
 | `hosts` | id, owner_id, machine_label, token_hash, last_seen_at, status | Token stored hashed, rotated |
 | `agents` | id, server_id, owner_id, name, role, system_prompt, tools (json), visibility | Definition, independent of any host |
-| `agent_hosts` | agent_id, host_id, priority, enabled | Which hosts may run an agent, in failover order |
+| `agent_hosts` | agent_id, host_id, priority, enabled | Agent owner authorizes a host; the host must also list the agent during registration. Hosts are ordered by priority. |
 | `agent_runtimes` | agent_id, host_id, status, started_at | Where it is running now |
 | `agent_permissions` | agent_id, role_id or user_id, can_invoke, tools_allowed (json) | Who may call it and with what |
 | `budgets` | agent_id, requester_id, window (`hour`/`day`/`task`), token_limit | Enforced on the host; mirrored for display |
-| `usage` | id, agent_id, requester_id, host_id, tokens_in, tokens_out, at | Reported by daemons |
+| `agent_usage` | id, agent_id, requester_id, host_id, tokens_in, tokens_out, reported_at | Display usage reported by authorized daemons; host budgets remain authoritative |
 
 **Never stored:** API keys, env variables, model credentials.
 

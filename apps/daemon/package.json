@@ -1,0 +1,33 @@
+{
+  "name": "@swarmroom/daemon",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./provider-broker-client": "./dist/provider-broker-client.js"
+  },
+  "bin": {
+    "swarmroom-agent": "./dist/agent-runtime-cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "token": "tsx src/token-cli.ts",
+    "test": "vitest run",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@napi-rs/keyring": "^2.1.2",
+    "@swarmroom/protocol": "workspace:*",
+    "ws": "8.23.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

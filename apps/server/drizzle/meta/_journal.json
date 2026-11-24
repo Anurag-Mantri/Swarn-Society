@@ -15,6 +15,13 @@
       "when": 1795390101154,
       "tag": "0001_natural_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795546454703,
+      "tag": "0002_lovely_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

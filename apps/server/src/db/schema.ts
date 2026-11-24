@@ -1,4 +1,5 @@
-import { boolean, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -94,4 +95,18 @@ export const agentHosts = pgTable("agent_hosts", {
   enabled: boolean("enabled").notNull().default(true),
 }, (table) => [
   primaryKey({ columns: [table.agentId, table.hostId] }),
+]);
+
+export const agentUsage = pgTable("agent_usage", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  agentId: uuid("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  requesterId: uuid("requester_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  hostId: uuid("host_id").notNull().references(() => hosts.id, { onDelete: "cascade" }),
+  tokensIn: integer("tokens_in").notNull(),
+  tokensOut: integer("tokens_out").notNull(),
+  reportedAt: timestamp("reported_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("agent_usage_requester_at_idx").on(table.requesterId, table.reportedAt),
+  index("agent_usage_agent_at_idx").on(table.agentId, table.reportedAt),
+  check("agent_usage_token_counts_valid", sql`${table.tokensIn} BETWEEN 0 AND 10000000 AND ${table.tokensOut} BETWEEN 0 AND 10000000`),
 ]);

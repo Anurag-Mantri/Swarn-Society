@@ -34,6 +34,15 @@ export const replySchema = z.object({
   text: text(8000),
 }).strict();
 
+export const agentUsageSchema = z.object({
+  t: z.literal("agent.usage"),
+  channelId: text(100),
+  agent: text(100),
+  requesterId: z.string().uuid(),
+  tokensIn: z.number().int().nonnegative().max(10_000_000),
+  tokensOut: z.number().int().nonnegative().max(10_000_000),
+}).strict();
+
 export const taskSchema = z.object({
   t: z.literal("task"),
   channelId: text(100),
@@ -66,10 +75,24 @@ export const errorSchema = z.object({
   message: text(1000),
 }).strict();
 
+export const hostClientFrameSchema = z.discriminatedUnion("t", [
+  hostSchema,
+  hostHeartbeatSchema,
+  agentUsageSchema,
+  replySchema,
+]);
+
+export const hostServerFrameSchema = z.discriminatedUnion("t", [
+  taskSchema,
+  hostRegisteredSchema,
+  errorSchema,
+]);
+
 export const inboundFrameSchema = z.discriminatedUnion("t", [
   helloSchema,
   hostSchema,
   hostHeartbeatSchema,
+  agentUsageSchema,
   messageSchema,
   replySchema,
 ]);
@@ -79,7 +102,10 @@ export type Host = z.infer<typeof hostSchema>;
 export type HostHeartbeat = z.infer<typeof hostHeartbeatSchema>;
 export type Message = z.infer<typeof messageSchema>;
 export type Reply = z.infer<typeof replySchema>;
+export type AgentUsage = z.infer<typeof agentUsageSchema>;
 export type Task = z.infer<typeof taskSchema>;
 export type Init = z.infer<typeof initSchema>;
 export type HostRegistered = z.infer<typeof hostRegisteredSchema>;
 export type ErrorFrame = z.infer<typeof errorSchema>;
+export type HostClientFrame = z.infer<typeof hostClientFrameSchema>;
+export type HostServerFrame = z.infer<typeof hostServerFrameSchema>;
