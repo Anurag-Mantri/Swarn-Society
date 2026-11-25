@@ -53,6 +53,16 @@ Measure graph quality against a labeled set of team events.
 Track precision and recall separately for node extraction and edge extraction.
 Block releases when precision for automatic edges falls below 90%.
 
+Run the labeled structured-event benchmark after building the package.
+
+```sh
+pnpm --filter @swarmroom/knowledge-graph build
+pnpm --filter @swarmroom/knowledge-graph evaluate
+pnpm --filter @swarmroom/knowledge-graph evaluate /path/to/labeled-events.json
+```
+
+The benchmark counts predicted and expected facts separately for each source, then reports precision and recall for nodes and automatically accepted edges. The command fails if automatic edge precision is undefined or below 90%. CI also checks for any fixture regressions. The checked-in fixture covers synthetic examples. Before broad release, run the same command on representative, permission-cleared team metadata and record the results. Use the package's `evaluation/structured.json` as the dataset format.
+
 ## Privacy
 Respect server, channel and role permissions when reading graph data.
 Delete or anonymize graph nodes and sources when the underlying account or server data is deleted.
