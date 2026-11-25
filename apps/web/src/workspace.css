@@ -69,3 +69,13 @@ a.primary { display: inline-block; }
 
 .workspace-view { display: flex; flex-wrap: wrap; gap: .4rem; }
 .workspace-view button[aria-pressed="true"] { background: var(--active); }
+
+.sidebar nav .unread-count {
+  display: inline-block;
+  margin-inline-start: .2rem;
+  padding: .05rem .35rem;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: white;
+  font-variant-numeric: tabular-nums;
+}

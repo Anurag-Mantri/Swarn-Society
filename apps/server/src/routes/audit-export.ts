@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
-import { hasChannelPermission, hasServerPermission } from "../channel-access.js";
+import { hasServerPermission, readableChannelIds } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { channels, creditEntries, extensionManifests, taskPosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
@@ -43,12 +43,7 @@ export const auditExportRoutes: FastifyPluginAsync = async (app) => {
     if (!await hasServerPermission(serverId, user.id, permissions.manageRoles | permissions.manageMembers)) {
       return reply.code(403).send({ error: "You cannot export audit records in this workspace." });
     }
-    const workspaceChannels = await db.select({ id: channels.id, serverId: channels.serverId }).from(channels)
-      .where(eq(channels.serverId, serverId));
-    const visible: string[] = [];
-    for (const channel of workspaceChannels) {
-      if (await hasChannelPermission(channel, user.id, permissions.readMessages)) visible.push(channel.id);
-    }
+    const visible = await readableChannelIds(serverId, user.id);
     const channelScope = visible.length
       ? sql`${taskPosts.channelId} in (${sql.join(visible.map((id) => sql`${id}`), sql`, `)})`
       : sql`false`;

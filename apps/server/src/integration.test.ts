@@ -1480,6 +1480,72 @@ integration("Postgres-backed server routes", () => {
     }
   });
 
+  it("counts unread channel roots with a monotonic scoped read cursor", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Notifications workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    async function createChannel(name: string) {
+      const channel = await inject({
+        method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name },
+      });
+      return channel.json<{ id: string }>().id;
+    }
+    const channelId = await createChannel("readable");
+    const privateId = await createChannel("private");
+    const [reader] = await db.insert(users).values({ githubId: randomUUID(), handle: "notifications-reader" }).returning();
+    const token = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: reader!.id, secretHash: hashSecret(token), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const readerHeaders = { cookie: `session=${token}` };
+    const unread = `/api/servers/${serverId}/unread`;
+    expect((await inject({ url: unread, headers: readerHeaders })).statusCode).toBe(403);
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Notification reader", permissions: permissions.readMessages },
+    });
+    const { id: roleId } = role.json<{ id: string }>();
+    await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers,
+      payload: { userId: reader!.id, roleId },
+    });
+    await inject({
+      method: "PUT", url: `/api/channels/${privateId}/role-restrictions/${roleId}`, headers,
+      payload: { denied: permissions.readMessages },
+    });
+
+    const before = "00000000-0000-4000-8000-000000010001";
+    const after = "00000000-0000-4000-8000-000000010002";
+    const createdAt = new Date("2026-11-25T09:00:00Z");
+    const base = { channelId, authorKind: "user", authorId: userId, body: "Message", createdAt };
+    await db.insert(messages).values([{ ...base, id: before }, { ...base, id: after }]);
+    const [reply, hidden] = await db.insert(messages).values([
+      { ...base, threadId: before }, { ...base, channelId: privateId }, { ...base, authorId: reader!.id },
+    ]).returning({ id: messages.id });
+
+    const counts = async () => {
+      const response = await inject({ url: unread, headers: readerHeaders });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json<{ channelId: string; count: number }[]>();
+    };
+    const mark = (messageId: string, id = channelId) => inject({
+      method: "POST", url: `/api/channels/${id}/read`, headers: readerHeaders, payload: { messageId },
+    });
+    expect(await counts()).toEqual([{ channelId, count: 2 }]);
+    expect((await mark(reply!.id)).statusCode).toBe(404);
+    expect((await mark(hidden!.id)).statusCode).toBe(404);
+    expect((await mark(hidden!.id, privateId)).statusCode).toBe(403);
+    expect((await mark(before)).statusCode).toBe(200);
+    expect(await counts()).toEqual([{ channelId, count: 1 }]);
+    expect((await mark(after)).statusCode).toBe(200);
+    expect((await mark(before)).statusCode).toBe(200);
+    expect(await counts()).toEqual([]);
+    await db.insert(messages).values({ ...base, createdAt: new Date("2026-11-25T09:00:01Z") });
+    expect(await counts()).toEqual([{ channelId, count: 1 }]);
+  });
+
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
     const workspace = await inject({

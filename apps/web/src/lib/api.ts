@@ -1,4 +1,10 @@
-import type { AgentReputation, ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution, VoiceJoin, VoiceSettings } from '@swarmroom/protocol';
+import type {
+  AgentReputation, ChannelKind, ChannelUnread, GitHubCommitReceipt, KnowledgeExtractionInput,
+  KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote,
+  MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics,
+  TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution, VoiceJoin,
+  VoiceSettings,
+} from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -45,6 +51,10 @@ export const api = {
   createWorkspace: (name: string) => post<Workspace>('/api/servers', { name }),
   createChannel: (workspaceId: string, name: string, kind: ChannelKind) =>
     post<Channel>(`/api/servers/${encodeURIComponent(workspaceId)}/channels`, { name, kind }),
+  unreadChannels: (serverId: string) =>
+    request<ChannelUnread[]>(`/api/servers/${encodeURIComponent(serverId)}/unread`),
+  markChannelRead: (channelId: string, messageId: string) =>
+    post<{ ok: boolean }>(`/api/channels/${encodeURIComponent(channelId)}/read`, { messageId }),
   messages: (channelId: string, threadId?: string) => request<Message[]>(
     `/api/channels/${encodeURIComponent(channelId)}/messages${threadId ? `?threadId=${encodeURIComponent(threadId)}` : ''}`
   ),

@@ -72,6 +72,7 @@ Keep each pull request on one task or a tightly related task group.
 
 ## Phase 5: Voice and external app extensions
 - [x] Add LiveKit voice channels.
+- [x] Show unread channel notifications and persist read positions.
 - [x] Add extension manifests and host approval.
 - [x] Add the adapter register/session/snapshot protocol.
 - [x] Add Zod schemas for every adapter message.

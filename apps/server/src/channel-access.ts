@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { channelRoleRestrictions, memberRoles, members, roles, servers } from "./db/schema.js";
+import { channelRoleRestrictions, channels, memberRoles, members, roles, servers } from "./db/schema.js";
 import { includesPermission, permissions } from "./permissions.js";
 
 type PermissionQuery = Pick<typeof db, "select">;
@@ -44,4 +44,15 @@ export function hasChannelPermission(
   channel: { id: string; serverId: string }, userId: string, permission: number, database?: PermissionQuery,
 ): Promise<boolean> {
   return hasPermission(channel.serverId, userId, permissions.readMessages | permission, channel.id, database);
+}
+
+
+export async function readableChannelIds(serverId: string, userId: string, database: PermissionQuery = db): Promise<string[]> {
+  const candidates = await database.select({ id: channels.id, serverId: channels.serverId }).from(channels)
+    .where(eq(channels.serverId, serverId));
+  const allowed: string[] = [];
+  for (const channel of candidates) {
+    if (await hasChannelPermission(channel, userId, permissions.readMessages, database)) allowed.push(channel.id);
+  }
+  return allowed;
 }
