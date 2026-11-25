@@ -64,3 +64,13 @@ Never send API keys or environment variable values into graph extraction.
 3. Add a review queue for low-confidence edges.
 4. Add AI-assisted extraction for free-text sources.
 5. Add timeline and impact queries after the graph is accurate.
+
+## Rebuild a workspace
+
+With the control plane's database configuration and a compiled server, run:
+
+```sh
+pnpm --filter @swarmroom/server knowledge:rebuild <workspace-uuid>
+```
+
+The operator command replays one workspace's stored structured events in a single transaction. It repairs missing facts and deterministic provenance links, removes unsupported derived facts when no review refers to them, and leaves inferred relationships and review records in place. The rebuild serializes with live graph writes for that workspace. On a large workspace, schedule it when write traffic is low.
