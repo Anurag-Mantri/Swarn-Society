@@ -74,3 +74,16 @@ The command verifies that the checkout's `origin` points to the approved reposit
 ## Manual file adapter
 
 A Linux host can opt in to report one approved local file's snapshot metadata on connection. See [manual file adapter setup](../../docs/EXTENSIONS.md#manual-file-adapter) for the manifest, host approval, and `SWARMROOM_FILE_ADAPTER` configuration.
+
+## Deploy the daemon to a remote Linux host
+
+With Node.js 22 and the workspace's pnpm version, build a relocatable daemon package on Linux:
+
+```sh
+pnpm install --frozen-lockfile
+bash apps/daemon/scripts/package-linux.sh /absolute/path/to/new-release-directory
+```
+
+Build on the same CPU architecture and libc family as the target so the package includes the matching native keychain binding. Copy the resulting directory as a unit, preserving symlinks. The target needs Node.js 22, a running Secret Service for the daemon account, and local rootless Podman for sandbox execution. It does not need the monorepo or pnpm.
+
+As the unprivileged daemon account, configure the control-plane WebSocket URL, host name, agent names, and optional sandbox settings. Store the host token by running `node dist/token-cli.js set` inside the release directory, then start the daemon with `node dist/main.js`. Use the ordinary daemon configuration and audit log paths. Keep provider credentials in the target account's keychain and supply a digest-pinned image and explicit workspace mounts before running agents.

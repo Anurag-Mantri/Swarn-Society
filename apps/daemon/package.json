@@ -2,6 +2,7 @@
   "name": "@swarmroom/daemon",
   "private": true,
   "type": "module",
+  "files": ["dist"],
   "exports": {
     "./provider-broker-client": "./dist/provider-broker-client.js"
   },

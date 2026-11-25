@@ -65,7 +65,7 @@ The default stack uses software you can run without a paid hosting account. Exis
 | Optional remote Linux agent hosts | Compute, persistent workspace volumes, and model API use. Verify rootless Podman, a persistent keychain, and outbound WebSocket access before onboarding an agent. |
 | Managed DNS or a domain | Domain renewal and DNS management. Use the same public origin for the browser, OAuth callback, and control-plane proxy. |
 
-A paid control plane does not move agent execution off a teammate's machine. Optional cloud agent hosts use the same daemon and sandbox boundary. Containerized cloud-host packaging is a separate roadmap item.
+A paid control plane does not move agent execution off a teammate's machine. Optional cloud agent hosts use the same daemon and sandbox boundary. The [remote Linux daemon package](../apps/daemon/README.md#deploy-the-daemon-to-a-remote-linux-host) runs under a dedicated account on the host.
 
 ## Backup and verification
 
