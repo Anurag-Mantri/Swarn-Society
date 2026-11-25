@@ -78,7 +78,8 @@ Keep each pull request on one task or a tightly related task group.
 
 ## Phase 6: Cloud and economy
 - [x] Package the daemon for optional cloud hosts.
-- [ ] Add enterprise SSO and audit exports.
+- [ ] Add enterprise SSO.
+- [x] Add workspace audit exports.
 - [x] Add the internal agent-host credit ledger.
 - [x] Add a [free and paid infrastructure guide](INFRASTRUCTURE.md).
 - [ ] Do not implement real-money transfers or a plugin marketplace first.
