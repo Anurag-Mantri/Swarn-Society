@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadAgentBudgetPolicies, loadDaemonConfig, loadSandboxConfig } from "./config.js";
+import { loadAgentBudgetPolicies, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
 
 describe("daemon configuration", () => {
   it("parses a secure websocket URL and unique agent names", () => {
@@ -86,6 +86,19 @@ describe("agent budget configuration", () => {
       SWARMROOM_AGENT_BUDGETS: JSON.stringify({
         scout: { ownerId: "owner-1", taskTokens: 30, hourTokens: 20, dayTokens: 40 },
       }),
+    }, ["scout"])).toThrow();
+  });
+});
+
+
+describe("host-wide token caps", () => {
+  it("requires an ordered policy for every local agent when enabled", () => {
+    expect(loadHostTokenPolicies({}, ["scout"]).size).toBe(0);
+    const env = { SWARMROOM_HOST_TOKEN_CAPS: '{"scout":{"taskTokens":1000,"dayTokens":5000}}' };
+    expect(loadHostTokenPolicies(env, ["scout"]).get("scout")).toEqual({ taskTokens: 1000, dayTokens: 5000 });
+    expect(() => loadHostTokenPolicies(env, ["scout", "reviewer"])).toThrow("every configured agent");
+    expect(() => loadHostTokenPolicies({
+      SWARMROOM_HOST_TOKEN_CAPS: '{"scout":{"taskTokens":5000,"dayTokens":1000}}',
     }, ["scout"])).toThrow();
   });
 });

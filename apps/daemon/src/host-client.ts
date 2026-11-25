@@ -146,7 +146,7 @@ export class HostClient {
         }
       }
       text = error instanceof SandboxExecutionError && error.budgetExceeded
-        ? "This task would exceed your token budget. Ask the agent owner to raise the limit or try a shorter task."
+        ? "This task would exceed a token limit on the host. Ask the agent owner to raise the limit or try a shorter task."
         : "Task could not be completed in the host sandbox.";
     } finally {
       this.activeTasks.delete(controller);

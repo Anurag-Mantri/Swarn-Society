@@ -168,7 +168,7 @@ describe("host client", () => {
     try {
       await expect(reply).resolves.toMatchObject({
         t: "reply",
-        text: "This task would exceed your token budget. Ask the agent owner to raise the limit or try a shorter task.",
+        text: "This task would exceed a token limit on the host. Ask the agent owner to raise the limit or try a shorter task.",
       });
     } finally {
       client.stop();

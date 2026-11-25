@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isAbsolute } from "node:path";
+import type { HostTokenPolicy } from "./budgets/host-token-caps.js";
 import type { AgentBudgetPolicy } from "./budget-ledger.js";
 
 const environmentSchema = z.object({
@@ -40,6 +41,29 @@ export function loadAgentBudgetPolicies(env: NodeJS.ProcessEnv, agents: string[]
       Object.keys(parsed.data).some((agent) => !agents.includes(agent)) ||
       agents.some((agent) => !Object.hasOwn(parsed.data, agent))) {
     throw new Error("SWARMROOM_AGENT_BUDGETS contains invalid policies or agents not configured on this host.");
+  }
+  return new Map(Object.entries(parsed.data));
+}
+
+const hostTokenPolicySchema = z.object({
+  taskTokens: z.number().int().positive().max(10_000_000),
+  dayTokens: z.number().int().positive().max(100_000_000),
+}).strict().refine(({ taskTokens, dayTokens }) => taskTokens <= dayTokens);
+
+export function loadHostTokenPolicies(env: NodeJS.ProcessEnv, agents: string[]): Map<string, HostTokenPolicy> {
+  const value = env.SWARMROOM_HOST_TOKEN_CAPS?.trim();
+  if (!value) return new Map();
+  const message = "SWARMROOM_HOST_TOKEN_CAPS must set ordered task and day token caps for every configured agent.";
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(value) as unknown;
+  } catch {
+    throw new Error(message);
+  }
+  const parsed = z.record(z.string(), hostTokenPolicySchema).safeParse(decoded);
+  if (!parsed.success || Object.keys(parsed.data).length !== agents.length ||
+      agents.some((agent) => !Object.hasOwn(parsed.data, agent))) {
+    throw new Error(message);
   }
   return new Map(Object.entries(parsed.data));
 }
