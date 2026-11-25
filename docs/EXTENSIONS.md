@@ -39,7 +39,7 @@ No direct control of applications that provide no safe local API or documented f
 ## Examples
 | Application | MVP integration |
 |---|---|
-| Blender | Project file snapshot and task status |
+| Blender | Saved project snapshot metadata ([setup](#blender-project-file)) |
 | Photoshop | Document snapshot and export metadata |
 | Video editor | Project manifest and export path |
 | Game | Session status and shared assignment state |
@@ -78,3 +78,26 @@ Set `SWARMROOM_FILE_ADAPTER` in the daemon's environment to a JSON object of thi
 ```
 
 Use a new adapter UUID and the IDs of the registered manifest and a channel writable by the host owner. Start the daemon using its normal host token. It attempts one report per connection and waits for an acknowledgement between steps. Disconnects and acknowledgement timeouts stop the attempt while the daemon continues handling other host traffic. Removing this variable disables the adapter.
+
+## Blender project file
+
+Use the manual file adapter to report snapshot metadata for one saved Blender project on a Linux host. Save the project in a dedicated directory, then register this manifest for the workspace.
+
+```json
+{
+  "slug": "blender-file",
+  "name": "Blender project file",
+  "version": "1.0.0",
+  "protocolVersion": 1,
+  "operatingSystems": ["linux"],
+  "capabilities": ["resource.read", "snapshot.create"],
+  "resources": [{ "type": "blend-project", "extensions": [".blend"] }],
+  "snapshotFormat": "metadata-json"
+}
+```
+
+Approve both capabilities on the host. In the [manual file adapter configuration](#manual-file-adapter), set `resourceType` to `blend-project`, `root` to the project directory, and `file` to the relative path of the saved `.blend` file. The project must be at most 32 MiB. Start or reconnect the daemon after saving the project to report a new snapshot.
+
+The daemon reads the selected file and leaves Blender and the project unchanged. The control plane receives the declared project type, file extension, byte count, and SHA-256 digest.
+
+This workflow was verified with Blender 4.5.17 LTS. Blender saved and reopened the test project, the approved daemon reported its snapshot over WebSocket, and the PostgreSQL record matched the saved file's size and digest. [Blender 4.5 LTS](https://www.blender.org/releases/4-5/)
