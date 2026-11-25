@@ -28,6 +28,7 @@ import { allPermissions, defaultMemberPermissions, permissions } from "./permiss
 import { hasChannelPermission, hasServerPermission } from "./channel-access.js";
 import { storeMessage } from "./messages/storage.js";
 import { threadRootExists } from "./message-threads.js";
+import { creditRoutes } from "./routes/credits.js";
 import { extensionManifestRoutes } from "./routes/extension-manifests.js";
 import { knowledgeOverviewRoutes } from "./routes/knowledge-overview.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
@@ -59,6 +60,7 @@ await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
 await app.register(knowledgeOverviewRoutes);
 await app.register(extensionManifestRoutes);
+await app.register(creditRoutes);
 await app.register(workspaceDirectoryRoutes);
 await app.register(workspaceFileRoutes);
 await app.register(taskPostRoutes);

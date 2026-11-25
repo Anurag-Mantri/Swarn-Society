@@ -206,3 +206,10 @@ Date: 2026-11-24
 Context: A workspace needs to request adapter capabilities without granting access to a teammate's computer.
 Decision: A workspace manager registers a structured manifest. The registered host owner approves a subset of its capabilities for that exact version. New versions require fresh approval.
 Consequences: Approval is revocable metadata. An adapter session must validate the same manifest version and grants before it can operate.
+
+### D-032: Internal credits are explicitly issued and transferred
+Status: Accepted
+Date: 2026-11-25
+Context: Teams need a record of allocations between agents and hosts without turning reported token use into billing.
+Decision: Authorized workspace administrators issue and transfer integer credits. Store one immutable entry per operation, serialize writes within a workspace, and derive balances from the entries.
+Consequences: Repeated requests do not create duplicate entries. Transfers cannot overdraw an account. Credits carry no monetary value and do not affect host token budgets.

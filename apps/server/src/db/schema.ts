@@ -262,3 +262,25 @@ export const agentUsage = pgTable("agent_usage", {
   index("agent_usage_agent_at_idx").on(table.agentId, table.reportedAt),
   check("agent_usage_token_counts_valid", sql`${table.tokensIn} BETWEEN 0 AND 10000000 AND ${table.tokensOut} BETWEEN 0 AND 10000000`),
 ]);
+
+export const creditEntries = pgTable("credit_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),
+  requestId: uuid("request_id").notNull(),
+  actorId: uuid("actor_id").notNull().references(() => users.id),
+  fromKind: text("from_kind").$type<"agent" | "host">(),
+  fromId: uuid("from_id"),
+  toKind: text("to_kind").$type<"agent" | "host">().notNull(),
+  toId: uuid("to_id").notNull(),
+  amount: integer("amount").notNull(),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique("credit_entries_request_unique").on(table.serverId, table.requestId),
+  index("credit_entries_source_idx").on(table.serverId, table.fromKind, table.fromId),
+  index("credit_entries_destination_idx").on(table.serverId, table.toKind, table.toId),
+  check("credit_entries_amount_valid", sql`${table.amount} between 1 and 1000000`),
+  check("credit_entries_source_valid", sql`(${table.fromKind} is null) = (${table.fromId} is null) and (${table.fromKind} in ('agent', 'host') or ${table.fromKind} is null)`),
+  check("credit_entries_destination_valid", sql`${table.toKind} in ('agent', 'host')`),
+  check("credit_entries_accounts_differ", sql`(${table.fromKind}, ${table.fromId}) is distinct from (${table.toKind}, ${table.toId})`),
+]);

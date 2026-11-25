@@ -142,3 +142,5 @@ export { extensionApprovalSchema, extensionCapability, extensionManifestSchema }
 export type { ExtensionCapability, ExtensionManifest } from "./extensions.js";
 export { adapterAckSchema, adapterFrameSchema } from "./adapter-frames.js";
 export type { AdapterFrame } from "./adapter-frames.js";
+export { creditAccountSchema, creditEntrySchema } from "./credits.js";
+export type { CreditAccount } from "./credits.js";
