@@ -161,3 +161,5 @@ export type { AgentReputation, TaskReputationInput, TaskReputationReview } from 
 export { liveKitUrlSchema, voiceHostSelectionSchema, voiceTokenRequestSchema, voiceTokenTtlSeconds } from "./voice.js";
 export type { VoiceGrant, VoiceJoin, VoiceSettings, VoiceTokenRequest, VoiceTokenResponse } from "./voice.js";
 export { workspaceSsoIdSchema } from "./workspace-sso.js";
+export { markChannelReadSchema } from "./notifications.js";
+export type { ChannelUnread } from "./notifications.js";

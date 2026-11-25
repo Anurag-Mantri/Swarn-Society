@@ -1,9 +1,6 @@
 import { and, eq, exists, gte, inArray, isNull, not, notExists, or } from "drizzle-orm";
-import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { knowledgeEdgeSources, knowledgeEdges, knowledgeNodeSources, knowledgeReviews, knowledgeSources } from "../db/knowledge-schema.js";
-import { channels } from "../db/schema.js";
-import { permissions } from "../permissions.js";
 
 export const minimumConfidence = 90;
 export const automaticEdge = and(
@@ -11,16 +8,6 @@ export const automaticEdge = and(
   eq(knowledgeEdges.hasConflict, false),
   gte(knowledgeEdges.confidence, minimumConfidence),
 )!;
-
-export async function readableKnowledgeChannels(serverId: string, userId: string, database: Pick<typeof db, "select"> = db) {
-  const candidates = await database.select({ id: channels.id, serverId: channels.serverId }).from(channels)
-    .where(eq(channels.serverId, serverId));
-  const allowed: string[] = [];
-  for (const channel of candidates) {
-    if (await hasChannelPermission(channel, userId, permissions.readMessages, database)) allowed.push(channel.id);
-  }
-  return allowed;
-}
 
 export function readableSource(channelIds: string[]) {
   const workspaceSource = isNull(knowledgeSources.channelId);

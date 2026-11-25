@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import type { Message } from './api';
 
-  let { title, messages, connected, currentUser, openThread, close, send }:
+  let { title, messages, connected, currentUser, openThread, close, send, onLatestVisible }:
     {
       title: string;
       messages: Message[];
@@ -10,10 +11,33 @@
       openThread?: (message: Message) => void;
       close?: () => void;
       send: (text: string) => boolean;
+      onLatestVisible?: (message: Message) => void;
     } = $props();
 
   let draft = $state('');
   const time = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+
+  let scroller: HTMLDivElement | undefined = $state();
+  let previousLatest: string | undefined;
+
+  function reportLatest() {
+    const latest = messages.at(-1);
+    if (latest && scroller && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 2) {
+      onLatestVisible?.(latest);
+    }
+  }
+
+  $effect.pre(() => {
+    const viewport = scroller;
+    const latest = messages.at(-1);
+    if (!viewport || !latest || latest.id === previousLatest) return;
+    const follow = !previousLatest || viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+    previousLatest = latest.id;
+    void tick().then(() => {
+      if (follow) viewport.scrollTop = viewport.scrollHeight;
+      reportLatest();
+    });
+  });
 
   function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -27,7 +51,7 @@
     <h1>{title}</h1>
     {#if close}<button type="button" onclick={close}>Close</button>{/if}
   </header>
-  <div class="messages">
+  <div class="messages" bind:this={scroller} onscroll={reportLatest}>
     {#if messages.length === 0}
       <p class="empty">Start the conversation.</p>
     {/if}

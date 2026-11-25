@@ -102,6 +102,8 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index("messages_channel_created_idx").on(table.channelId, table.createdAt),
+  index("messages_root_unread_idx").on(table.channelId, table.createdAt.desc(), table.id.desc())
+    .where(sql`${table.threadId} is null`),
   index("messages_thread_created_idx").on(table.threadId, table.createdAt),
   unique("messages_channel_id_unique").on(table.channelId, table.id),
   foreignKey({
@@ -109,6 +111,16 @@ export const messages = pgTable("messages", {
     columns: [table.channelId, table.threadId],
     foreignColumns: [table.channelId, table.id],
   }).onDelete("cascade"),
+]);
+
+export const channelReadCursors = pgTable("channel_read_cursors", {
+  channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  readAt: timestamp("read_at", { withTimezone: true }).notNull(),
+  readId: uuid("read_id").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.channelId, table.userId] }),
+  index("channel_read_cursors_user_idx").on(table.userId),
 ]);
 
 export const hosts = pgTable("hosts", {

@@ -39,6 +39,7 @@ import { knowledgeCommitRoutes } from "./routes/knowledge-commits.js";
 import { knowledgeProposalRoutes } from "./routes/knowledge-proposals.js";
 import { knowledgeReviewRoutes } from "./routes/knowledge-review.js";
 import { knowledgeOverviewRoutes } from "./routes/knowledge-overview.js";
+import { unreadNotificationRoutes } from "./routes/unread-notifications.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
 import { workspaceCollaborationRoutes } from "./routes/workspace-collaboration.js";
@@ -80,6 +81,7 @@ await app.register(websocket, {
 await app.register(workspaceOidcRoutes, { providers: ssoProviders, publicOrigin });
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
+await app.register(unreadNotificationRoutes);
 await app.register(knowledgeOverviewRoutes);
 await app.register(knowledgeReviewRoutes);
 await app.register(knowledgeProposalRoutes);

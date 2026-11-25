@@ -4,12 +4,12 @@ import { alias } from "drizzle-orm/pg-core";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
-import { hasServerPermission } from "../channel-access.js";
+import { hasServerPermission, readableChannelIds } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { knowledgeEdgeSources, knowledgeEdges, knowledgeNodes, knowledgeReviews, knowledgeSources } from "../db/knowledge-schema.js";
 import { lockKnowledgeWorkspace } from "../knowledge/storage.js";
 import {
-  automaticEdge, edgeHasEvidence, edgeReview, readableEdgeEvidence, readableEndpoint, readableKnowledgeChannels,
+  automaticEdge, edgeHasEvidence, edgeReview, readableEdgeEvidence, readableEndpoint,
 } from "../knowledge/visibility.js";
 import { permissions } from "../permissions.js";
 
@@ -37,7 +37,7 @@ export const knowledgeReviewRoutes: FastifyPluginAsync = async (app) => {
     if (!await hasServerPermission(serverId, user.id, reviewPermission)) {
       return reply.code(403).send({ error: "You cannot review knowledge in this workspace." });
     }
-    const channelIds = await readableKnowledgeChannels(serverId, user.id);
+    const channelIds = await readableChannelIds(serverId, user.id);
     const queue = db.$with("review_queue").as(db.select().from(knowledgeEdges).where(and(
       eq(knowledgeEdges.serverId, serverId), not(automaticEdge), notExists(edgeReview()), reviewVisibility(channelIds),
     )).orderBy(knowledgeEdges.id).limit(25));
@@ -85,7 +85,7 @@ export const knowledgeReviewRoutes: FastifyPluginAsync = async (app) => {
     const result = await db.transaction(async (transaction) => {
       await lockKnowledgeWorkspace(transaction, serverId, "exclusive");
       if (!await hasServerPermission(serverId, user.id, reviewPermission, transaction)) return { status: 403 } as const;
-      const channelIds = await readableKnowledgeChannels(serverId, user.id, transaction);
+      const channelIds = await readableChannelIds(serverId, user.id, transaction);
       const [edge] = await transaction.select({ automatic: automaticEdge.as("automatic") }).from(knowledgeEdges).where(and(
         eq(knowledgeEdges.serverId, serverId), eq(knowledgeEdges.id, edgeId), reviewVisibility(channelIds),
       )).for("update");

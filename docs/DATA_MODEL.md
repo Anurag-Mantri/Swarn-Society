@@ -25,6 +25,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `voice_hosts` | server_id (primary key), host_id | The workspace owner's selected LiveKit token issuer. |
 | `channel_role_restrictions` | channel_id, role_id, denied (bitset) | Removes read, send, or invoke permissions for a role in one channel. |
 | `messages` | id, channel_id, thread_id?, author_kind (`user`/`agent`/`system`), author_id, host_id?, body, created_at | `thread_id` is the ID of a root message in the same channel. `host_id` records which machine ran an agent reply. |
+| `channel_read_cursors` | channel_id, user_id (composite primary key), read_at, read_id | Monotonic root-message order for unread channel counts. |
 | `attachments` | id, message_id, storage_key, mime, size | Object storage |
 
 ## Hosts and agents

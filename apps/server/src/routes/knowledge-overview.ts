@@ -2,12 +2,12 @@ import { and, desc, eq, exists, inArray, ne, notExists, or } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
-import { hasServerPermission } from "../channel-access.js";
+import { hasServerPermission, readableChannelIds } from "../channel-access.js";
 import { db } from "../db/index.js";
 import {
   knowledgeEdgeSources, knowledgeEdges, knowledgeNodeSources, knowledgeNodes, knowledgeSources,
 } from "../db/knowledge-schema.js";
-import { automaticEdge, edgeReview, minimumConfidence, readableEdgeEvidence, readableKnowledgeChannels, readableSource } from "../knowledge/visibility.js";
+import { automaticEdge, edgeReview, minimumConfidence, readableEdgeEvidence, readableSource } from "../knowledge/visibility.js";
 import { permissions } from "../permissions.js";
 
 const paramsSchema = z.object({ serverId: z.string().uuid() });
@@ -36,7 +36,7 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(403).send({ error: "You cannot view knowledge in this workspace." });
     }
 
-    const allowed = await readableKnowledgeChannels(serverId, user.id);
+    const allowed = await readableChannelIds(serverId, user.id);
     if (channelId && !allowed.includes(channelId)) {
       return reply.code(403).send({ error: "You cannot view knowledge in this channel." });
     }

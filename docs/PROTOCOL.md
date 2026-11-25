@@ -134,6 +134,13 @@ Task creation may include `parentTaskId` to post a subtask. Its parent must be o
 `POST /api/channels/:channelId/knowledge/proposals` accepts `{serverId, channelId, messageId, references: [{taskId, confidence}]}`. It allows up to eight unique task IDs in the same task channel and requires the same permissions as export. The confidence is an integer from 0 to 100. The server returns `{inserted}` with 201 for a new import, 200 for an identical retry, or 409 when a stored proposal differs. All imported relationships require human review.
 
 
+## Unread channel notifications
+
+`GET /api/servers/:serverId/unread` returns `[{channelId, count}]` for readable channels with unread root messages. It excludes messages sent by the signed-in user. Counts cap at 100, shown as `99+` in the client.
+
+`POST /api/channels/:channelId/read` accepts `{messageId}` for a root message in the channel. It advances the signed-in user's read position without moving it backward on retries or delayed requests. The client submits the newest root message after it reaches the visible end of channel chat. Replies in threads follow their existing history route.
+
+
 ## Voice channels
 
 `GET /api/servers/:serverId/voice` lists the owner's registered hosts and selected voice host. `PUT` accepts `{hostId}`, where `null` disables new joins. Only the workspace owner may read or change these settings.

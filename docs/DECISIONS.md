@@ -269,3 +269,10 @@ Date: 2026-11-25
 Context: Companies need sign-in through a trusted identity provider without giving the control plane provider client secrets.
 Decision: Configure one public OIDC client per enabled workspace. Use the authorization code flow with S256 PKCE, a workspace-specific callback, signed attempt cookie, nonce, and verified ID token. Bind members to issuer and subject.
 Consequences: A valid first sign-in grants the default Member role in that workspace. Changing membership policies applies on the next SSO sign-in. GitHub identities remain independent.
+
+### D-041: Unread badges use per-user channel cursors
+Status: Accepted
+Date: 2026-11-25
+Context: Channel navigation needs a persistent unread signal across reconnects and devices.
+Decision: Store the latest root-message timestamp and ID the user has viewed. Only advance the cursor for a readable channel. Exclude the user's own messages and count unread roots within each readable channel.
+Consequences: Delayed requests cannot move the cursor backward. Counts are bounded for the channel list. Thread replies are surfaced in their thread.
