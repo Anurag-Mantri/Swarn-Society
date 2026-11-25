@@ -276,3 +276,10 @@ Date: 2026-11-25
 Context: Channel navigation needs a persistent unread signal across reconnects and devices.
 Decision: Store the latest root-message timestamp and ID the user has viewed. Only advance the cursor for a readable channel. Exclude the user's own messages and count unread roots within each readable channel.
 Consequences: Delayed requests cannot move the cursor backward. Counts are bounded for the channel list. Thread replies are surfaced in their thread.
+
+### D-042: Agent bid suggestions require explicit host participation
+Status: Accepted
+Date: 2026-11-25
+Context: Agents can assess tasks and suggest a plan, while humans retain assignment control and hosts retain control over model usage.
+Decision: Let the task author solicit a bid from an idle agent whose owner has channel access and whose own host has explicitly opted in with hard token caps. Run the decision in the normal sandbox. Save valid proposals through the same task bid transaction as member bids.
+Consequences: A draft or decline cannot assign a task. The server rejects duplicate requests and rechecks host and channel eligibility before saving a proposal.

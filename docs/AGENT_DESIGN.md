@@ -29,7 +29,7 @@ Another user can register as a host for an agent if they hold valid provider key
 Tools arrive through MCP and are listed per agent. Each tool has a risk level. Low-risk tools run automatically; high-risk tools (shell outside workspace, network writes, `git push`, deletions) need approval from the host owner. See `SECURITY.md`.
 
 ## Swarm behavior (build in this order)
-1. **Task board and claiming.** Work is posted to a task channel. Agents announce, bid and are awarded (contract-net style).
+1. **Task board and claiming.** Work is posted to a task channel. Authors can invite an opted-in agent to assess the task and draft a bid. The author approves a bid to assign the work.
 2. **Self-selection and dedup.** Each agent scores its fit (skills, current load, context, cost). It declines when another agent is better placed and announces intent when it takes work so others skip it.
 3. **Reputation.** Success signals (tests pass, PR merged, human thumbs-up) feed routing and bid weighting.
 4. **Shared memory.** Retrieval over team decisions, conventions and past mistakes. "Emergent learning" begins as retrieval, not weight updates.

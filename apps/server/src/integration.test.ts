@@ -1,4 +1,4 @@
-import { workspaceSnapshotBranch, type VoiceTokenRequest } from "@swarmroom/protocol";
+import { workspaceSnapshotBranch, type TaskBidRequest, type VoiceTokenRequest } from "@swarmroom/protocol";
 import Fastify, { type InjectOptions } from "fastify";
 import cookiePlugin from "@fastify/cookie";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -1544,6 +1544,79 @@ integration("Postgres-backed server routes", () => {
     expect(await counts()).toEqual([]);
     await db.insert(messages).values({ ...base, createdAt: new Date("2026-11-25T09:00:01Z") });
     expect(await counts()).toEqual([{ channelId, count: 1 }]);
+  });
+
+  it("accepts a model bid from an opted-in owner's host and waits for explicit human approval", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Automatic bid workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "work", kind: "task" },
+    });
+    const { id: channelId } = channel.json<{ id: string }>();
+    const [peer] = await db.insert(users).values({ githubId: randomUUID(), handle: "bid-agent-owner" }).returning();
+    const peerSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: peer!.id, secretHash: hashSecret(peerSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const peerHeaders = { cookie: `session=${peerSecret}` };
+    await inject({ method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: peer!.id } });
+    const [agent, privateAgent] = await db.insert(agents).values([
+      { serverId, ownerId: peer!.id, name: "Opted in", role: "Quality" },
+      { serverId, ownerId: peer!.id, name: "Only manual", role: "Engineering" },
+    ]).returning();
+    const token = randomBytes(32).toString("base64url");
+    const [host] = await db.insert(hosts).values({ ownerId: peer!.id, machineLabel: "Opted-in host", tokenHash: hashSecret(token) }).returning();
+    const path = `/api/channels/${channelId}/tasks`;
+    const task = await inject({ method: "POST", url: path, headers, payload: { title: "Check rollout", description: "Review the checklist." } });
+    const { id: taskId } = task.json<{ id: string }>();
+    const suggest = `${path}/${taskId}/bids/suggest`;
+
+    const socket = await app.injectWS("/ws");
+    try {
+      const ready = nextWebSocketFrame(socket, "agent bid host registration", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host.registered");
+      socket.send(JSON.stringify({
+        t: "host", token, machine: host!.machineLabel, agents: [agent!.name, privateAgent!.name], bidAgents: [agent!.name],
+      }));
+      await ready;
+      expect((await inject({ url: suggest, headers: peerHeaders })).statusCode).toBe(403);
+      expect((await inject({ url: suggest, headers })).json()).toEqual([{ id: agent!.id, name: "Opted in", role: "Quality" }]);
+      const requestBid = (agentId: string) => inject({ method: "POST", url: suggest, headers, payload: { agentId } });
+      expect((await requestBid(privateAgent!.id)).statusCode).toBe(409);
+      const requestFrame = () => nextWebSocketFrame(socket, "agent bid request", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "task.bid.request");
+      const waitingForDecline = requestFrame();
+      const declining = requestBid(agent!.id);
+      const offered = await waitingForDecline as TaskBidRequest;
+      expect(offered).toMatchObject({ channelId, requesterId: userId, title: "Check rollout", description: "Review the checklist." });
+      expect((await requestBid(agent!.id)).statusCode).toBe(409);
+      socket.send(JSON.stringify({ t: "task.bid.response", requestId: offered.requestId, result: { status: "declined" } }));
+      expect((await declining).json()).toEqual({ bid: null });
+
+      const waitingForProposal = requestFrame();
+      const accepting = requestBid(agent!.id);
+      const next = await waitingForProposal as TaskBidRequest;
+      socket.send(JSON.stringify({
+        t: "task.bid.response", requestId: next.requestId,
+        result: { status: "proposed", draft: { plan: "Compare rollout steps.", deliverable: "Reviewed checklist." } },
+      }));
+      const bid = await accepting;
+      expect(bid.statusCode, bid.body).toBe(201);
+      const { bid: stored } = bid.json<{ bid: { id: string } }>();
+      expect(stored).toMatchObject({ agentId: agent!.id, proposedBy: peer!.id, source: "agent", approvedAt: null });
+      const [beforeApproval] = await db.select().from(taskPosts).where(eq(taskPosts.id, taskId));
+      expect(beforeApproval?.claimedByAgentId).toBeNull();
+
+      const approved = await inject({ method: "POST", url: `${path}/${taskId}/bids/${stored.id}/approve`, headers });
+      expect(approved.statusCode, approved.body).toBe(200);
+      expect(approved.json()).toMatchObject({ claimedByAgentId: agent!.id });
+      expect((await requestBid(agent!.id)).statusCode).toBe(409);
+    } finally {
+      socket.terminate();
+    }
   });
 
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {

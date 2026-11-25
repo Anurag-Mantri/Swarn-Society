@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { TaskBid, TaskPost } from '@swarmroom/protocol';
+  import type { TaskBid, TaskBidCandidate, TaskPost } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
 
   let { task, currentUser, selectedAgent, onClaim }:
@@ -10,11 +10,47 @@
   let loading = $state(true);
   let busy = $state(false);
   let error = $state('');
+  let candidates = $state<TaskBidCandidate[]>([]);
+  let candidate = $state('');
+  let notice = $state('');
   let plan = $state('');
   let deliverable = $state('');
   let estimatedTokens = $state<number>();
   const hasBid = $derived(bids.some((bid) => bid.agentId === selectedAgent));
   const open = $derived(!task.claimedByAgentId && !task.resolution);
+
+  const available = $derived(candidates.filter(({ id }) => !bids.some((bid) => bid.agentId === id)));
+
+  async function loadCandidates() {
+    if (!open || currentUser !== task.createdBy) return;
+    try {
+      candidates = await api.taskBidCandidates(task.channelId, task.id);
+      if (!candidates.some(({ id }) => id === candidate)) candidate = candidates[0]?.id ?? '';
+    } catch (problem) {
+      if (!(problem instanceof ApiError) || (problem.status !== 403 && problem.status !== 409)) showError(problem);
+    }
+  }
+
+  async function requestBid() {
+    if (busy || !open || !available.some(({ id }) => id === candidate)) return;
+    busy = true;
+    error = '';
+    notice = 'Requesting an agent bid…';
+    try {
+      const { bid } = await api.requestAgentBid(task.channelId, task.id, candidate);
+      if (bid) {
+        bids = [...bids, bid];
+        candidate = available.find(({ id }) => id !== bid.agentId)?.id ?? '';
+      }
+      notice = bid ? 'Agent bid submitted for your approval.' : 'The agent declined to bid.';
+    } catch (problem) {
+      notice = '';
+      showError(problem);
+      if (problem instanceof ApiError && problem.status === 409) await refresh();
+    } finally {
+      busy = false;
+    }
+  }
 
   function showError(problem: unknown) {
     error = problem instanceof Error ? problem.message : 'Could not update this bid.';
@@ -35,6 +71,7 @@
     try {
       const bid = await api.placeBid(task.channelId, task.id, { agentId: selectedAgent, plan, deliverable, estimatedTokens });
       bids = [...bids, bid];
+      if (candidate === bid.agentId) candidate = available[0]?.id ?? '';
       plan = '';
       deliverable = '';
       estimatedTokens = undefined;
@@ -58,11 +95,12 @@
     } finally { busy = false; }
   }
 
-  onMount(() => { void refresh(); });
+  onMount(() => { void Promise.all([refresh(), loadCandidates()]); });
 </script>
 
 <section aria-label="Task bids">
   {#if error}<p role="alert">{error}</p>{/if}
+  {#if notice}<p role="status">{notice}</p>{/if}
   {#if loading}
     <p role="status">Loading bids…</p>
   {:else if bids.length === 0}
@@ -71,6 +109,7 @@
   {#each bids as bid (bid.id)}
     <article>
       <strong>{bid.agentName}</strong>
+      {#if bid.source === 'agent'}<p>Agent-generated bid</p>{/if}
       <p>{bid.plan}</p>
       <p>Deliverable <strong>{bid.deliverable}</strong></p>
       {#if bid.estimatedTokens !== null}<p>Estimated tokens {bid.estimatedTokens.toLocaleString()}</p>{/if}
@@ -81,6 +120,17 @@
       {/if}
     </article>
   {/each}
+  {#if open && available.length && !loading}
+    <div class="agent-bid">
+      <label for={`agent-bid-${task.id}`}>Agent to invite</label>
+      <select id={`agent-bid-${task.id}`} bind:value={candidate} disabled={busy}>
+        {#each available as agent (agent.id)}
+          <option value={agent.id}>{agent.name} · {agent.role}</option>
+        {/each}
+      </select>
+      <button type="button" onclick={requestBid} disabled={busy || !candidate}>Request agent bid</button>
+    </div>
+  {/if}
   {#if open && selectedAgent && !hasBid && !loading}
     <form onsubmit={submit}>
       <label for="bid-plan">Work plan</label>
@@ -100,4 +150,5 @@
   p { margin: .35rem 0; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
   form { display: grid; gap: .45rem; margin: 1rem 0; }
   form button { justify-self: start; }
+  .agent-bid { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 </style>

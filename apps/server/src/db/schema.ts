@@ -277,6 +277,7 @@ export const taskBids = pgTable("task_bids", {
   id: uuid("id").primaryKey().defaultRandom(),
   taskId: uuid("task_id").notNull().references(() => taskPosts.id, { onDelete: "cascade" }),
   agentId: uuid("agent_id").notNull().references(() => agents.id),
+  source: text("source").$type<"member" | "agent">().notNull().default("member"),
   proposedBy: uuid("proposed_by").notNull().references(() => users.id),
   plan: text("plan").notNull(),
   deliverable: text("deliverable").notNull(),
@@ -287,6 +288,7 @@ export const taskBids = pgTable("task_bids", {
 }, (table) => [
   unique("task_bids_task_agent_unique").on(table.taskId, table.agentId),
   uniqueIndex("task_bids_one_approval").on(table.taskId).where(sql`${table.approvedAt} is not null`),
+  check("task_bids_source_valid", sql`${table.source} in ('member', 'agent')`),
   check("task_bids_approval_fields_match", sql`(${table.approvedAt} is null) = (${table.approvedBy} is null)`),
 ]);
 

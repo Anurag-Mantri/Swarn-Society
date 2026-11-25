@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
-import { createChannelSchema, inboundFrameSchema, threadedHostProtocolVersion } from "@swarmroom/protocol";
+import { createChannelSchema, inboundFrameSchema, threadedHostProtocolVersion, type TaskBidRequest, type TaskBidResponse, type VoiceGrant, type VoiceTokenRequest } from "@swarmroom/protocol";
 import { eq, and, lt, ne } from "drizzle-orm";
 import Fastify from "fastify";
 import type { WebSocket } from "ws";
@@ -52,7 +52,8 @@ import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
 import { closeAdapterSessions, handleAdapterFrame, type AdapterConnection } from "./extensions/adapter-session.js";
 import { voiceRoutes } from "./routes/voice.js";
-import { VoiceJoinBroker } from "./voice/join-broker.js";
+import { HostRequestBroker } from "./hosts/request-broker.js";
+import { taskBidSuggestionRoutes } from "./routes/task-bid-suggestions.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
@@ -103,6 +104,7 @@ type HostConnection = AdapterConnection & {
   socket: WebSocket;
   supportsThreads: boolean;
   supportsVoice: boolean;
+  autoBidAgents: ReadonlySet<string>;
 };
 
 type UserConnection = {
@@ -113,7 +115,8 @@ type UserConnection = {
 
 const hostConnections = new Set<HostConnection>();
 const userConnections = new Set<UserConnection>();
-const voiceBroker = new VoiceJoinBroker();
+const voiceBroker = new HostRequestBroker<VoiceTokenRequest, VoiceGrant>(4_000, 32, 256);
+const bidBroker = new HostRequestBroker<TaskBidRequest, TaskBidResponse["result"]>(55_000, 1, 64);
 await app.register(voiceRoutes, {
   broker: voiceBroker,
   findConnection: (hostId, tokenHash) => {
@@ -126,6 +129,17 @@ await app.register(voiceRoutes, {
   },
 });
 
+await app.register(taskBidSuggestionRoutes, {
+  broker: bidBroker,
+  findConnection: (hostId, tokenHash, agentName) => {
+    const host = [...hostConnections].find((candidate) => candidate.hostId === hostId &&
+      candidate.tokenHash === tokenHash && candidate.autoBidAgents.has(agentName) && candidate.socket.readyState === 1);
+    return host && {
+      connectionId: host.connectionId,
+      send: (frame) => host.socket.send(JSON.stringify(frame)),
+    };
+  },
+});
 const pendingHostStatusUpdates = new Set<Promise<unknown>>();
 const usageRequesterMembers = alias(members, "usage_requester_members");
 const usageHostMembers = alias(members, "usage_host_members");
@@ -548,6 +562,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
   const close = () => {
     if (connection && "hostId" in connection) {
       voiceBroker.close(connection.connectionId);
+      bidBroker.close(connection.connectionId);
       const cleanup = closeAdapterSessions(connection.connectionId).catch((error: unknown) => {
         app.log.error({ error }, "Could not close adapter sessions");
       });
@@ -694,6 +709,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
           socket, hostId: host.id, tokenHash: host.tokenHash, connectionId: randomUUID(),
           supportsThreads: (frame.version ?? 1) >= threadedHostProtocolVersion,
           supportsVoice: frame.voice === true,
+          autoBidAgents: new Set(frame.bidAgents?.filter((name) => frame.agents.includes(name)) ?? []),
         };
         hostConnections.add(connection);
         socket.send(JSON.stringify({ t: "host.registered", hostId: host.id }));
@@ -705,9 +721,16 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         return;
       }
 
+      if (frame.t === "task.bid.response") {
+        if ("hostId" in connection && hostConnections.has(connection)) {
+          bidBroker.accept(connection.connectionId, frame.requestId, frame.result);
+        }
+        return;
+      }
+
       if (frame.t === "voice.token.response") {
         if ("hostId" in connection && connection.supportsVoice && hostConnections.has(connection)) {
-          voiceBroker.accept(connection.connectionId, frame);
+          voiceBroker.accept(connection.connectionId, frame.requestId, frame.grant);
         }
         return;
       }

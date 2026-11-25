@@ -7,6 +7,7 @@ import { db } from "../db/index.js";
 import { agents, taskBids, taskPosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
 import { assignTask } from "../task-assignment.js";
+import { saveTaskBid } from "../tasks/bids.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
 const basePath = "/api/channels/:channelId/tasks/:taskId/bids";
@@ -37,18 +38,9 @@ export const taskBidRoutes: FastifyPluginAsync = async (app) => {
     )).limit(1);
     if (!agent) return reply.code(403).send({ error: "Choose one of your agents in this workspace." });
 
-    const result = await db.transaction(async (transaction) => {
-      const [task] = await transaction.select().from(taskPosts).where(and(
-        eq(taskPosts.id, params.data.taskId), eq(taskPosts.channelId, access.channel.id),
-      )).for("update");
-      if (!task) return { status: 404, error: "Task not found in this channel." } as const;
-      if (task.resolution) return { status: 409, error: "This task is closed." } as const;
-      if (task.claimedByAgentId) return { status: 409, error: "This task already has a claim." } as const;
-      const [bid] = await transaction.insert(taskBids).values({
-        ...body.data, taskId: task.id, proposedBy: access.user.id,
-      }).onConflictDoNothing({ target: [taskBids.taskId, taskBids.agentId] }).returning();
-      if (!bid) return { status: 409, error: "This agent already submitted a bid." } as const;
-      return { status: 201, bid: { ...bid, agentName: agent.name } } as const;
+    const result = await saveTaskBid({
+      ...body.data, taskId: params.data.taskId, channelId: access.channel.id,
+      agentName: agent.name, proposedBy: access.user.id, source: "member",
     });
     if ("error" in result) return reply.code(result.status).send({ error: result.error });
     return reply.code(result.status).send(result.bid);

@@ -68,6 +68,18 @@ export function loadHostTokenPolicies(env: NodeJS.ProcessEnv, agents: string[]):
   return new Map(Object.entries(parsed.data));
 }
 
+export function loadAutoBidAgents(
+  env: NodeJS.ProcessEnv, agents: string[], tokenPolicies: ReadonlyMap<string, HostTokenPolicy>,
+): string[] {
+  const value = env.SWARMROOM_AUTO_BID_AGENTS?.trim();
+  if (!value) return [];
+  const optedIn = [...new Set(value.split(",").map((agent) => agent.trim()).filter(Boolean))];
+  if (!optedIn.length || optedIn.some((agent) => !agents.includes(agent) || !tokenPolicies.has(agent))) {
+    throw new Error("Automatic bid agents must be configured on this host with hard token caps.");
+  }
+  return optedIn;
+}
+
 export function loadDaemonConfig(env: NodeJS.ProcessEnv): DaemonConfig {
   const parsed = environmentSchema.safeParse({
     SWARMROOM_CONTROL_PLANE_URL: env.SWARMROOM_CONTROL_PLANE_URL,

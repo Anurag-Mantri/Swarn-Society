@@ -1,4 +1,4 @@
-import { voiceHostSelectionSchema } from "@swarmroom/protocol";
+import { voiceHostSelectionSchema, type VoiceGrant, type VoiceTokenRequest } from "@swarmroom/protocol";
 import { and, eq, ne } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
@@ -7,14 +7,14 @@ import { hasChannelPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import { channels, hosts, servers, voiceHosts } from "../db/schema.js";
 import { permissions } from "../permissions.js";
-import type { VoiceConnection, VoiceJoinBroker } from "../voice/join-broker.js";
+import type { HostRequestBroker, HostRequestConnection } from "../hosts/request-broker.js";
 
 const channelParams = z.object({ channelId: z.string().uuid() });
 const serverParams = z.object({ serverId: z.string().uuid() });
 const settingsPath = "/api/servers/:serverId/voice";
 type Options = {
-  broker: VoiceJoinBroker;
-  findConnection: (hostId: string, tokenHash: string) => VoiceConnection | undefined;
+  broker: HostRequestBroker<VoiceTokenRequest, VoiceGrant>;
+  findConnection: (hostId: string, tokenHash: string) => HostRequestConnection<VoiceTokenRequest> | undefined;
 };
 
 async function workspaceOwner(serverId: string) {
@@ -89,9 +89,10 @@ export const voiceRoutes: FastifyPluginAsync<Options> = async (app, { broker, fi
       return reply.code(503).send({ error: "The workspace voice host is unavailable." });
     }
     const canPublish = await hasChannelPermission(channel, user.id, permissions.sendMessages);
-    const grant = await broker.request(connection, {
+    const grant = await broker.request(connection, (requestId) => ({
+      t: "voice.token.request", requestId,
       userId: user.id, displayName: user.handle, canPublish, channelId: channel.id, serverId: channel.serverId,
-    });
+    }));
     const [current] = await selectedHost(channel.serverId);
     if (!grant || current?.hostId !== selected.hostId || current.tokenHash !== selected.tokenHash ||
         findConnection(current.hostId, current.tokenHash)?.connectionId !== connection.connectionId) {

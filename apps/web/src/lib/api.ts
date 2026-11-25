@@ -1,7 +1,7 @@
 import type {
   AgentReputation, ChannelKind, ChannelUnread, GitHubCommitReceipt, KnowledgeExtractionInput,
   KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote,
-  MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics,
+  MemoryScope, TaskBid, TaskBidInput, TaskBidCandidate, TaskClaimant, TaskCoordinationMetrics,
   TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution, VoiceJoin,
   VoiceSettings,
 } from '@swarmroom/protocol';
@@ -72,6 +72,12 @@ export const api = {
     post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/claim`, { agentId }),
   taskBids: (channelId: string, taskId: string) =>
     request<TaskBid[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids`),
+  taskBidCandidates: (channelId: string, taskId: string) =>
+    request<TaskBidCandidate[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids/suggest`),
+  requestAgentBid: (channelId: string, taskId: string, agentId: string) =>
+    post<{ bid: TaskBid | null }>(
+      `/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids/suggest`, { agentId }
+    ),
   placeBid: (channelId: string, taskId: string, bid: TaskBidInput) =>
     post<TaskBid>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/bids`, bid),
   approveBid: (channelId: string, taskId: string, bidId: string) =>

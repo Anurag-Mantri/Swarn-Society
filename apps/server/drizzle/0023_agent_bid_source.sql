@@ -1,0 +1,2 @@
+ALTER TABLE "task_bids" ADD COLUMN "source" text DEFAULT 'member' NOT NULL;--> statement-breakpoint
+ALTER TABLE "task_bids" ADD CONSTRAINT "task_bids_source_valid" CHECK ("task_bids"."source" in ('member', 'agent'));

@@ -2,7 +2,7 @@ import { HostTokenCaps } from "./budgets/host-token-caps.js";
 import { createVoiceIssuer, loadVoiceConfig, type VoiceTokenIssuer } from "./voice/issuer.js";
 import { createVoiceKeychain } from "./voice/keychain.js";
 import { createSystemHostTokenKeychain } from "./keychain.js";
-import { loadAgentBudgetPolicies, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
+import { loadAgentBudgetPolicies, loadAutoBidAgents, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
 import { SandboxRunner } from "./sandbox/runner.js";
 import { createPodmanSandboxBackend } from "./sandbox/podman.js";
@@ -20,7 +20,8 @@ async function main(): Promise<void> {
 
   const sandboxConfig = loadSandboxConfig(process.env, config.agents);
   const budgets = new LocalBudgetLedger(loadAgentBudgetPolicies(process.env, config.agents));
-  const hostCaps = new HostTokenCaps(loadHostTokenPolicies(process.env, config.agents));
+  const hostTokenPolicies = loadHostTokenPolicies(process.env, config.agents);
+  const hostCaps = new HostTokenCaps(hostTokenPolicies);
   const secrets = sandboxConfig
     ? await createSystemAgentSecretKeychain(config.controlPlaneUrl.host)
     : undefined;
@@ -28,6 +29,8 @@ async function main(): Promise<void> {
   const sandbox = sandboxConfig && broker
     ? await createPodmanSandboxBackend(sandboxConfig, broker)
     : undefined;
+  const autoBidAgents = loadAutoBidAgents(process.env, config.agents, hostTokenPolicies);
+  if (autoBidAgents.length && !sandbox) throw new Error("Automatic bids require the configured rootless sandbox.");
   const fileAdapter = loadFileAdapterConfig(process.env.SWARMROOM_FILE_ADAPTER);
   const voiceConfig = loadVoiceConfig(process.env);
   let voiceIssuer: VoiceTokenIssuer | undefined;
@@ -38,7 +41,7 @@ async function main(): Promise<void> {
     voiceIssuer = createVoiceIssuer(voiceConfig, credentials);
   }
   const client = new HostClient(
-    config, token, new SandboxRunner(sandbox), new LocalAuditLog(), fileAdapter && createFileAdapter(fileAdapter), voiceIssuer,
+    config, token, new SandboxRunner(sandbox), new LocalAuditLog(), fileAdapter && createFileAdapter(fileAdapter), voiceIssuer, autoBidAgents,
   );
   const stop = () => client.stop();
   process.once("SIGINT", stop);

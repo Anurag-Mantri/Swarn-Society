@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { adapterAckSchema, adapterFrames } from "./adapter-frames.js";
+import { taskBidRequestSchema, taskBidResponseSchema } from "./agent-bids.js";
 import { voiceTokenRequestSchema, voiceTokenResponseSchema } from "./voice.js";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
@@ -27,6 +28,7 @@ export const hostSchema = z.object({
   agents: z.array(text(100)).min(1).max(100),
   version: z.number().int().positive().optional(),
   voice: z.literal(true).optional(),
+  bidAgents: z.array(text(100)).min(1).max(100).optional(),
 }).strict();
 
 export const hostHeartbeatSchema = z.object({
@@ -99,6 +101,7 @@ export const hostClientFrameSchema = z.discriminatedUnion("t", [
   agentUsageSchema,
   replySchema,
   voiceTokenResponseSchema,
+  taskBidResponseSchema,
   ...adapterFrames,
 ]);
 
@@ -107,6 +110,7 @@ export const hostServerFrameSchema = z.discriminatedUnion("t", [
   hostRegisteredSchema,
   adapterAckSchema,
   voiceTokenRequestSchema,
+  taskBidRequestSchema,
   errorSchema,
 ]);
 
@@ -118,6 +122,7 @@ export const inboundFrameSchema = z.discriminatedUnion("t", [
   messageSchema,
   replySchema,
   voiceTokenResponseSchema,
+  taskBidResponseSchema,
   ...adapterFrames,
 ]);
 
@@ -139,8 +144,8 @@ export { maximumSnapshotBytes, maximumSnapshotFiles, workspaceSnapshotBranch, wo
 export type { WorkspaceSnapshot } from "./workspace-snapshot.js";
 export { claimTaskPostSchema, createTaskPostSchema, maximumTaskDelegationDepth, resolveTaskPostSchema } from "./task-posts.js";
 export type { TaskClaimant, TaskPost, TaskResolution } from "./task-posts.js";
-export { createTaskBidSchema } from "./task-posts.js";
-export type { TaskBid, TaskBidInput } from "./task-posts.js";
+export { createTaskBidSchema, taskBidDraftSchema } from "./task-posts.js";
+export type { TaskBid, TaskBidDraft, TaskBidInput } from "./task-posts.js";
 export type { TaskCoordinationMetrics } from "./task-posts.js";
 export { knowledgeReviewSchema } from "./knowledge.js";
 export type { KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate } from "./knowledge.js";
@@ -163,3 +168,5 @@ export type { VoiceGrant, VoiceJoin, VoiceSettings, VoiceTokenRequest, VoiceToke
 export { workspaceSsoIdSchema } from "./workspace-sso.js";
 export { markChannelReadSchema } from "./notifications.js";
 export type { ChannelUnread } from "./notifications.js";
+export type { TaskBidCandidate, TaskBidRequest, TaskBidResponse } from "./agent-bids.js";
+export { containsKnownSecret } from "./secret-patterns.js";
