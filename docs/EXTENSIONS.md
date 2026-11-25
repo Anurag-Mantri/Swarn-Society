@@ -57,3 +57,24 @@ Adapters need explicit tests before a manifest is enabled for a server.
 - `DELETE /api/hosts/:hostId/extensions/:manifestId/approval` revokes consent for that version.
 
 Registration and approval record metadata. The [adapter session protocol](PROTOCOL.md#host-owned-adapter-sessions) enforces the approved subset and channel access. A host adapter executable still needs to be installed and started manually.
+
+## Manual file adapter
+
+The Linux host daemon can report a snapshot from a file saved by a local application. Configure the adapter on the host and select one file beneath a dedicated directory. This adapter reads that file and reports its declared type, size, and SHA-256 digest. The control plane receives metadata, while the filename, filesystem path, and contents stay local.
+
+Register a manifest with protocol version 1, Linux support, a resource type and extension that match the file, and capabilities `resource.read` and `snapshot.create`. Use the `metadata-json` snapshot format. The host owner must approve both capabilities before the daemon can complete a report.
+
+Set `SWARMROOM_FILE_ADAPTER` in the daemon's environment to a JSON object of this shape:
+
+```json
+{
+  "adapterId": "00000000-0000-4000-8000-000000000001",
+  "manifestId": "00000000-0000-4000-8000-000000000002",
+  "channelId": "00000000-0000-4000-8000-000000000003",
+  "root": "/home/host/workspace-notes",
+  "file": "notes.txt",
+  "resourceType": "document"
+}
+```
+
+Use a new adapter UUID and the IDs of the registered manifest and a channel writable by the host owner. Start the daemon using its normal host token. It attempts one report per connection and waits for an acknowledgement between steps. Disconnects and acknowledgement timeouts stop the attempt while the daemon continues handling other host traffic. Removing this variable disables the adapter.

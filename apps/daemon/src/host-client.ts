@@ -3,6 +3,7 @@ import WebSocket from "ws";
 import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
 import { SandboxExecutionError } from "./sandbox/runner.js";
+import { AdapterTransport, type AdapterReporter } from "./extensions/transport.js";
 import type { AuditLogger } from "./audit-log.js";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
@@ -21,6 +22,7 @@ export class HostClient {
     private readonly token: string,
     private readonly runner: SandboxRunner,
     private readonly audit: AuditLogger,
+    private readonly adapter?: AdapterReporter,
   ) {}
 
   async start(): Promise<void> {
@@ -55,11 +57,18 @@ export class HostClient {
     return new Promise((resolve) => {
       const socket = new WebSocket(this.config.controlPlaneUrl, { followRedirects: false });
       this.socket = socket;
+      let adapterStarted = false;
+      const adapterTransport = this.adapter ? new AdapterTransport((frame) => {
+        if (socket.readyState !== WebSocket.OPEN) return false;
+        this.send(frame, socket);
+        return true;
+      }) : undefined;
       let finished = false;
       const finish = (reconnect: boolean) => {
         if (finished) return;
         finished = true;
         this.abortActiveTasks();
+        adapterTransport?.close();
         if (this.heartbeat) clearInterval(this.heartbeat);
         resolve(reconnect);
       };
@@ -82,6 +91,18 @@ export class HostClient {
         }
         if (frame.t === "host.registered") {
           this.heartbeat = setInterval(() => this.send({ t: "host.heartbeat" }), HEARTBEAT_INTERVAL_MS);
+          if (!adapterStarted && this.adapter && adapterTransport) {
+            adapterStarted = true;
+            const controller = new AbortController();
+            this.activeTasks.add(controller);
+            void this.adapter(adapterTransport.exchange, controller.signal).catch(() => {
+              if (!controller.signal.aborted) process.stderr.write("File adapter report could not be completed.\n");
+            }).finally(() => this.activeTasks.delete(controller));
+          }
+          return;
+        }
+        if (frame.t === "adapter.ack" || (frame.t === "error" && frame.code.startsWith("adapter_"))) {
+          adapterTransport?.receive(frame);
           return;
         }
         if (frame.t === "error") {
