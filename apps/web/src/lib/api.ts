@@ -1,4 +1,4 @@
-import type { ChannelKind, KnowledgeOverview, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { ChannelKind, KnowledgeOverview, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -74,5 +74,13 @@ export const api = {
   knowledge: (serverId: string, channelId?: string) => request<KnowledgeOverview>(
     `/api/servers/${encodeURIComponent(serverId)}/knowledge${channelId ? `?channelId=${encodeURIComponent(channelId)}` : ''}`
   ),
+  memory: (id: string, scope: MemoryScope, q: string, targetId?: string) => {
+    const query = new URLSearchParams({ scope, q });
+    if (targetId) query.set('targetId', targetId);
+    return request<MemoryNote[]>(`/api/servers/${encodeURIComponent(id)}/memory?${query}`);
+  },
+  memoryAgents: (id: string) => request<TaskClaimant[]>(`/api/servers/${encodeURIComponent(id)}/memory/agents`),
+  saveMemory: (id: string, scope: MemoryScope, body: string, targetId?: string) =>
+    post<MemoryNote>(`/api/servers/${encodeURIComponent(id)}/memory`, { scope, body, targetId }),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

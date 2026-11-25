@@ -120,6 +120,13 @@
       "when": 1795615774257,
       "tag": "0016_internal_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795616339641,
+      "tag": "0017_scoped_memory",
+      "breakpoints": true
     }
   ]
 }

@@ -284,3 +284,22 @@ export const creditEntries = pgTable("credit_entries", {
   check("credit_entries_destination_valid", sql`${table.toKind} in ('agent', 'host')`),
   check("credit_entries_accounts_differ", sql`(${table.fromKind}, ${table.fromId}) is distinct from (${table.toKind}, ${table.toId})`),
 ]);
+
+export const memoryNotes = pgTable("memory_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),
+  channelId: uuid("channel_id").references(() => channels.id, { onDelete: "cascade" }),
+  agentId: uuid("agent_id").references(() => agents.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  scope: text("scope").$type<"workspace" | "channel" | "agent">().notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("memory_notes_scope_idx").on(table.serverId, table.scope, table.createdAt),
+  index("memory_notes_search_idx").using("gin", sql`to_tsvector('simple'::regconfig, ${table.body})`),
+  check("memory_notes_target_valid", sql`
+    (${table.scope} = 'workspace' and ${table.channelId} is null and ${table.agentId} is null) or
+    (${table.scope} = 'channel' and ${table.channelId} is not null and ${table.agentId} is null) or
+    (${table.scope} = 'agent' and ${table.channelId} is null and ${table.agentId} is not null)
+  `),
+]);
