@@ -6,6 +6,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | Table | Key fields | Notes |
 |---|---|---|
 | `users` | id, github_id, handle, avatar_url | From GitHub OAuth |
+| `oidc_identities` | issuer, subject (composite primary key), user_id | Stores enterprise sign-in identity mappings. GitHub ID is nullable for users provisioned by OIDC. |
 | `servers` | id, name, owner_id | A workspace/team |
 | `roles` | id, server_id, name, permissions (bitset) | Bits cover reading/sending messages, invoking agents, and managing channels, agents, members and roles. Server owners have all permissions. |
 | `members` | server_id, user_id | PK (server_id, user_id) |

@@ -5,11 +5,20 @@ import { channelPermissions } from "../permissions.js";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  githubId: text("github_id").notNull().unique(),
+  githubId: text("github_id").unique(),
   handle: text("handle").notNull(),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const oidcIdentities = pgTable("oidc_identities", {
+  issuer: text("issuer").notNull(),
+  subject: text("subject").notNull(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+}, (table) => [
+  primaryKey({ columns: [table.issuer, table.subject] }),
+  index("oidc_identities_user_idx").on(table.userId),
+]);
 
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(),

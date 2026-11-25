@@ -160,3 +160,4 @@ export { taskReputationInputSchema } from "./task-reputation.js";
 export type { AgentReputation, TaskReputationInput, TaskReputationReview } from "./task-reputation.js";
 export { liveKitUrlSchema, voiceHostSelectionSchema, voiceTokenRequestSchema, voiceTokenTtlSeconds } from "./voice.js";
 export type { VoiceGrant, VoiceJoin, VoiceSettings, VoiceTokenRequest, VoiceTokenResponse } from "./voice.js";
+export { workspaceSsoIdSchema } from "./workspace-sso.js";

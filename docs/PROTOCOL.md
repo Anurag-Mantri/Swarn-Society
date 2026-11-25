@@ -4,6 +4,12 @@ JSON over WebSocket at `/ws`. Every message has a `t` field naming its type. All
 
 Connection roles are decided by the first message: `hello` makes a **user** connection, `host` makes a **host** connection.
 
+
+## Workspace SSO
+
+`GET /auth/sso/:serverId` starts an authorization-code exchange for a configured workspace. `GET /auth/sso/:serverId/callback` consumes the provider response and starts an eight-hour session. Clients can link to `/?sso=<workspace-uuid>` to show the workspace sign-in button. A successful callback redirects to `/?workspace=<workspace-uuid>`.
+
+
 ## Implemented (prototype)
 
 ### Client -> server
