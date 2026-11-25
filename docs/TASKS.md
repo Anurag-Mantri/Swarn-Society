@@ -72,8 +72,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add extension manifests and host approval.
 - [x] Add the adapter register/session/snapshot protocol.
 - [x] Add Zod schemas for every adapter message.
-- [ ] Add one manual adapter for a local file-based app.
-- [ ] Test denied permissions and offline/unresponsive hosts.
+- [x] Add one manual adapter for a local file-based app.
+- [x] Test denied permissions and offline/unresponsive hosts.
 - [ ] Document a Blender or Photoshop adapter only after a tested integration exists.
 
 ## Phase 6: Cloud and economy

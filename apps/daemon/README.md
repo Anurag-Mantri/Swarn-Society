@@ -70,3 +70,7 @@ pnpm --filter @swarmroom/daemon github-app status <app-id> <installation-id> <re
 ```
 
 The command verifies that the checkout's `origin` points to the approved repository. It compares the local and GitHub heads of the workspace snapshot branch, then reports their commit SHAs and the ahead/behind counts when the local Git graph can establish them. A `fetch-needed` result means the checkout lacks the remote commit or enough history to compare it. This operation reads from GitHub and the checkout. Fetching, pulling, merging, and publishing are separate actions.
+
+## Manual file adapter
+
+A Linux host can opt in to report one approved local file's snapshot metadata on connection. See [manual file adapter setup](../../docs/EXTENSIONS.md#manual-file-adapter) for the manifest, host approval, and `SWARMROOM_FILE_ADAPTER` configuration.

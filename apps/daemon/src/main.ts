@@ -6,6 +6,7 @@ import { createPodmanSandboxBackend } from "./sandbox/podman.js";
 import { LocalAuditLog } from "./audit-log.js";
 import { createSystemAgentSecretKeychain } from "./keychain.js";
 import { LocalProviderEgressBroker } from "./provider-broker.js";
+import { createFileAdapter, loadFileAdapterConfig } from "./extensions/file-adapter.js";
 import { LocalBudgetLedger } from "./budget-ledger.js";
 
 async function main(): Promise<void> {
@@ -23,7 +24,10 @@ async function main(): Promise<void> {
   const sandbox = sandboxConfig && broker
     ? await createPodmanSandboxBackend(sandboxConfig, broker)
     : undefined;
-  const client = new HostClient(config, token, new SandboxRunner(sandbox), new LocalAuditLog());
+  const fileAdapter = loadFileAdapterConfig(process.env.SWARMROOM_FILE_ADAPTER);
+  const client = new HostClient(
+    config, token, new SandboxRunner(sandbox), new LocalAuditLog(), fileAdapter && createFileAdapter(fileAdapter),
+  );
   const stop = () => client.stop();
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
