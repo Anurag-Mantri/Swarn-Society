@@ -42,6 +42,7 @@ import { workspaceCollaborationRoutes } from "./routes/workspace-collaboration.j
 import { taskMetricsRoutes } from "./routes/task-metrics.js";
 import { taskResolutionRoutes } from "./routes/task-resolution.js";
 import { taskBidRoutes } from "./routes/task-bids.js";
+import { taskReputationRoutes } from "./routes/task-reputation.js";
 import { taskPostRoutes } from "./routes/task-posts.js";
 import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
@@ -74,6 +75,7 @@ await app.register(memoryRoutes);
 await app.register(workspaceDirectoryRoutes);
 await app.register(workspaceFileRoutes);
 await app.register(taskPostRoutes);
+await app.register(taskReputationRoutes);
 await app.register(taskBidRoutes);
 await app.register(taskResolutionRoutes);
 await app.register(taskMetricsRoutes);

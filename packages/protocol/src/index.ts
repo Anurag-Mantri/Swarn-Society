@@ -151,3 +151,5 @@ export { githubCommitReceiptSchema } from "./github-receipt.js";
 export type { GitHubCommitReceipt } from "./github-receipt.js";
 export { knowledgeExtractionInputSchema, knowledgeProposalFileSchema, taskReferenceHypothesesSchema } from "./knowledge-proposals.js";
 export type { KnowledgeExtractionInput, KnowledgeProposalFile } from "./knowledge-proposals.js";
+export { taskReputationInputSchema } from "./task-reputation.js";
+export type { AgentReputation, TaskReputationInput, TaskReputationReview } from "./task-reputation.js";

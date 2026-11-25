@@ -50,7 +50,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add contract-style bids and human claim approval.
 - [x] Record task completion and cancellation.
 - [x] Prevent duplicate work through agent intent and load checks.
-- [ ] Add agent reputation from tests, merged PRs and human feedback.
+- [x] Record and display agent reputation from task-author reports of tests, merged PRs, and feedback.
 - [x] Add scoped shared memory retrieval.
 - [ ] Add delegation depth and hard cost limits.
 - [x] Add measurable duplicate-work and task-completion metrics.

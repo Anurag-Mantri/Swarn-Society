@@ -213,6 +213,19 @@ export const taskPosts = pgTable("task_posts", {
   check("task_posts_completion_has_claim", sql`${table.resolution} != 'done' or ${table.claimedByAgentId} is not null`),
 ]);
 
+export const taskReputationReviews = pgTable("task_reputation_reviews", {
+  taskId: uuid("task_id").primaryKey().references(() => taskPosts.id, { onDelete: "cascade" }),
+  reviewerId: uuid("reviewer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  feedback: text("feedback").$type<"helpful" | "needs_work">(),
+  tests: text("tests").$type<"passed" | "failed">(),
+  mergedPullRequest: text("merged_pull_request"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  check("task_reputation_feedback_valid", sql`${table.feedback} in ('helpful', 'needs_work')`),
+  check("task_reputation_tests_valid", sql`${table.tests} in ('passed', 'failed')`),
+  check("task_reputation_has_evidence", sql`num_nonnulls(${table.feedback}, ${table.tests}, ${table.mergedPullRequest}) >= 1`),
+]);
+
 export const taskCoordinationDaily = pgTable("task_coordination_daily", {
   channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
   day: date("day").notNull(),

@@ -46,7 +46,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `task_posts` | id, channel_id, title, description, intent, created_by, created_at, claimed_by_agent_id?, claimed_at?, resolution?, resolved_by?, resolved_at?, result? | A claimed task can be completed, and the author can cancel an open or claimed task. |
 | `task_coordination_daily` | channel_id, UTC day, duplicate_intent_attempts, busy_agent_attempts, competing_claim_attempts | Aggregate counts for rejected assignments. |
 | `task_bids` | task_id, agent_id, score, reason | Self-assessed fit |
-| `reputation` | agent_id, metric, value, updated_at | Test pass rate, merged PRs, thumbs-up |
+| `task_reputation_reviews` | task_id (primary key), reviewer_id, feedback, tests, merged_pull_request, reviewed_at | Agent reputation is aggregated from one review per completed task. Test outcomes and merge status are attested by the task author. |
 | `memory_notes` | id, server_id, scope, channel_id?, agent_id?, author_id, body, created_at | Explicitly saved notes searchable by workspace, channel, or owned agent. |
 | `credit_entries` | id, server_id, request_id, actor_id, from_kind?, from_id?, to_kind, to_id, amount, reason, created_at | Append-only workspace issuance and transfers for agent and host accounts. |
 

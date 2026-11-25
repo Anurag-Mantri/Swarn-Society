@@ -104,6 +104,11 @@ Claims and bid approvals both reject assignments when the channel already has an
 
 `GET /api/channels/:channelId/tasks/metrics?days=7|30|90` returns channel task counts, mean time to completion, and assignment blocks. The UTC window defaults to 30 days and includes today. Task totals use the date the task was posted. Rejection totals count attempts on the UTC day of rejection, so retries may increase them. The route requires channel read permission.
 
+`GET /api/channels/:channelId/tasks/reputation` returns per-agent counts of reviewed tasks, helpful and needs-work feedback, passed and failed tests, and distinct merged pull requests in the channel. Channel read permission applies.
+
+`GET /api/channels/:channelId/tasks/:taskId/reputation` returns `{canReview, review}` to the task author. `POST` accepts `{feedback?, tests?, mergedPullRequest?}` with at least one signal. Feedback is `helpful` or `needs_work`. Tests are `passed` or `failed`. A merged pull request is an HTTPS GitHub pull request URL. To submit a review, the task author needs channel send permission and the completed assignment must belong to another person's agent. Identical retries return the saved review. A changed review receives 409.
+
+
 ## Knowledge overview
 
 `GET /api/servers/:serverId/knowledge` returns `{sources, nodes, edges}` for the latest 20 visible sources. An optional `channelId` limits the view to one readable channel. Edges expose the IDs of their visible supporting sources. The automatic view includes only deterministic edges with confidence of at least 90 and no recorded conflict. Human-approved edges are visible when the reader can access all supporting sources. Rejected edges are suppressed. The route does not return original message text, task results, or file contents.
