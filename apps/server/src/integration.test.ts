@@ -994,6 +994,44 @@ integration("Postgres-backed server routes", () => {
     expect((await inject({ url: approvalsPath, headers })).json()).toEqual([]);
   }, 30_000);
 
+  it("moves internal credits once per request and prevents concurrent overspending", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({ method: "POST", url: "/api/servers", headers, payload: { name: "Credit ledger test" } });
+    expect(workspace.statusCode).toBe(201);
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const agent = await inject({
+      method: "POST", url: `/api/servers/${serverId}/agents`, headers, payload: { name: "credit-agent" },
+    });
+    const host = await inject({ method: "POST", url: "/api/hosts", headers, payload: { machine: "credit host" } });
+    expect(agent.statusCode).toBe(201);
+    expect(host.statusCode).toBe(201);
+    const agentAccount = { kind: "agent", id: agent.json<{ id: string }>().id };
+    const hostAccount = { kind: "host", id: host.json<{ id: string }>().id };
+    const url = `/api/servers/${serverId}/credits`;
+    const grant = { requestId: randomUUID(), to: agentAccount, amount: 10, reason: "Pilot allocation" };
+    expect((await inject({ method: "POST", url, payload: grant })).statusCode).toBe(401);
+    const inserted = await inject({ method: "POST", url, headers, payload: grant });
+    expect(inserted.statusCode).toBe(201);
+    const replay = await inject({ method: "POST", url, headers, payload: grant });
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json()).toEqual(inserted.json());
+    expect((await inject({ method: "POST", url, headers, payload: { ...grant, amount: 11 } })).statusCode).toBe(409);
+    expect((await inject({
+      method: "POST", url, headers, payload: { ...grant, requestId: randomUUID(), to: { kind: "host", id: randomUUID() } },
+    })).statusCode).toBe(404);
+
+    const transfers = await Promise.all([randomUUID(), randomUUID()].map((requestId) => inject({
+      method: "POST", url, headers, payload: { requestId, from: agentAccount, to: hostAccount, amount: 7, reason: "Host allocation" },
+    })));
+    expect(transfers.map(({ statusCode }) => statusCode).sort()).toEqual([201, 409]);
+    const agentLedger = await inject({ url: `${url}?kind=agent&id=${agentAccount.id}`, headers });
+    const hostLedger = await inject({ url: `${url}?kind=host&id=${hostAccount.id}`, headers });
+    expect(agentLedger.json()).toMatchObject({ balance: "3", entries: expect.any(Array) });
+    expect(hostLedger.json()).toMatchObject({ balance: "7", entries: expect.any(Array) });
+    expect(agentLedger.json<{ entries: unknown[] }>().entries).toHaveLength(2);
+    expect(hostLedger.json<{ entries: unknown[] }>().entries).toHaveLength(1);
+  }, 30_000);
+
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
     const hostResponse = await inject({

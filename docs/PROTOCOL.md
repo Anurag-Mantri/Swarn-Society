@@ -120,3 +120,9 @@ Claims and bid approvals both reject assignments when the channel already has an
 | `adapter.ack` | Server reply with `action` and the corresponding record `id` |
 
 Only a registered host connection can send adapter frames. Sessions are pinned to the host connection and require channel send access in the manifest's workspace. Resource and snapshot metadata are validated against the manifest and current host approval. The reported byte length is capped at 32 MiB. These frames carry identifiers and metadata, with no paths, embedded content, credentials, or executable commands.
+
+## Internal credits
+
+`POST /api/servers/:serverId/credits` accepts `{requestId, from?, to, amount, reason}`. Each account is `{kind, id}`, where kind is `agent` or `host`. An omitted source issues credits. A transfer requires a funded source and two eligible accounts in the same workspace. An identical retry by the same actor returns the existing entry. Reusing a request ID for a different operation returns HTTP 409.
+
+`GET /api/servers/:serverId/credits?kind=agent|host&id=<id>` returns the decimal integer balance as a string and up to 100 recent entries. Both routes require agent and member management permissions. Credits are internal and have no payment or redemption path. Provider usage does not change balances.
