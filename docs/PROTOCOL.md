@@ -112,6 +112,8 @@ Claims and bid approvals both reject assignments when the channel already has an
 
 `POST /api/servers/:serverId/knowledge/reviews/:edgeId` records `{decision, reason?}`. The decision is `approved` or `rejected`. The workspace stores the reviewer and timestamp. A decision is final. The same reviewer retrying an identical request receives the existing decision. A different decision or a review of an automatically accepted edge returns 409.
 
+`POST /api/servers/:serverId/knowledge/commit-receipts` accepts `{serverId, repositoryId, branch, commitSha, committedAt}`. The workspace owner submits metadata read by the host-side GitHub CLI. The branch must match the workspace's dedicated snapshot branch. The server records the authenticated reporter and deduplicates by workspace, repository, and commit. It returns `{sourceId, inserted}` with 201 for a new receipt, 200 for an identical retry, or 409 when the existing source metadata differs.
+
 
 ## Host-owned adapter sessions
 

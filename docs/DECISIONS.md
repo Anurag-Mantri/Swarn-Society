@@ -220,3 +220,10 @@ Date: 2026-11-25
 Context: Low-confidence, inferred, and conflicting relationships need human judgment. A workspace role can have administrative permissions while being denied access to a channel.
 Decision: Allow people with workspace role-management and message-read permissions to review an edge when they can read provenance for both endpoints and all sources attached to the edge. Record a final decision for the relationship.
 Consequences: A rejected edge stays hidden. An approved edge appears for a reader only when they can read all attached evidence and the selected view includes both endpoints.
+
+### D-034: Workspace owners attest to imported GitHub receipts
+Status: Accepted
+Date: 2026-11-25
+Context: The graph needs commit provenance from private repositories where GitHub access belongs to the host.
+Decision: Have the host CLI read the dedicated snapshot branch with a repository-scoped read token. Import the resulting metadata through the workspace owner's authenticated session. Record the user as the reporter.
+Consequences: The control plane can show commit provenance without requesting the installation token. It trusts the workspace owner's submission and attributes the receipt to that user.

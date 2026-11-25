@@ -7,6 +7,8 @@ import {
 
 export type KnowledgeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+export class KnowledgeSourceConflictError extends Error {}
+
 export function storeKnowledgeEvent(input: unknown): Promise<{ sourceId: string; inserted: boolean }> {
   return db.transaction((transaction) => recordKnowledgeEvent(transaction, input));
 }
@@ -26,7 +28,7 @@ export async function recordKnowledgeEvent(
   if (!inserted) {
     const [same] = await transaction.select({ id: knowledgeSources.id }).from(knowledgeSources)
       .where(and(eq(knowledgeSources.id, sourceId), sql`${knowledgeSources.event} = ${JSON.stringify(event)}::jsonb`)).limit(1);
-    if (!same) throw new Error("Knowledge source identity already belongs to another event.");
+    if (!same) throw new KnowledgeSourceConflictError("Knowledge source identity already belongs to another event.");
     return { sourceId, inserted: false };
   }
 

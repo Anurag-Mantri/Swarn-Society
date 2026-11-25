@@ -1,6 +1,7 @@
 import { maximumSnapshotBytes, workspaceSnapshotSchema } from "@swarmroom/protocol";
 import { readFile, stat } from "node:fs/promises";
 import { githubId, inspectGitHubInstallation, installationTarget, parseGitHubAppKey } from "./app.js";
+import { readWorkspaceCommitReceipt } from "./receipt.js";
 import { getWorkspaceSyncStatus } from "./status.js";
 import { publishWorkspaceSnapshot } from "./snapshot.js";
 import { createGitHubAppKeychain } from "./app-keychain.js";
@@ -9,7 +10,7 @@ async function main(): Promise<void> {
   const [action, appArg, secondArg, thirdArg, fileOrWorkspace, checkout, ...extra] = process.argv.slice(2);
   const appId = githubId.safeParse(appArg);
   if (!appId.success || extra.length || (checkout && action !== "status") ||
-      (fileOrWorkspace && action !== "publish" && action !== "status")) throw new Error("Provide a valid GitHub App ID.");
+      (fileOrWorkspace && action !== "publish" && action !== "status" && action !== "receipt")) throw new Error("Provide a valid GitHub App ID.");
   const keychain = await createGitHubAppKeychain(appId.data);
 
   if (action === "key-import" && secondArg && !thirdArg) {
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
     process.stdout.write("GitHub App key removed from the OS keychain.\n");
     return;
   }
-  if (action === "verify" || action === "publish" || action === "status") {
+  if (action === "verify" || action === "publish" || action === "status" || action === "receipt") {
     const target = installationTarget.safeParse({
       appId: appId.data,
       installationId: secondArg,
@@ -40,6 +41,10 @@ async function main(): Promise<void> {
     if (action === "verify") {
       const repository = await inspectGitHubInstallation(target.data, pem);
       process.stdout.write(`${JSON.stringify(repository)}\n`);
+    } else if (action === "receipt") {
+      if (!fileOrWorkspace) throw new Error("Provide the workspace ID.");
+      const receipt = await readWorkspaceCommitReceipt(target.data, pem, fileOrWorkspace);
+      process.stdout.write(`${JSON.stringify(receipt)}\n`);
     } else if (action === "status") {
       if (!fileOrWorkspace || !checkout) throw new Error("Provide the workspace ID and the local Git checkout.");
       const status = await getWorkspaceSyncStatus(target.data, pem, fileOrWorkspace, checkout);
@@ -58,7 +63,7 @@ async function main(): Promise<void> {
     }
     return;
   }
-  throw new Error("Use github-app key-import <app-id> <pem-file>, key-delete <app-id>, or verify <app-id> <installation-id> <repository-id>, publish <app-id> <installation-id> <repository-id> <snapshot.json>, or status <app-id> <installation-id> <repository-id> <workspace-id> <checkout>.");
+  throw new Error("Use github-app key-import <app-id> <pem-file>, key-delete <app-id>, or verify <app-id> <installation-id> <repository-id>, publish <app-id> <installation-id> <repository-id> <snapshot.json>, receipt <app-id> <installation-id> <repository-id> <workspace-id>, or status <app-id> <installation-id> <repository-id> <workspace-id> <checkout>.");
 }
 
 main().catch((error: unknown) => {

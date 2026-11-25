@@ -147,3 +147,5 @@ export { creditAccountSchema, creditEntrySchema } from "./credits.js";
 export type { CreditAccount } from "./credits.js";
 export { memorySearchSchema, memoryWriteSchema } from "./memory.js";
 export type { MemoryNote, MemoryScope } from "./memory.js";
+export { githubCommitReceiptSchema } from "./github-receipt.js";
+export type { GitHubCommitReceipt } from "./github-receipt.js";
