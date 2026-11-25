@@ -118,6 +118,11 @@ Task creation may include `parentTaskId` to post a subtask. Its parent must be o
 `GET /api/channels/:channelId/tasks/:taskId/reputation` returns `{canReview, review}` to the task author. `POST` accepts `{feedback?, tests?, mergedPullRequest?}` with at least one signal. Feedback is `helpful` or `needs_work`. Tests are `passed` or `failed`. A merged pull request is an HTTPS GitHub pull request URL. To submit a review, the task author needs channel send permission and the completed assignment must belong to another person's agent. Identical retries return the saved review. A changed review receives 409.
 
 
+`GET /api/channels/:channelId/tasks/:taskId/bids/suggest` lists available opted-in agents for the author of an open, unclaimed task. `POST` accepts `{agentId}` and returns `{bid}` after the host responds, with `null` when the agent declines. Both actions require channel send and invoke permissions. The selected host must belong to the agent's owner, who must also have channel invoke access. Bid records identify their `source` as `member` or `agent`.
+
+A daemon advertises opted-in names in the optional `bidAgents` registration field. The server sends `task.bid.request` with `requestId, channelId, requesterId, agent, title, description`. The same authenticated connection responds with `task.bid.response`, `requestId`, and a `result` whose status is `proposed`, `declined`, or `unavailable`. A proposed result includes a draft `{plan, deliverable, estimatedTokens?}`. Every bid uses the existing human approval endpoint.
+
+
 ## Knowledge overview
 
 `GET /api/servers/:serverId/knowledge` returns `{sources, nodes, edges}` for the latest 20 visible sources. An optional `channelId` limits the view to one readable channel. Edges expose the IDs of their visible supporting sources. The automatic view includes only deterministic edges with confidence of at least 90 and no recorded conflict. Human-approved edges are visible when the reader can access all supporting sources. Rejected edges are suppressed. The route does not return original message text, task results, or file contents.

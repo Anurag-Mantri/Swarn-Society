@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadAgentBudgetPolicies, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
+import { loadAgentBudgetPolicies, loadAutoBidAgents, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
 
 describe("daemon configuration", () => {
   it("parses a secure websocket URL and unique agent names", () => {
@@ -100,5 +100,16 @@ describe("host-wide token caps", () => {
     expect(() => loadHostTokenPolicies({
       SWARMROOM_HOST_TOKEN_CAPS: '{"scout":{"taskTokens":5000,"dayTokens":1000}}',
     }, ["scout"])).toThrow();
+  });
+});
+
+
+describe("automatic bid opt-in", () => {
+  it("requires the opted-in agent to have local host caps", () => {
+    const limits = new Map([["scout", { taskTokens: 1000, dayTokens: 5000 }]]);
+    expect(loadAutoBidAgents({}, ["scout"], limits)).toEqual([]);
+    expect(loadAutoBidAgents({ SWARMROOM_AUTO_BID_AGENTS: "scout,scout" }, ["scout"], limits)).toEqual(["scout"]);
+    expect(() => loadAutoBidAgents({ SWARMROOM_AUTO_BID_AGENTS: "scout" }, ["scout"], new Map())).toThrow("hard token caps");
+    expect(() => loadAutoBidAgents({ SWARMROOM_AUTO_BID_AGENTS: "other" }, ["scout"], limits)).toThrow("configured");
   });
 });

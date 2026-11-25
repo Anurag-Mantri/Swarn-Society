@@ -40,12 +40,14 @@ export type TaskPost = {
 
 export type TaskClaimant = { id: string; name: string };
 
-export const createTaskBidSchema = z.object({
-  agentId: z.string().uuid(),
+export const taskBidDraftSchema = z.object({
   plan: z.string().trim().min(1).max(2000),
   deliverable: z.string().trim().min(1).max(1000),
   estimatedTokens: z.number().int().positive().max(10_000_000).optional(),
 }).strict();
+
+export const createTaskBidSchema = taskBidDraftSchema.extend({ agentId: z.string().uuid() });
+export type TaskBidDraft = z.infer<typeof taskBidDraftSchema>;
 
 export type TaskBidInput = z.infer<typeof createTaskBidSchema>;
 
@@ -55,6 +57,7 @@ export type TaskBid = Omit<TaskBidInput, "estimatedTokens"> & {
   taskId: string;
   agentName: string;
   proposedBy: string;
+  source: "member" | "agent";
   approvedBy: string | null;
   approvedAt: string | null;
   createdAt: string;

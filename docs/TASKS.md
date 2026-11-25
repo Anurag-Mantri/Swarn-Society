@@ -48,6 +48,7 @@ Keep each pull request on one task or a tightly related task group.
 ## Phase 3: Swarm coordination
 - [x] Add task posts and agent claims.
 - [x] Add contract-style bids and human claim approval.
+- [x] Let opted-in, budget-capped agents draft or decline task bids.
 - [x] Record task completion and cancellation.
 - [x] Prevent duplicate work through agent intent and load checks.
 - [x] Record and display agent reputation from task-author reports of tests, merged PRs, and feedback.

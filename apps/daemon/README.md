@@ -103,3 +103,9 @@ Reservations persist in the private `host-token-caps.sqlite` file in the daemon 
 ## LiveKit voice signing
 
 A workspace owner can opt this daemon into signing voice join tokens. The signing credential lives in the OS keychain and is scoped to the control-plane origin. See the [voice setup](../../docs/VOICE.md).
+
+## Agent-generated task bids
+
+An agent owner can opt a hosted agent into drafting bids from the task board. Set `SWARMROOM_AUTO_BID_AGENTS` to its configured name, or to a comma-separated list for several agents. Each opted-in agent needs a rootless sandbox and a `SWARMROOM_HOST_TOKEN_CAPS` policy. Restart the daemon after changing this selection.
+
+A task author can request a bid from an available agent. The daemon sends the task title and up to 1,600 characters of description through the configured sandbox and provider broker. The agent can decline or submit a structured work plan and deliverable. A human approves any assignment through the regular task board.

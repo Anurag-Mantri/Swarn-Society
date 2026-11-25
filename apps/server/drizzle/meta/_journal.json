@@ -162,6 +162,13 @@
       "when": 1795619486219,
       "tag": "0022_channel_unread",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795619871648,
+      "tag": "0023_agent_bid_source",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -79,6 +80,56 @@ describe("host client", () => {
       await started;
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await rm(auditDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("drafts a bid through the sandbox for an opted-in agent and returns only the bid payload", async () => {
+    const server = new WebSocketServer({ port: 0 });
+    await once(server, "listening");
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Test server did not bind a TCP port.");
+    const requestId = randomUUID();
+    const requesterId = randomUUID();
+    const channelId = randomUUID();
+    const proposal = { plan: "Review the failing checks.", deliverable: "A verified fix." };
+    const frames: unknown[] = [];
+    const completed = new Promise<unknown>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Timed out waiting for a bid.")), 5_000);
+      server.once("connection", (socket) => socket.on("message", (data) => {
+        const frame = JSON.parse(data.toString()) as unknown;
+        frames.push(frame);
+        if (typeof frame !== "object" || frame === null || !("t" in frame)) return;
+        if (frame.t === "host") {
+          socket.send(JSON.stringify({ t: "host.registered", hostId: "host-1" }));
+          socket.send(JSON.stringify({
+            t: "task.bid.request", requestId, channelId, requesterId, agent: "scout",
+            title: "Fix checks", description: "Review failing checks.",
+          }));
+        }
+        if (frame.t === "task.bid.response") {
+          clearTimeout(timeout);
+          resolve(frame);
+        }
+      }));
+    });
+    const run = vi.fn(async () => ({ text: JSON.stringify(proposal), usage: { inputTokens: 12, outputTokens: 8 } }));
+    const audit = { recordTask: vi.fn(async () => undefined) };
+    const client = new HostClient({
+      controlPlaneUrl: new URL(`ws://127.0.0.1:${address.port}/ws`), machine: "bid worker", agents: ["scout"],
+    }, "host-token", new SandboxRunner({ run }), audit, undefined, undefined, ["scout"]);
+    const running = client.start();
+    try {
+      await expect(completed).resolves.toEqual({ t: "task.bid.response", requestId, result: { status: "proposed", draft: proposal } });
+      expect(frames[0]).toMatchObject({ t: "host", bidAgents: ["scout"] });
+      expect(run).toHaveBeenCalledWith({
+        t: "task", channelId, from: requesterId, agent: "scout", text: expect.stringContaining("Do not execute the work"),
+      }, expect.any(AbortSignal));
+      expect(audit.recordTask).toHaveBeenCalledTimes(2);
+      expect(frames).not.toContainEqual(expect.objectContaining({ t: "reply" }));
+    } finally {
+      client.stop();
+      await running;
+      await new Promise<void>((resolve) => server.close(() => resolve()));
     }
   });
 

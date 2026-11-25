@@ -1,9 +1,10 @@
-import { hostClientFrameSchema, hostServerFrameSchema, threadedHostProtocolVersion, type HostServerFrame, type Task } from "@swarmroom/protocol";
+import { hostClientFrameSchema, hostServerFrameSchema, threadedHostProtocolVersion, type HostServerFrame, type Task, type TaskBidRequest, type TaskBidResponse } from "@swarmroom/protocol";
 import WebSocket from "ws";
 import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
-import { SandboxExecutionError } from "./sandbox/runner.js";
+import { SandboxExecutionError, type SandboxTokenUsage } from "./sandbox/runner.js";
 import { AdapterTransport, type AdapterReporter } from "./extensions/transport.js";
+import { buildBidTask, parseBidDraft } from "./tasks/bid-draft.js";
 import type { VoiceTokenIssuer } from "./voice/issuer.js";
 import type { AuditLogger } from "./audit-log.js";
 
@@ -25,6 +26,7 @@ export class HostClient {
     private readonly audit: AuditLogger,
     private readonly adapter?: AdapterReporter,
     private readonly voiceIssuer?: VoiceTokenIssuer,
+    private readonly autoBidAgents: string[] = [],
   ) {}
 
   async start(): Promise<void> {
@@ -79,6 +81,7 @@ export class HostClient {
         const frame = hostClientFrameSchema.parse({
           t: "host", token: this.token, machine: this.config.machine, agents: this.config.agents,
           version: threadedHostProtocolVersion, voice: this.voiceIssuer ? true : undefined,
+          bidAgents: this.autoBidAgents.length ? this.autoBidAgents : undefined,
         });
         socket.send(JSON.stringify(frame));
       });
@@ -119,6 +122,7 @@ export class HostClient {
           });
           return;
         }
+        if (frame.t === "task.bid.request") void this.handleBidRequest(frame, socket);
         if (frame.t === "task") void this.handleTask(frame, socket);
       });
       socket.on("error", () => finish(true));
@@ -130,47 +134,73 @@ export class HostClient {
     });
   }
 
+  private async runAudited(task: Task, signal: AbortSignal, recordUsage: (usage: SandboxTokenUsage) => void) {
+    const { threadId: _threadId, ...executionTask } = task;
+    await this.audit.recordTask(task, "task.started");
+    try {
+      const result = await this.runner.run(executionTask, signal);
+      recordUsage(result.usage);
+      await this.audit.recordTask(task, "task.succeeded");
+      return result;
+    } catch (error) {
+      if (error instanceof SandboxExecutionError) recordUsage(error.usage);
+      try {
+        await this.audit.recordTask(task, "task.failed");
+      } catch {
+        // Do not expose local audit storage errors to other users.
+      }
+      throw error;
+    }
+  }
+
+  private reportUsage(task: Task, usage: SandboxTokenUsage | undefined, socket: WebSocket) {
+    if (!usage || (usage.inputTokens <= 0 && usage.outputTokens <= 0)) return;
+    this.send({
+      t: "agent.usage", channelId: task.channelId, agent: task.agent, requesterId: task.from,
+      tokensIn: usage.inputTokens, tokensOut: usage.outputTokens,
+    }, socket);
+  }
+
   private async handleTask(task: Task, socket: WebSocket): Promise<void> {
-    // The daemon keeps reply routing metadata so older sandbox images can still run tasks.
-    const { threadId, ...executionTask } = task;
     const controller = new AbortController();
     this.activeTasks.add(controller);
     let text: string;
-    let usage: { inputTokens: number; outputTokens: number } | undefined;
-    let started = false;
+    let usage: SandboxTokenUsage | undefined;
     try {
-      await this.audit.recordTask(task, "task.started");
-      started = true;
-      const result = await this.runner.run(executionTask, controller.signal);
+      const result = await this.runAudited(task, controller.signal, (recorded) => { usage = recorded; });
       text = result.text;
-      usage = result.usage;
-      await this.audit.recordTask(task, "task.succeeded");
     } catch (error: unknown) {
-      if (error instanceof SandboxExecutionError) usage = error.usage;
-      if (started) {
-        try {
-          await this.audit.recordTask(task, "task.failed");
-        } catch {
-          // Do not expose local audit storage errors to other users.
-        }
-      }
       text = error instanceof SandboxExecutionError && error.budgetExceeded
         ? "This task would exceed a token limit on the host. Ask the agent owner to raise the limit or try a shorter task."
         : "Task could not be completed in the host sandbox.";
     } finally {
       this.activeTasks.delete(controller);
     }
-    if (usage && (usage.inputTokens > 0 || usage.outputTokens > 0)) {
-      this.send({
-        t: "agent.usage",
-        channelId: task.channelId,
-        agent: task.agent,
-        requesterId: task.from,
-        tokensIn: usage.inputTokens,
-        tokensOut: usage.outputTokens,
-      }, socket);
+    this.reportUsage(task, usage, socket);
+    this.send({ t: "reply", channelId: task.channelId, threadId: task.threadId, agent: task.agent, text }, socket);
+  }
+
+  private async handleBidRequest(request: TaskBidRequest, socket: WebSocket) {
+    let result: TaskBidResponse["result"] = { status: "unavailable" };
+    if (this.autoBidAgents.includes(request.agent)) {
+      const controller = new AbortController();
+      this.activeTasks.add(controller);
+      let task: Task | undefined;
+      let usage: SandboxTokenUsage | undefined;
+      try {
+        task = buildBidTask(request);
+        const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(48_000)]);
+        const response = await this.runAudited(task, signal, (recorded) => { usage = recorded; });
+        const draft = parseBidDraft(response.text);
+        result = draft ? { status: "proposed", draft } : { status: "declined" };
+      } catch {
+        // The task board receives an unavailable result for sandbox or validation errors.
+      } finally {
+        this.activeTasks.delete(controller);
+      }
+      if (task) this.reportUsage(task, usage, socket);
     }
-    this.send({ t: "reply", channelId: task.channelId, threadId, agent: task.agent, text }, socket);
+    this.send({ t: "task.bid.response", requestId: request.requestId, result }, socket);
   }
 
   private abortActiveTasks(): void {
