@@ -255,3 +255,10 @@ Date: 2026-11-25
 Context: Requester quotas exempt an agent's owner and do not bound the aggregate work sent to one agent from different users.
 Decision: Support host-configured task and rolling per-agent token caps. Reserve the conservative request bound in a private SQLite transaction before calling the provider. Limit capped requests to the existing text routes and a bounded input shape.
 Consequences: The host caps also cover the owner and local extraction. They persist across restarts and share accounting with other daemon processes in the same state directory. Provider usage reports remain display-only at the control plane.
+
+### D-039: LiveKit join tokens are signed on an authorized host
+Status: Accepted
+Date: 2026-11-25
+Context: Voice requires LiveKit join credentials while the control plane needs to enforce channel access.
+Decision: Let the workspace owner select one of their connected, consented voice hosts. Check channel read and send permissions on new joins. Ask the selected host to sign one short-lived room token with its OS-keychain credential.
+Consequences: The control plane stores the host association. New joins require the selected host to be online. Media flows between browsers and LiveKit, which manages established sessions.

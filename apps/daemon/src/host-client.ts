@@ -4,6 +4,7 @@ import type { DaemonConfig } from "./config.js";
 import { SandboxRunner } from "./sandbox/runner.js";
 import { SandboxExecutionError } from "./sandbox/runner.js";
 import { AdapterTransport, type AdapterReporter } from "./extensions/transport.js";
+import type { VoiceTokenIssuer } from "./voice/issuer.js";
 import type { AuditLogger } from "./audit-log.js";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
@@ -23,6 +24,7 @@ export class HostClient {
     private readonly runner: SandboxRunner,
     private readonly audit: AuditLogger,
     private readonly adapter?: AdapterReporter,
+    private readonly voiceIssuer?: VoiceTokenIssuer,
   ) {}
 
   async start(): Promise<void> {
@@ -76,7 +78,7 @@ export class HostClient {
       socket.on("open", () => {
         const frame = hostClientFrameSchema.parse({
           t: "host", token: this.token, machine: this.config.machine, agents: this.config.agents,
-          version: threadedHostProtocolVersion,
+          version: threadedHostProtocolVersion, voice: this.voiceIssuer ? true : undefined,
         });
         socket.send(JSON.stringify(frame));
       });
@@ -108,6 +110,13 @@ export class HostClient {
         if (frame.t === "error") {
           socket.close(1008, "host authorization failed");
           finish(false);
+          return;
+        }
+        if (frame.t === "voice.token.request") {
+          const grant = this.voiceIssuer?.(frame) ?? Promise.resolve(null);
+          void grant.catch(() => null).then((result) => {
+            this.send({ t: "voice.token.response", requestId: frame.requestId, grant: result }, socket);
+          });
           return;
         }
         if (frame.t === "task") void this.handleTask(frame, socket);

@@ -11,6 +11,7 @@
   "dependencies": {
     "@hocuspocus/provider": "^4.9.0",
     "@swarmroom/protocol": "workspace:*",
+    "livekit-client": "2.25.0",
     "monaco-editor": "0.52.2",
     "y-monaco": "^0.1.6",
     "yjs": "^13.6.33"

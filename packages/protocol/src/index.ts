@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { adapterAckSchema, adapterFrames } from "./adapter-frames.js";
+import { voiceTokenRequestSchema, voiceTokenResponseSchema } from "./voice.js";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const threadId = z.string().uuid().optional();
@@ -25,6 +26,7 @@ export const hostSchema = z.object({
   machine: text(100),
   agents: z.array(text(100)).min(1).max(100),
   version: z.number().int().positive().optional(),
+  voice: z.literal(true).optional(),
 }).strict();
 
 export const hostHeartbeatSchema = z.object({
@@ -96,6 +98,7 @@ export const hostClientFrameSchema = z.discriminatedUnion("t", [
   hostHeartbeatSchema,
   agentUsageSchema,
   replySchema,
+  voiceTokenResponseSchema,
   ...adapterFrames,
 ]);
 
@@ -103,6 +106,7 @@ export const hostServerFrameSchema = z.discriminatedUnion("t", [
   taskSchema,
   hostRegisteredSchema,
   adapterAckSchema,
+  voiceTokenRequestSchema,
   errorSchema,
 ]);
 
@@ -113,6 +117,7 @@ export const inboundFrameSchema = z.discriminatedUnion("t", [
   agentUsageSchema,
   messageSchema,
   replySchema,
+  voiceTokenResponseSchema,
   ...adapterFrames,
 ]);
 
@@ -153,3 +158,5 @@ export { knowledgeExtractionInputSchema, knowledgeProposalFileSchema, taskRefere
 export type { KnowledgeExtractionInput, KnowledgeProposalFile } from "./knowledge-proposals.js";
 export { taskReputationInputSchema } from "./task-reputation.js";
 export type { AgentReputation, TaskReputationInput, TaskReputationReview } from "./task-reputation.js";
+export { liveKitUrlSchema, voiceHostSelectionSchema, voiceTokenRequestSchema, voiceTokenTtlSeconds } from "./voice.js";
+export type { VoiceGrant, VoiceJoin, VoiceSettings, VoiceTokenRequest, VoiceTokenResponse } from "./voice.js";

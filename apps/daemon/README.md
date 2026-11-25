@@ -99,3 +99,7 @@ SWARMROOM_HOST_TOKEN_CAPS={"scout":{"taskTokens":10000,"dayTokens":100000}}
 The broker permits text-only requests under a host cap. It reserves the serialized input size, provider framing allowance, and maximum output tokens before contacting the provider. Keep the full reservation when accounting against the caps. This bounds the token budget available to the runtime without relying on the provider to report usage. The owner configures the model and its provider pricing separately.
 
 Reservations persist in the private `host-token-caps.sqlite` file in the daemon state directory. Use the same cap configuration and daemon state directory for the daemon and local extraction CLI. If the file cannot be opened or is invalid, capped calls fail before contacting the provider. Use Node 22.13 or newer for this opt-in feature.
+
+## LiveKit voice signing
+
+A workspace owner can opt this daemon into signing voice join tokens. The signing credential lives in the OS keychain and is scoped to the control-plane origin. See the [voice setup](../../docs/VOICE.md).

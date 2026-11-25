@@ -47,6 +47,8 @@ import { taskPostRoutes } from "./routes/task-posts.js";
 import { workspaceFileRoutes } from "./routes/workspace-files.js";
 import { workspaceDirectoryRoutes } from "./routes/workspace-directory.js";
 import { closeAdapterSessions, handleAdapterFrame, type AdapterConnection } from "./extensions/adapter-session.js";
+import { voiceRoutes } from "./routes/voice.js";
+import { VoiceJoinBroker } from "./voice/join-broker.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
@@ -84,6 +86,7 @@ await app.register(workspaceCollaborationRoutes);
 type HostConnection = AdapterConnection & {
   socket: WebSocket;
   supportsThreads: boolean;
+  supportsVoice: boolean;
 };
 
 type UserConnection = {
@@ -94,6 +97,19 @@ type UserConnection = {
 
 const hostConnections = new Set<HostConnection>();
 const userConnections = new Set<UserConnection>();
+const voiceBroker = new VoiceJoinBroker();
+await app.register(voiceRoutes, {
+  broker: voiceBroker,
+  findConnection: (hostId, tokenHash) => {
+    const host = [...hostConnections].find((candidate) => candidate.hostId === hostId &&
+      candidate.tokenHash === tokenHash && candidate.supportsVoice && candidate.socket.readyState === 1);
+    return host && {
+      connectionId: host.connectionId,
+      send: (frame) => host.socket.send(JSON.stringify(frame)),
+    };
+  },
+});
+
 const pendingHostStatusUpdates = new Set<Promise<unknown>>();
 const usageRequesterMembers = alias(members, "usage_requester_members");
 const usageHostMembers = alias(members, "usage_host_members");
@@ -528,6 +544,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
   const close = () => {
     if (connection && "hostId" in connection) {
+      voiceBroker.close(connection.connectionId);
       const cleanup = closeAdapterSessions(connection.connectionId).catch((error: unknown) => {
         app.log.error({ error }, "Could not close adapter sessions");
       });
@@ -673,6 +690,7 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
         connection = {
           socket, hostId: host.id, tokenHash: host.tokenHash, connectionId: randomUUID(),
           supportsThreads: (frame.version ?? 1) >= threadedHostProtocolVersion,
+          supportsVoice: frame.voice === true,
         };
         hostConnections.add(connection);
         socket.send(JSON.stringify({ t: "host.registered", hostId: host.id }));
@@ -681,6 +699,13 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, request) => {
 
       if (!connection) {
         socket.close(1008, "Connection not registered");
+        return;
+      }
+
+      if (frame.t === "voice.token.response") {
+        if ("hostId" in connection && connection.supportsVoice && hostConnections.has(connection)) {
+          voiceBroker.accept(connection.connectionId, frame);
+        }
         return;
       }
 
