@@ -77,7 +77,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add Zod schemas for every adapter message.
 - [x] Add one manual adapter for a local file-based app.
 - [x] Test denied permissions and offline/unresponsive hosts.
-- [ ] Document a Blender or Photoshop adapter only after a tested integration exists.
+- [x] Document the tested Blender project-file adapter.
 
 ## Phase 6: Cloud and economy
 - [x] Package the daemon for optional cloud hosts.
