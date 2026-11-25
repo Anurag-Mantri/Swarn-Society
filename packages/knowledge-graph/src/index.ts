@@ -9,7 +9,7 @@ export type NodeKind = "server" | "channel" | "person" | "agent" | "host" | "tas
 
 export type Relation = "in_server" | "in_channel" | "authored" | "mentioned_in" | "assigned_to" |
   "assigned_by" | "completed_by" | "recorded_completion" | "decided_in" | "changed" |
-  "in_repository" | "reported_commit" | "hosted_by";
+  "in_repository" | "reported_commit" | "references_task" | "hosted_by";
 
 export type KnowledgeSource = {
   id: string;
@@ -18,7 +18,7 @@ export type KnowledgeSource = {
   type: KnowledgeEvent["type"];
   sourceId: string;
   occurredAt: string;
-  method: "structured-v1";
+  method: "structured-v1" | "model-proposal-v1";
 };
 
 export type KnowledgeNode = {
@@ -35,7 +35,8 @@ export type KnowledgeEdge = {
   fromId: string;
   toId: string;
   relation: Relation;
-  confidence: 100;
+  confidence: number;
+  method: "deterministic" | "inferred";
 };
 
 function stableId(...parts: string[]): string {
@@ -52,7 +53,7 @@ export function extractKnowledge(input: unknown) {
     type: event.type,
     sourceId: event.sourceId,
     occurredAt: event.occurredAt,
-    method: "structured-v1",
+    method: event.type === "task.reference.proposed" ? "model-proposal-v1" : "structured-v1",
   };
   const nodes = new Map<string, KnowledgeNode>();
   const edges = new Map<string, KnowledgeEdge>();
@@ -61,9 +62,12 @@ export function extractKnowledge(input: unknown) {
     nodes.set(id, { id, serverId, kind, key, confidence: 100 });
     return id;
   };
-  const edge = (fromId: string, toId: string, relation: Relation): void => {
+  const edge = (
+    fromId: string, toId: string, relation: Relation,
+    confidence = 100, method: KnowledgeEdge["method"] = "deterministic",
+  ): void => {
     const id = stableId("edge", serverId, fromId, relation, toId);
-    edges.set(id, { id, serverId, fromId, toId, relation, confidence: 100 });
+    edges.set(id, { id, serverId, fromId, toId, relation, confidence, method });
   };
 
   const server = node("server", serverId);
@@ -131,6 +135,12 @@ export function extractKnowledge(input: unknown) {
         edge(commit, file, "changed");
         edge(file, server, "in_server");
       }
+      break;
+    }
+    case "task.reference.proposed": {
+      const message = node("event", `message:${event.messageId}`);
+      const task = node("task", event.taskId);
+      edge(message, task, "references_task", event.confidence, "inferred");
       break;
     }
     case "agent.hosted": {

@@ -149,3 +149,5 @@ export { memorySearchSchema, memoryWriteSchema } from "./memory.js";
 export type { MemoryNote, MemoryScope } from "./memory.js";
 export { githubCommitReceiptSchema } from "./github-receipt.js";
 export type { GitHubCommitReceipt } from "./github-receipt.js";
+export { knowledgeExtractionInputSchema, knowledgeProposalFileSchema, taskReferenceHypothesesSchema } from "./knowledge-proposals.js";
+export type { KnowledgeExtractionInput, KnowledgeProposalFile } from "./knowledge-proposals.js";

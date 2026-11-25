@@ -104,3 +104,15 @@ pnpm --filter @swarmroom/daemon exec tsx src/github/cli.ts receipt <app-id> <ins
 ```
 
 The command reads the workspace snapshot branch head using a repository-scoped installation token. The workspace owner imports the JSON from the Knowledge view. The graph records the owner as the person who reported the receipt. The control plane trusts that owner's attestation. GitHub credentials, file content, and Git author email stay out of the receipt.
+
+### Propose references between a message and a task
+
+A workspace reviewer can open **Propose task references** in the Knowledge review queue. Choose a message from a task channel, then download the input JSON. It includes up to 1,800 characters of the message and titles of up to eight recent tasks from the same channel. Only send the export to a model provider if the selected content can be shared with that provider.
+
+With a compiled daemon and a configured agent and provider, run on the agent's host:
+
+```sh
+pnpm --filter @swarmroom/daemon exec node dist/knowledge/propose-cli.js extraction-input.json <agent-name> > proposals.json
+```
+
+This command mounts an empty temporary workspace and uses the host's existing Podman sandbox and provider broker. It accepts only JSON referencing the supplied task IDs. The output stores metadata and confidence scores. Import it through the same Knowledge panel. A reviewer can read the original excerpt and approve or reject each proposal. The shared graph displays a proposed relationship only after approval and only to people who can read its channel.

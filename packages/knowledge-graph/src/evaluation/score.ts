@@ -56,7 +56,7 @@ export function evaluateKnowledge(input: unknown) {
     sources.add(facts.source.id);
     const actualNodes = new Map(facts.nodes.map(({ id, kind, key }) => [id, `${kind}:${key}`]));
     countMatches(nodes, { actual: actualNodes.values(), expected: sample.nodes });
-    const actualEdges = facts.edges.filter(({ confidence }) => confidence >= 90).map(({ fromId, relation, toId }) =>
+    const actualEdges = facts.edges.filter(({ confidence, method }) => method === "deterministic" && confidence >= 90).map(({ fromId, relation, toId }) =>
       JSON.stringify([actualNodes.get(fromId), relation, actualNodes.get(toId)]));
     countMatches(edges, { actual: actualEdges, expected: sample.edges.map((edge) => JSON.stringify(edge)) });
   }

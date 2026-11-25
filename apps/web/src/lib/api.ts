@@ -1,4 +1,4 @@
-import type { ChannelKind, GitHubCommitReceipt, KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -76,6 +76,12 @@ export const api = {
   ),
   importCommitReceipt: (serverId: string, receipt: GitHubCommitReceipt) =>
     post<{ sourceId: string; inserted: boolean }>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/commit-receipts`, receipt),
+  extractionInputPath: (channelId: string, messageId: string) =>
+    `/api/channels/${encodeURIComponent(channelId)}/knowledge/extraction-input?messageId=${encodeURIComponent(messageId)}`,
+  extractionInput: (channelId: string, messageId: string) =>
+    request<KnowledgeExtractionInput>(api.extractionInputPath(channelId, messageId)),
+  importKnowledgeProposal: (proposal: KnowledgeProposalFile) =>
+    post<{ inserted: number }>(`/api/channels/${encodeURIComponent(proposal.channelId)}/knowledge/proposals`, proposal),
   knowledgeReviews: (serverId: string) =>
     request<KnowledgeReviewCandidate[]>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/reviews`),
   decideKnowledgeReview: (serverId: string, edgeId: string, review: KnowledgeReview) =>

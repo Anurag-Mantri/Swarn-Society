@@ -67,6 +67,14 @@ export const knowledgeEventSchema = z.discriminatedUnion("type", [
     reportedBy: uuid,
   }).strict(),
   z.object({
+    ...channel,
+    type: z.literal("task.reference.proposed"),
+    messageId: uuid,
+    taskId: uuid,
+    proposedBy: uuid,
+    confidence: z.number().int().min(0).max(100),
+  }).strict(),
+  z.object({
     ...common,
     type: z.literal("agent.hosted"),
     agentId: uuid,

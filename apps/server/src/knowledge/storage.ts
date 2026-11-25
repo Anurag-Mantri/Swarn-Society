@@ -49,7 +49,7 @@ export async function writeKnowledgeFacts(
 ) {
   const { serverId, id: sourceId } = source;
   await transaction.insert(knowledgeNodes).values(nodes).onConflictDoNothing({ target: knowledgeNodes.id });
-  await transaction.insert(knowledgeEdges).values(edges.map((edge) => ({ ...edge, method: "deterministic" as const })))
+  await transaction.insert(knowledgeEdges).values(edges)
     .onConflictDoNothing({ target: knowledgeEdges.id });
   await transaction.insert(knowledgeNodeSources).values(nodes.map(({ id: nodeId }) => ({ serverId, nodeId, sourceId }))).onConflictDoNothing();
   await transaction.insert(knowledgeEdgeSources).values(edges.map(({ id: edgeId }) => ({ serverId, edgeId, sourceId }))).onConflictDoNothing();

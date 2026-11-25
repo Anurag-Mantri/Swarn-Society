@@ -91,7 +91,7 @@
   {#if workspace.ownerId === profile.id}
     <CommitReceiptImport workspaceId={workspace.id} onImport={load} />
   {/if}
-  <KnowledgeReviews workspaceId={workspace.id} {label} onReview={load} />
+  <KnowledgeReviews workspaceId={workspace.id} {channels} sources={data?.sources ?? []} {label} onReview={load} />
 </section>
 
 <style>
