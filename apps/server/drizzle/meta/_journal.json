@@ -141,6 +141,13 @@
       "when": 1795617887386,
       "tag": "0019_task_delegation",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795618396893,
+      "tag": "0020_livekit_voice",
+      "breakpoints": true
     }
   ]
 }

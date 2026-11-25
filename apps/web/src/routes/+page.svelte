@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { errorSchema, initSchema, messageSchema } from '@swarmroom/protocol';
+  import VoiceRoom from '$lib/VoiceRoom.svelte';
   import WorkspaceMemory from '$lib/WorkspaceMemory.svelte';
   import KnowledgeOverview from '$lib/KnowledgeOverview.svelte';
   import TaskBoard from '$lib/TaskBoard.svelte';
@@ -294,6 +295,11 @@
       {:else if view === 'tasks' && channel?.kind === 'task'}
         {#key channelId}<TaskBoard {channelId} name={channel.name} currentUser={profile.id} />{/key}
       {:else if channel}
+        {#if channel.kind === 'voice' && workspace}
+          {#key channelId}
+            <VoiceRoom {channelId} {workspaceId} owner={workspace.ownerId === profile.id} />
+          {/key}
+        {/if}
         <div class="chat-layout" class:thread-open={root !== null}>
           {#key channelId}
             <Conversation title={channel.name} {messages} currentUser={profile.id} connected={status === 'connected'}

@@ -71,7 +71,7 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Evaluate graph precision and recall on representative team data before broad release.
 
 ## Phase 5: Voice and external app extensions
-- [ ] Add LiveKit voice channels.
+- [x] Add LiveKit voice channels.
 - [x] Add extension manifests and host approval.
 - [x] Add the adapter register/session/snapshot protocol.
 - [x] Add Zod schemas for every adapter message.

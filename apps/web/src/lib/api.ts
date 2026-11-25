@@ -1,4 +1,4 @@
-import type { AgentReputation, ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution } from '@swarmroom/protocol';
+import type { AgentReputation, ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution, VoiceJoin, VoiceSettings } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -102,5 +102,12 @@ export const api = {
   memoryAgents: (id: string) => request<TaskClaimant[]>(`/api/servers/${encodeURIComponent(id)}/memory/agents`),
   saveMemory: (id: string, scope: MemoryScope, body: string, targetId?: string) =>
     post<MemoryNote>(`/api/servers/${encodeURIComponent(id)}/memory`, { scope, body, targetId }),
+  joinVoice: (channelId: string, signal: AbortSignal) =>
+    request<VoiceJoin>(`/api/channels/${encodeURIComponent(channelId)}/voice/join`, { method: 'POST', signal }),
+  voiceSettings: (serverId: string) => request<VoiceSettings>(`/api/servers/${encodeURIComponent(serverId)}/voice`),
+  setVoiceHost: (serverId: string, hostId: string | null) =>
+    request<{ hostId: string | null }>(`/api/servers/${encodeURIComponent(serverId)}/voice`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hostId }),
+    }),
   signOut: () => post<{ ok: boolean }>('/auth/logout')
 };

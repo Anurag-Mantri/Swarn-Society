@@ -1,4 +1,4 @@
-import { workspaceSnapshotBranch } from "@swarmroom/protocol";
+import { workspaceSnapshotBranch, type VoiceTokenRequest } from "@swarmroom/protocol";
 import type { InjectOptions } from "fastify";
 import { randomBytes, randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
@@ -1309,6 +1309,91 @@ integration("Postgres-backed server routes", () => {
     const delegated = await post("Owner delegation", peerParent, peerHeaders);
     expect(delegated.statusCode, delegated.body).toBe(201);
     expect(delegated.json()).toMatchObject({ parentTaskId: peerParent, delegationDepth: 1, createdBy: peer!.id });
+  });
+
+  it("restricts LiveKit joins to the selected host and derives listen-only grants from channel access", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Voice workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "voice", kind: "voice" },
+    });
+    const { id: channelId } = channel.json<{ id: string }>();
+    const settings = `/api/servers/${serverId}/voice`;
+    const joinPath = `/api/channels/${channelId}/voice/join`;
+    const join = (actor = headers) => inject({ method: "POST", url: joinPath, headers: actor });
+    expect((await join()).statusCode).toBe(503);
+    const [listener] = await db.insert(users).values({ githubId: randomUUID(), handle: "voice-listener" }).returning();
+    const listenerSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: listener!.id, secretHash: hashSecret(listenerSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const reader = { cookie: `session=${listenerSecret}` };
+    expect((await join(reader)).statusCode).toBe(403);
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Voice listener", permissions: permissions.readMessages },
+    });
+    const { id: roleId } = role.json<{ id: string }>();
+    await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers,
+      payload: { userId: listener!.id, roleId },
+    });
+    const hostSecret = randomBytes(32).toString("base64url");
+    const otherSecret = randomBytes(32).toString("base64url");
+    const [host, other] = await db.insert(hosts).values([
+      { ownerId: userId, machineLabel: "Voice signer", tokenHash: hashSecret(hostSecret) },
+      { ownerId: listener!.id, machineLabel: "Other signer", tokenHash: hashSecret(otherSecret) },
+    ]).returning();
+    const selectHost = (hostId: string, actor = headers) => inject({
+      method: "PUT", url: settings, headers: actor, payload: { hostId },
+    });
+    expect((await selectHost(other!.id)).statusCode).toBe(404);
+    expect((await selectHost(host!.id, reader)).statusCode).toBe(403);
+    expect((await selectHost(host!.id)).statusCode).toBe(200);
+
+    const socket = await app.injectWS("/ws");
+    const unrelated = await app.injectWS("/ws");
+    try {
+      for (const [client, token] of [[socket, hostSecret], [unrelated, otherSecret]] as const) {
+        const registered = nextWebSocketFrame(client, "voice host registration", (frame) =>
+          typeof frame === "object" && frame !== null && "t" in frame && frame.t === "host.registered");
+        client.send(JSON.stringify({ t: "host", token, machine: "test voice host", agents: ["Agent"], voice: true }));
+        await registered;
+      }
+      const pending = nextWebSocketFrame(socket, "voice token request", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "voice.token.request");
+      const joined = join(reader);
+      const frame = await pending as VoiceTokenRequest;
+      expect(frame).toMatchObject({ serverId, channelId, userId: listener!.id, canPublish: false });
+      unrelated.send(JSON.stringify({
+        t: "voice.token.response", requestId: frame.requestId, grant: { url: "wss://other.example.test", token: "one.two.three" },
+      }));
+      socket.send(JSON.stringify({
+        t: "voice.token.response", requestId: frame.requestId, grant: { url: "wss://voice.example.test", token: "four.five.six" },
+      }));
+      const result = await joined;
+      expect(result.statusCode, result.body).toBe(200);
+      expect(result.headers["cache-control"]).toBe("no-store");
+      expect(result.json()).toEqual({ url: "wss://voice.example.test", token: "four.five.six", canPublish: false });
+
+      const ownerPending = nextWebSocketFrame(socket, "owner voice request", (frame) =>
+        typeof frame === "object" && frame !== null && "t" in frame && frame.t === "voice.token.request");
+      const interrupted = join();
+      expect(await ownerPending).toMatchObject({ userId, canPublish: true });
+      socket.close();
+      expect((await interrupted).statusCode).toBe(503);
+      await inject({
+        method: "PUT", url: `/api/channels/${channelId}/role-restrictions/${roleId}`, headers,
+        payload: { denied: permissions.readMessages },
+      });
+      expect((await join(reader)).statusCode).toBe(403);
+    } finally {
+      socket.terminate();
+      unrelated.terminate();
+    }
   });
 
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {

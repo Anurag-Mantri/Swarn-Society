@@ -112,6 +112,11 @@ export const hosts = pgTable("hosts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const voiceHosts = pgTable("voice_hosts", {
+  serverId: uuid("server_id").primaryKey().references(() => servers.id, { onDelete: "cascade" }),
+  hostId: uuid("host_id").notNull().references(() => hosts.id, { onDelete: "cascade" }),
+});
+
 export const extensionManifests = pgTable("extension_manifests", {
   id: uuid("id").primaryKey().defaultRandom(),
   serverId: uuid("server_id").notNull().references(() => servers.id, { onDelete: "cascade" }),

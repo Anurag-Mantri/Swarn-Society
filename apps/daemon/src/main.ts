@@ -1,4 +1,6 @@
 import { HostTokenCaps } from "./budgets/host-token-caps.js";
+import { createVoiceIssuer, loadVoiceConfig, type VoiceTokenIssuer } from "./voice/issuer.js";
+import { createVoiceKeychain } from "./voice/keychain.js";
 import { createSystemHostTokenKeychain } from "./keychain.js";
 import { loadAgentBudgetPolicies, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
@@ -27,8 +29,16 @@ async function main(): Promise<void> {
     ? await createPodmanSandboxBackend(sandboxConfig, broker)
     : undefined;
   const fileAdapter = loadFileAdapterConfig(process.env.SWARMROOM_FILE_ADAPTER);
+  const voiceConfig = loadVoiceConfig(process.env);
+  let voiceIssuer: VoiceTokenIssuer | undefined;
+  if (voiceConfig) {
+    const keychain = await createVoiceKeychain(config.controlPlaneUrl.host);
+    const credentials = keychain.load();
+    if (!credentials) throw new Error("Store the LiveKit signing credential in the host OS keychain.");
+    voiceIssuer = createVoiceIssuer(voiceConfig, credentials);
+  }
   const client = new HostClient(
-    config, token, new SandboxRunner(sandbox), new LocalAuditLog(), fileAdapter && createFileAdapter(fileAdapter),
+    config, token, new SandboxRunner(sandbox), new LocalAuditLog(), fileAdapter && createFileAdapter(fileAdapter), voiceIssuer,
   );
   const stop = () => client.stop();
   process.once("SIGINT", stop);

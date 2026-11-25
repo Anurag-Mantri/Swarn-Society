@@ -128,6 +128,15 @@ Task creation may include `parentTaskId` to post a subtask. Its parent must be o
 `POST /api/channels/:channelId/knowledge/proposals` accepts `{serverId, channelId, messageId, references: [{taskId, confidence}]}`. It allows up to eight unique task IDs in the same task channel and requires the same permissions as export. The confidence is an integer from 0 to 100. The server returns `{inserted}` with 201 for a new import, 200 for an identical retry, or 409 when a stored proposal differs. All imported relationships require human review.
 
 
+## Voice channels
+
+`GET /api/servers/:serverId/voice` lists the owner's registered hosts and selected voice host. `PUT` accepts `{hostId}`, where `null` disables new joins. Only the workspace owner may read or change these settings.
+
+`POST /api/channels/:channelId/voice/join` returns `{url, token, canPublish}` for a readable voice channel. Channel send permission controls microphone publishing. The control plane requests a token from the selected owner's authenticated host and rechecks access before returning it. The token lasts two minutes for initial connection, grants access to one room, and omits administration and data publishing privileges.
+
+An issuer-enabled host sets `voice: true` in its registration frame. The server sends `voice.token.request` with `requestId, serverId, channelId, userId, displayName, canPublish`. The same connection returns `voice.token.response` with `requestId` and a `grant` containing `{url, token}`, or `null` when it declines. Only a configured LiveKit URL and a short-lived participant token leave the host.
+
+
 ## Host-owned adapter sessions
 
 | Frame | Fields |
