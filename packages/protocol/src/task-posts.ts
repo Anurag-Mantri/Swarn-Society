@@ -1,9 +1,12 @@
 import { z } from "zod";
 
+export const maximumTaskDelegationDepth = 3;
+
 export const createTaskPostSchema = z.object({
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(4000).default(""),
   intent: z.string().trim().min(1).max(160).optional(),
+  parentTaskId: z.string().uuid().optional(),
 }).strict();
 
 export const claimTaskPostSchema = z.object({ agentId: z.string().uuid() }).strict();
@@ -21,6 +24,8 @@ export type TaskPost = {
   channelId: string;
   createdBy: string;
   title: string;
+  parentTaskId: string | null;
+  delegationDepth: number;
   description: string;
   intent: string;
   createdAt: string;

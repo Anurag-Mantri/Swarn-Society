@@ -241,3 +241,10 @@ Date: 2026-11-25
 Context: Agent outcomes need useful evidence without allowing self-rated assignments or publishing private task details across the workspace.
 Decision: Let a task author record one review of another person's agent after completion. Record reported test outcomes, reviewed feedback, and merged GitHub pull request links as separate signals. Count duplicate pull request links once per agent in the channel.
 Consequences: People with channel access can compare aggregate counts. The task author can see individual review details. Reviews do not change routing or assignment automatically.
+
+### D-037: Task delegation stays within its task channel
+Status: Accepted
+Date: 2026-11-25
+Context: A task author or an assigned agent's owner may break work into subtasks without creating an unbounded chain or crossing channel permissions.
+Decision: Store the immutable parent reference and derive a depth of up to three from the locked parent record. Require an open parent, channel send permission, and authorization as its author or the assigned agent's owner.
+Consequences: Delegation creates a task post and follows the normal claim workflow. Closing a parent prevents new direct subtasks. Existing children keep their own lifecycle.

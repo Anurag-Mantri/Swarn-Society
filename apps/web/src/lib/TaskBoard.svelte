@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
+  import { maximumTaskDelegationDepth } from '@swarmroom/protocol';
   import type { TaskClaimant, TaskPost, TaskResolution } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
   import AgentReputation from './AgentReputation.svelte';
@@ -15,6 +16,8 @@
   let openBids = $state<string | null>(null);
   let closingTask = $state<{ id: string; resolution: TaskResolution } | null>(null);
   let resolutionNotes = $state('');
+  let parentTask = $state<{ id: string; title: string } | null>(null);
+  let titleInput: HTMLInputElement;
   let title = $state('');
   let description = $state('');
   let intent = $state('');
@@ -41,8 +44,9 @@
     busy = true;
     error = '';
     try {
-      const task = await api.createTask(channelId, title, description, intent.trim() || undefined);
+      const task = await api.createTask(channelId, title, description, intent.trim() || undefined, parentTask?.id);
       tasks = [task, ...tasks];
+      parentTask = null;
       title = '';
       description = '';
       intent = '';
@@ -61,6 +65,12 @@
       showError(problem);
       if (problem instanceof ApiError && problem.status === 409) await refresh();
     } finally { busy = false; }
+  }
+
+  async function delegate(task: TaskPost) {
+    parentTask = { id: task.id, title: task.title };
+    await tick();
+    titleInput?.focus();
   }
 
   function startResolution(task: TaskPost, resolution: TaskResolution) {
@@ -99,8 +109,12 @@
   <TaskMetrics {channelId} />
   <AgentReputation {channelId} revision={reputationRevision} />
   <form onsubmit={post}>
+    {#if parentTask}
+      <p>Subtask of <strong>{parentTask.title}</strong></p>
+      <button type="button" onclick={() => { parentTask = null; }} disabled={busy}>Remove parent</button>
+    {/if}
     <label for="task-title">Task title</label>
-    <input id="task-title" required maxlength="160" bind:value={title} />
+    <input id="task-title" required maxlength="160" bind:this={titleInput} bind:value={title} />
     <label for="task-description">Description</label>
     <textarea id="task-description" rows="3" maxlength="4000" bind:value={description}></textarea>
     <details>
@@ -108,7 +122,7 @@
       <label for="task-intent">Work intent (optional)</label>
       <input id="task-intent" maxlength="160" bind:value={intent} />
     </details>
-    <button class="primary" disabled={busy || loading || !title.trim()}>Post task</button>
+    <button class="primary" disabled={busy || loading || !title.trim()}>{parentTask ? 'Post subtask' : 'Post task'}</button>
   </form>
   {#if agents.length}
     <div class="agent-choice">
@@ -127,6 +141,9 @@
     {#each tasks as task (task.id)}
       <li>
         <h2>{task.title}</h2>
+        {#if task.parentTaskId}
+          <p>Subtask of {tasks.find(({ id }) => id === task.parentTaskId)?.title ?? `task ${task.parentTaskId.slice(0, 8)}`}</p>
+        {/if}
         {#if task.description}<p class="description">{task.description}</p>{/if}
         {#if task.resolution}
           <p>{task.resolution === 'done' ? 'Completed' : 'Cancelled'}</p>
@@ -142,6 +159,10 @@
           <p>Open for claims</p>
         {/if}
         {#if !task.resolution}
+          {#if (task.delegationDepth ?? 0) < maximumTaskDelegationDepth &&
+            (task.createdBy === currentUser || agents.some(({ id }) => id === task.claimedByAgentId))}
+            <button type="button" disabled={busy || loading} onclick={() => delegate(task)}>Delegate subtask</button>
+          {/if}
           {#if task.claimedByAgentId && (task.createdBy === currentUser || agents.some((agent) => agent.id === task.claimedByAgentId))}
             <button type="button" disabled={busy} onclick={() => startResolution(task, 'done')}>Complete task</button>
           {/if}

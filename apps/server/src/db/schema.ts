@@ -1,6 +1,6 @@
 import { boolean, check, customType, date, foreignKey, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { ChannelKind, ExtensionCapability, ExtensionManifest, TaskResolution } from "@swarmroom/protocol";
+import { maximumTaskDelegationDepth, type ChannelKind, type ExtensionCapability, type ExtensionManifest, type TaskResolution } from "@swarmroom/protocol";
 import { channelPermissions } from "../permissions.js";
 
 export const users = pgTable("users", {
@@ -190,6 +190,8 @@ export const agents = pgTable("agents", {
 export const taskPosts = pgTable("task_posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
+  parentTaskId: uuid("parent_task_id"),
+  delegationDepth: integer("delegation_depth").notNull().default(0),
   createdBy: uuid("created_by").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
@@ -202,6 +204,15 @@ export const taskPosts = pgTable("task_posts", {
   resolvedBy: uuid("resolved_by").references(() => users.id),
   result: text("result"),
 }, (table) => [
+  unique("task_posts_channel_id_unique").on(table.channelId, table.id),
+  foreignKey({
+    name: "task_posts_parent_channel_fk", columns: [table.channelId, table.parentTaskId],
+    foreignColumns: [table.channelId, table.id],
+  }).onDelete("cascade"),
+  index("task_posts_parent_idx").on(table.channelId, table.parentTaskId),
+  check("task_posts_delegation_depth_valid", sql`${table.delegationDepth} between 0 and ${sql.raw(String(maximumTaskDelegationDepth))}`),
+  check("task_posts_parent_required", sql`(${table.parentTaskId} is null) = (${table.delegationDepth} = 0)`),
+  check("task_posts_parent_not_self", sql`${table.parentTaskId} <> ${table.id}`),
   index("task_posts_channel_created_idx").on(table.channelId, table.createdAt),
   index("task_posts_active_agent_idx").on(table.claimedByAgentId)
     .where(sql`${table.resolution} is null and ${table.claimedByAgentId} is not null`),

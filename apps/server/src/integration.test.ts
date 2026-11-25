@@ -1250,6 +1250,67 @@ integration("Postgres-backed server routes", () => {
     expect((await inject({ url: statsUrl, headers: teammateHeaders })).statusCode).toBe(403);
   });
 
+  it("limits delegated task depth and keeps the parent boundary inside the task channel", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Delegation workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    async function createChannel(name: string) {
+      const response = await inject({
+        method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name, kind: "task" },
+      });
+      return response.json<{ id: string }>().id;
+    }
+    const channelId = await createChannel("delegation");
+    const otherChannel = await createChannel("other delegation");
+    const path = `/api/channels/${channelId}/tasks`;
+    const post = (title: string, parentTaskId?: string, actor = headers, url = path) => inject({
+      method: "POST", url, headers: actor, payload: { title, parentTaskId },
+    });
+    const root = await post("Root assignment");
+    expect(root.statusCode).toBe(201);
+    const { id: rootId } = root.json<{ id: string }>();
+    expect(root.json()).toMatchObject({ parentTaskId: null, delegationDepth: 0 });
+    expect((await post("Other channel", rootId, headers, `/api/channels/${otherChannel}/tasks`)).statusCode).toBe(404);
+    let parent = rootId;
+    for (let depth = 1; depth <= 3; depth += 1) {
+      const child = await post(`Delegated step ${depth}`, parent);
+      expect(child.statusCode, child.body).toBe(201);
+      expect(child.json()).toMatchObject({ parentTaskId: parent, delegationDepth: depth });
+      parent = child.json<{ id: string }>().id;
+    }
+    expect((await post("Too deep", parent)).statusCode).toBe(409);
+    expect((await inject({
+      method: "POST", url: `${path}/${rootId}/resolve`, headers, payload: { resolution: "cancelled" },
+    })).statusCode).toBe(200);
+    expect((await post("Closed root", rootId)).statusCode).toBe(409);
+
+    const [peer] = await db.insert(users).values({ githubId: randomUUID(), handle: "delegate-peer" }).returning();
+    const peerSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: peer!.id, secretHash: hashSecret(peerSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const peerHeaders = { cookie: `session=${peerSecret}` };
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Delegation participant", permissions: permissions.readMessages | permissions.sendMessages },
+    });
+    await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers,
+      payload: { userId: peer!.id, roleId: role.json<{ id: string }>().id },
+    });
+    const { id: peerParent } = (await post("Parent to be claimed")).json<{ id: string }>();
+    expect((await post("Unrelated pending delegation", peerParent, peerHeaders)).statusCode).toBe(403);
+    const [agent] = await db.insert(agents).values({
+      serverId, ownerId: peer!.id, name: "Delegation agent", role: "Implementer",
+    }).returning();
+    await db.update(taskPosts).set({ claimedByAgentId: agent!.id, claimedAt: new Date() }).where(eq(taskPosts.id, peerParent));
+    const delegated = await post("Owner delegation", peerParent, peerHeaders);
+    expect(delegated.statusCode, delegated.body).toBe(201);
+    expect(delegated.json()).toMatchObject({ parentTaskId: peerParent, delegationDepth: 1, createdBy: peer!.id });
+  });
+
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
     const workspace = await inject({
