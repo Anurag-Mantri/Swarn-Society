@@ -126,3 +126,9 @@ Only a registered host connection can send adapter frames. Sessions are pinned t
 `POST /api/servers/:serverId/credits` accepts `{requestId, from?, to, amount, reason}`. Each account is `{kind, id}`, where kind is `agent` or `host`. An omitted source issues credits. A transfer requires a funded source and two eligible accounts in the same workspace. An identical retry by the same actor returns the existing entry. Reusing a request ID for a different operation returns HTTP 409.
 
 `GET /api/servers/:serverId/credits?kind=agent|host&id=<id>` returns the decimal integer balance as a string and up to 100 recent entries. Both routes require agent and member management permissions. Credits are internal and have no payment or redemption path. Provider usage does not change balances.
+
+## Workspace audit export
+
+`GET /api/servers/:serverId/audit/export?limit=100&after=<cursor>` downloads a JSON page of task posting, assignment and resolution, extension registrations, and internal credit entries. The caller needs role and member management permissions. Task records also require read access to the source channel.
+
+The response includes `{serverId, events, nextCursor}` with newest events first. Each event contains an ID, timestamp, action, subject ID, and actor or channel ID where applicable. Pass `nextCursor` to retrieve older records. The export contains metadata only. Host task logs remain local to the daemon.

@@ -10,6 +10,7 @@ import { db, pool } from "./db/index.js";
 import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
 import { knowledgeEdges, knowledgeEdgeSources, knowledgeSources } from "./db/knowledge-schema.js";
 import { storeKnowledgeEvent } from "./knowledge/storage.js";
+import { permissions } from "./permissions.js";
 import { hashSecret } from "./security.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -1030,6 +1031,56 @@ integration("Postgres-backed server routes", () => {
     expect(hostLedger.json()).toMatchObject({ balance: "7", entries: expect.any(Array) });
     expect(agentLedger.json<{ entries: unknown[] }>().entries).toHaveLength(2);
     expect(hostLedger.json<{ entries: unknown[] }>().entries).toHaveLength(1);
+    const audit = `/api/servers/${serverId}/audit/export`;
+    expect((await inject({ url: audit })).statusCode).toBe(401);
+    expect((await inject({ url: `${audit}?after=broken`, headers })).statusCode).toBe(400);
+    const first = await inject({ url: `${audit}?limit=1`, headers });
+    expect(first.statusCode).toBe(200);
+    expect(first.headers["cache-control"]).toBe("no-store");
+    const page = first.json<{ events: { action: string }[]; nextCursor: string }>();
+    expect(page.events).toEqual([expect.objectContaining({ action: "credit.transferred" })]);
+    expect(page.nextCursor).toBeTruthy();
+    const next = await inject({ url: `${audit}?limit=1&after=${page.nextCursor}`, headers });
+    expect(next.statusCode).toBe(200);
+    expect(next.json()).toMatchObject({ events: [expect.objectContaining({ action: "credit.issued" })], nextCursor: null });
+    expect(first.body + next.body).not.toContain("Pilot allocation");
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "private", kind: "task" },
+    });
+    const { id: channelId } = channel.json<{ id: string }>();
+    const task = await inject({
+      method: "POST", url: `/api/channels/${channelId}/tasks`, headers, payload: { title: "Private audit fixture" },
+    });
+    expect(task.statusCode).toBe(201);
+    const [auditor] = await db.insert(users).values({ githubId: "audit-reader-test", handle: "auditor" }).returning();
+    if (!auditor) throw new Error("Could not create auditor");
+    const auditSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: auditor.id, secretHash: hashSecret(auditSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const auditorHeaders = { cookie: `session=${auditSecret}` };
+    expect((await inject({ url: audit, headers: auditorHeaders })).statusCode).toBe(403);
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Auditor", permissions: permissions.manageRoles | permissions.manageMembers | permissions.readMessages },
+    });
+    expect(role.statusCode).toBe(201);
+    const { id: roleId } = role.json<{ id: string }>();
+    expect((await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: auditor.id, roleId },
+    })).statusCode).toBe(201);
+    const visible = await inject({ url: audit, headers: auditorHeaders });
+    expect(visible.json<{ events: unknown[] }>().events).toContainEqual(expect.objectContaining({ action: "task.posted", channelId }));
+    expect((await inject({
+      method: "PUT", url: `/api/channels/${channelId}/role-restrictions/${roleId}`,
+      headers, payload: { denied: permissions.readMessages },
+    })).statusCode).toBe(200);
+    const restricted = await inject({ url: audit, headers: auditorHeaders });
+    expect(restricted.statusCode).toBe(200);
+    expect(restricted.json<{ events: unknown[] }>().events).toHaveLength(2);
+    expect(restricted.body).not.toContain(channelId);
+
+
   }, 30_000);
 
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
