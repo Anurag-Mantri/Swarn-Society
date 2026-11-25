@@ -148,6 +148,13 @@
       "when": 1795618396893,
       "tag": "0020_livekit_voice",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795618978358,
+      "tag": "0021_workspace_oidc",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { errorSchema, initSchema, messageSchema } from '@swarmroom/protocol';
+  import { errorSchema, initSchema, messageSchema, workspaceSsoIdSchema } from '@swarmroom/protocol';
   import VoiceRoom from '$lib/VoiceRoom.svelte';
   import WorkspaceMemory from '$lib/WorkspaceMemory.svelte';
   import KnowledgeOverview from '$lib/KnowledgeOverview.svelte';
@@ -12,6 +12,8 @@
 
   let profile = $state<Profile | null>(null);
   let loading = $state(true);
+  let ssoWorkspace = $state<string | undefined>();
+  let ssoError = $state(false);
   let workspaces = $state<Workspace[]>([]);
   let channels = $state<Channel[]>([]);
   let workspaceId = $state('');
@@ -185,6 +187,10 @@
   }
 
   onMount(() => {
+    const params = new URLSearchParams(location.search);
+    ssoWorkspace = workspaceSsoIdSchema.safeParse(params.get('sso')).data;
+    ssoError = params.get('ssoError') === '1';
+    const requested = workspaceSsoIdSchema.safeParse(params.get('workspace')).data;
     void (async () => {
       try {
         const user = await api.profile();
@@ -192,7 +198,7 @@
         if (disposed) return;
         profile = user;
         workspaces = directory;
-        workspaceId = directory[0]?.id ?? '';
+        workspaceId = directory.find(({ id }) => id === requested)?.id ?? directory[0]?.id ?? '';
         connect();
       } catch (problem) {
         if (!(problem instanceof ApiError && problem.status === 401)) showError(problem);
@@ -219,7 +225,11 @@
       <h1>Swarmroom</h1>
       <p>Team chat with locally hosted agents.</p>
       {#if error}<p role="alert">{error}</p>{/if}
-      <a class="primary" href="/auth/github" data-sveltekit-reload>Sign in with GitHub</a>
+      {#if ssoWorkspace}
+        {#if ssoError}<p role="alert">Workspace sign-in could not be completed. Try again or contact your workspace administrator.</p>{/if}
+        <a class="primary" href={`/auth/sso/${ssoWorkspace}`} data-sveltekit-reload>Sign in with workspace SSO</a>
+      {/if}
+      <a class:primary={!ssoWorkspace} href="/auth/github" data-sveltekit-reload>Sign in with GitHub</a>
     </div>
   </main>
 {:else}

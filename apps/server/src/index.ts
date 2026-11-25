@@ -8,6 +8,9 @@ import Fastify from "fastify";
 import type { WebSocket } from "ws";
 import { z } from "zod";
 import { alias } from "drizzle-orm/pg-core";
+import { loadOidcWorkspaces } from "./auth/oidc-settings.js";
+import { setSessionCookie } from "./auth/session-cookie.js";
+import { workspaceOidcRoutes } from "./routes/oidc.js";
 import { requireUser, getUserBySessionSecret } from "./auth.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
@@ -52,11 +55,21 @@ import { VoiceJoinBroker } from "./voice/join-broker.js";
 import { createSecret, hashSecret } from "./security.js";
 
 export const app = Fastify({
-  logger: true,
+  logger: {
+    serializers: {
+      req: (request) => ({ method: request.method, url: request.url?.split("?")[0] }),
+    },
+  },
   bodyLimit: 64 * 1024,
 });
 
-await app.register(cookie);
+await app.register(cookie, { secret: config.sessionSecret });
+const ssoProviders = loadOidcWorkspaces(process.env);
+const publicOrigin = new URL(config.githubCallbackUrl);
+if (ssoProviders.size && process.env.NODE_ENV === "production" &&
+    (!process.env.SESSION_SECRET || publicOrigin.protocol !== "https:")) {
+  throw new Error("Workspace SSO in production requires SESSION_SECRET and an HTTPS callback origin.");
+}
 await app.register(rateLimit, {
   max: 100,
   timeWindow: "1 minute",
@@ -64,6 +77,7 @@ await app.register(rateLimit, {
 await app.register(websocket, {
   options: { maxPayload: 256 * 1024 },
 });
+await app.register(workspaceOidcRoutes, { providers: ssoProviders, publicOrigin });
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
 await app.register(knowledgeOverviewRoutes);
@@ -271,21 +285,8 @@ app.get("/auth/github/callback", async (request, reply) => {
     return reply.code(500).send({ error: "Could not create user" });
   }
 
-  const secret = createSecret();
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  await db.insert(sessions).values({
-    userId: user.id,
-    secretHash: hashSecret(secret),
-    expiresAt,
-  });
+  await setSessionCookie(reply, user.id, 30 * 24 * 60 * 60);
   reply.clearCookie("oauth_state", { path: "/" });
-  reply.setCookie("session", secret, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 30 * 24 * 60 * 60,
-  });
   return reply.redirect("/");
 });
 

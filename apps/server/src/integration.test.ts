@@ -1,5 +1,6 @@
 import { workspaceSnapshotBranch, type VoiceTokenRequest } from "@swarmroom/protocol";
-import type { InjectOptions } from "fastify";
+import Fastify, { type InjectOptions } from "fastify";
+import cookiePlugin from "@fastify/cookie";
 import { randomBytes, randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -8,11 +9,14 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
-import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, taskPosts, users } from "./db/schema.js";
+import { agentHosts, agentUsage, agents, channels, hosts, memberRoles, members, messages, oidcIdentities, roles, sessions, taskPosts, users } from "./db/schema.js";
 import { knowledgeEdges, knowledgeEdgeSources, knowledgeSources } from "./db/knowledge-schema.js";
 import { backfillKnowledgeGraph } from "./knowledge/backfill.js";
 import { rebuildKnowledgeGraph } from "./knowledge/rebuild.js";
 import { storeKnowledgeEvent } from "./knowledge/storage.js";
+import { openOidcProvider } from "./auth/oidc-client.js";
+import { workspaceOidcRoutes } from "./routes/oidc.js";
+import { createMockOidcProvider } from "./test-support/oidc-provider.js";
 import { permissions } from "./permissions.js";
 import { hashSecret } from "./security.js";
 
@@ -1393,6 +1397,86 @@ integration("Postgres-backed server routes", () => {
     } finally {
       socket.terminate();
       unrelated.terminate();
+    }
+  });
+
+  it("signs in workspace members with verified OIDC identity, PKCE, and an independent account", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Enterprise workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const other = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Other enterprise workspace" },
+    });
+    const otherId = other.json<{ id: string }>().id;
+    const publicOrigin = new URL("http://localhost:3000");
+    const provider = createMockOidcProvider();
+    const idp = Fastify();
+    await idp.register(cookiePlugin, { secret: config.sessionSecret });
+    await idp.register(workspaceOidcRoutes, {
+      providers: new Map([[serverId, {
+        issuer: provider.issuer, clientId: provider.clientId, requiredGroup: "engineering", signingAlgorithm: "RS256" as const,
+      }]]),
+      publicOrigin, openProvider: (definition) => openOidcProvider(definition, provider.fetch),
+    });
+    const begin = async () => {
+      const response = await idp.inject({ url: `/auth/sso/${serverId}` });
+      expect(response.statusCode, response.body).toBe(302);
+      const authorization = new URL(String(response.headers.location));
+      expect(authorization.origin).toBe(new URL(provider.issuer).origin);
+      expect(authorization.searchParams.get("code_challenge_method")).toBe("S256");
+      expect(authorization.searchParams.get("nonce")).toBeTruthy();
+      const redirect = new URL(String(authorization.searchParams.get("redirect_uri")));
+      expect(redirect.pathname).toBe(`/auth/sso/${serverId}/callback`);
+      const cookie = response.cookies.find(({ name }) => name === "sso_pending")!.value;
+      return { authorization, redirect, cookie };
+    };
+    const finish = async (group = "engineering", invalidSignature = false) => {
+      const attempt = await begin();
+      const code = provider.authorize(attempt.authorization, group, invalidSignature);
+      attempt.redirect.searchParams.set("code", code);
+      attempt.redirect.searchParams.set("state", attempt.authorization.searchParams.get("state")!);
+      const request = { url: `${attempt.redirect.pathname}${attempt.redirect.search}`, headers: { cookie: `sso_pending=${attempt.cookie}` } };
+      return { response: await idp.inject(request), request };
+    };
+
+    try {
+      expect((await idp.inject({ url: `/auth/sso/${otherId}` })).statusCode).toBe(404);
+      const tampered = await begin();
+      const originalState = tampered.authorization.searchParams.get("state")!;
+      const invalid = await idp.inject({
+        url: `${tampered.redirect.pathname}?code=unused&state=${originalState}`,
+        headers: { cookie: `sso_pending=${tampered.cookie}tampered` },
+      });
+      expect(invalid.statusCode).toBe(400);
+      expect(provider.requests()).toBe(0);
+      const failedPath = `/?sso=${serverId}&ssoError=1`;
+      expect((await finish("other-group")).response.headers.location).toBe(failedPath);
+      expect((await finish("engineering", true)).response.headers.location).toBe(failedPath);
+      expect(await db.select().from(oidcIdentities).where(eq(oidcIdentities.issuer, provider.issuer))).toHaveLength(0);
+
+      const signedIn = await finish();
+      expect(signedIn.response.headers.location).toBe(`/?workspace=${serverId}`);
+      const session = signedIn.response.cookies.find(({ name }) => name === "session");
+      expect(session?.maxAge).toBe(8 * 60 * 60);
+      const profile = await inject({ url: "/api/me", headers: { cookie: `session=${session!.value}` } });
+      expect(profile.statusCode).toBe(200);
+      const { id } = profile.json<{ id: string }>();
+      expect(profile.json()).toMatchObject({ handle: "Enterprise teammate" });
+      expect(id).not.toBe(userId);
+      const [identity] = await db.select().from(oidcIdentities).where(eq(oidcIdentities.issuer, provider.issuer));
+      expect(identity).toMatchObject({ issuer: provider.issuer, subject: "enterprise-user", userId: id });
+      const memberships = await db.select({ serverId: members.serverId }).from(members).where(eq(members.userId, id));
+      expect(memberships).toEqual([{ serverId }]);
+      const assigned = await db.select({ name: roles.name }).from(memberRoles).innerJoin(roles, eq(roles.id, memberRoles.roleId))
+        .where(eq(memberRoles.userId, id));
+      expect(assigned).toEqual([{ name: "Member" }]);
+      expect((await idp.inject(signedIn.request)).headers.location).toBe(failedPath);
+      expect((await finish()).response.headers.location).toBe(`/?workspace=${serverId}`);
+      expect(await db.select().from(oidcIdentities).where(eq(oidcIdentities.issuer, provider.issuer))).toHaveLength(1);
+    } finally {
+      await idp.close();
     }
   });
 

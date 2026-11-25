@@ -262,3 +262,10 @@ Date: 2026-11-25
 Context: Voice requires LiveKit join credentials while the control plane needs to enforce channel access.
 Decision: Let the workspace owner select one of their connected, consented voice hosts. Check channel read and send permissions on new joins. Ask the selected host to sign one short-lived room token with its OS-keychain credential.
 Consequences: The control plane stores the host association. New joins require the selected host to be online. Media flows between browsers and LiveKit, which manages established sessions.
+
+### D-040: Enterprise sign-in uses workspace-specific OIDC clients
+Status: Accepted
+Date: 2026-11-25
+Context: Companies need sign-in through a trusted identity provider without giving the control plane provider client secrets.
+Decision: Configure one public OIDC client per enabled workspace. Use the authorization code flow with S256 PKCE, a workspace-specific callback, signed attempt cookie, nonce, and verified ID token. Bind members to issuer and subject.
+Consequences: A valid first sign-in grants the default Member role in that workspace. Changing membership policies applies on the next SSO sign-in. GitHub identities remain independent.
