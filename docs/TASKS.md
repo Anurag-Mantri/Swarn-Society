@@ -66,7 +66,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Add human approval for low-confidence and conflicting edges.
 - [x] Rebuild graph state from source events.
 - [ ] Add AI-assisted extraction behind explicit review.
-- [ ] Evaluate graph precision and recall before broad release.
+- [x] Add labeled precision and recall checks for deterministic extraction.
+- [ ] Evaluate graph precision and recall on representative team data before broad release.
 
 ## Phase 5: Voice and external app extensions
 - [ ] Add LiveKit voice channels.
