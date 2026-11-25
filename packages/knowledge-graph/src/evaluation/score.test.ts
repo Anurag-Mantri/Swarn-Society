@@ -11,8 +11,8 @@ const data = JSON.parse(readFileSync(new URL("../../evaluation/structured.json",
 describe("labeled structured knowledge evaluation", () => {
   it("preserves expected relationships and endpoints for every supported event type", () => {
     expect(evaluateKnowledge(data)).toEqual({
-      sources: 10,
-      nodes: { truePositive: 41, falsePositive: 0, falseNegative: 0, precision: 1, recall: 1 },
+      sources: 11,
+      nodes: { truePositive: 44, falsePositive: 0, falseNegative: 0, precision: 1, recall: 1 },
       automaticEdges: { truePositive: 33, falsePositive: 0, falseNegative: 0, precision: 1, recall: 1 },
     });
   });

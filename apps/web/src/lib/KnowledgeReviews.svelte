@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { KnowledgeReview, KnowledgeReviewCandidate } from '@swarmroom/protocol';
-  import { api, ApiError } from './api';
+  import type { KnowledgeExtractionInput, KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate } from '@swarmroom/protocol';
+  import KnowledgeProposalImport from './KnowledgeProposalImport.svelte';
+  import { api, ApiError, type Channel } from './api';
 
-  let { workspaceId, label, onReview }: {
+  let { workspaceId, channels, sources, label, onReview }: {
     workspaceId: string;
+    channels: Channel[];
+    sources: KnowledgeOverview['sources'];
     label: (node: KnowledgeReviewCandidate['from']) => string;
     onReview: () => Promise<void>;
   } = $props();
@@ -14,6 +17,19 @@
   let saving = $state(false);
   let error = $state('');
   let notice = $state('');
+  let evidence = $state<Record<string, KnowledgeExtractionInput>>({});
+
+  async function readEvidence(channelId: string, sourceId: string) {
+    const [messageId] = sourceId.split(':');
+    if (!messageId) return;
+    error = '';
+    try {
+      evidence[sourceId] = await api.extractionInput(channelId, messageId);
+    } catch (problem) {
+      error = problem instanceof Error ? problem.message : 'Could not read the source excerpt.';
+    }
+  }
+
 
   async function load() {
     loading = true;
@@ -64,6 +80,7 @@
       <h2>Review queue</h2>
       <button type="button" onclick={load} disabled={loading || saving}>Refresh queue</button>
     </header>
+    {#if available}<KnowledgeProposalImport {workspaceId} {channels} {sources} afterImport={load} />{/if}
     {#if error}<p role="alert">{error}</p>{/if}
     {#if notice}<p role="status">{notice}</p>{/if}
     {#if available && !candidates.length && !loading}<p>No relationships waiting for your review.</p>{/if}
@@ -73,7 +90,20 @@
         <p>{edge.method === 'inferred' ? 'Inferred' : 'Deterministic'} · Confidence {edge.confidence}%{edge.hasConflict ? ' · Conflicting evidence' : ''}</p>
         <ul>
           {#each edge.sources as source (source.id)}
-            <li>{source.type.replace('.', ' ')} <code>{source.sourceId}</code></li>
+            <li>
+              {source.type.replaceAll('.', ' ')} <code>{source.sourceId}</code>
+              {#if source.type === 'task.reference.proposed' && source.channelId}
+                {@const input = evidence[source.sourceId]}
+                {#if input}
+                  <blockquote>{input.excerpt}</blockquote>
+                  {#each input.tasks.filter(({ id }) => source.sourceId.endsWith(id)) as task (task.id)}
+                    <p>Referenced task · {task.title}</p>
+                  {/each}
+                {:else}
+                  <button type="button" onclick={() => source.channelId && readEvidence(source.channelId, source.sourceId)}>Read source excerpt</button>
+                {/if}
+              {/if}
+            </li>
           {/each}
         </ul>
         <form onsubmit={(event) => decide(event, edge.id)}>

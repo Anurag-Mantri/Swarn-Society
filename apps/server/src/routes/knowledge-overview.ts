@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, inArray, notExists, or } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, ne, notExists, or } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
@@ -42,6 +42,13 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
     }
     const scope = channelId ? eq(knowledgeSources.channelId, channelId) : readableSource(allowed);
 
+    const approvedProposal = db.select({ id: knowledgeEdgeSources.edgeId }).from(knowledgeEdgeSources)
+      .innerJoin(knowledgeEdges, and(
+        eq(knowledgeEdges.serverId, knowledgeEdgeSources.serverId), eq(knowledgeEdges.id, knowledgeEdgeSources.edgeId),
+      )).where(and(
+        eq(knowledgeEdgeSources.serverId, knowledgeSources.serverId), eq(knowledgeEdgeSources.sourceId, knowledgeSources.id),
+        exists(edgeReview("approved")), notExists(edgeReview("rejected")), readableEdgeEvidence(allowed),
+      ));
     const sources = await db.select({
       id: knowledgeSources.id,
       channelId: knowledgeSources.channelId,
@@ -49,7 +56,10 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
       sourceId: knowledgeSources.sourceId,
       method: knowledgeSources.method,
       occurredAt: knowledgeSources.occurredAt,
-    }).from(knowledgeSources).where(and(eq(knowledgeSources.serverId, serverId), scope))
+    }).from(knowledgeSources).where(and(
+      eq(knowledgeSources.serverId, serverId), scope,
+      or(ne(knowledgeSources.method, "model-proposal-v1"), exists(approvedProposal)),
+    ))
       .orderBy(desc(knowledgeSources.occurredAt), desc(knowledgeSources.id)).limit(20);
     reply.header("Cache-Control", "no-store");
     if (sources.length === 0) return reply.send({ sources, nodes: [], edges: [] });

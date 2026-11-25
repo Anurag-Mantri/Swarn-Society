@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { containsKnownSecret } from "./secret-patterns.js";
 import { workspacePathSchema } from "./workspace-path.js";
 
 export const maximumSnapshotBytes = 4 * 1024 * 1024;
 export const maximumSnapshotFiles = 200;
 
 const secretName = /^(?:\.env(?:rc$|\.|$)|id_(?:rsa|ed25519|ecdsa|dsa)(?:$|\.)|\.npmrc$|\.netrc$)|\.(?:pem|key|pfx|p12)$/i;
-const secretValue = /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----|\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16})\b/;
+
 
 export const workspaceSnapshotSchema = z.object({
   serverId: z.string().uuid(),
@@ -21,7 +22,7 @@ export const workspaceSnapshotSchema = z.object({
     bytes += encoder.encode(file.content).byteLength;
     const path = file.path.toLowerCase();
     if (paths.has(path) || path.split("/").some((segment) => secretName.test(segment)) ||
-        (path === ".github" || path === ".github/workflows" || path.startsWith(".github/workflows/")) || secretValue.test(file.content)) {
+        (path === ".github" || path === ".github/workflows" || path.startsWith(".github/workflows/")) || containsKnownSecret(file.content)) {
       context.addIssue({ code: "custom", path: ["files", index], message: "A file is duplicated or matches a blocked snapshot pattern." });
     }
     paths.add(path);

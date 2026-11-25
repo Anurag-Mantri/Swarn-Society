@@ -227,3 +227,10 @@ Date: 2026-11-25
 Context: The graph needs commit provenance from private repositories where GitHub access belongs to the host.
 Decision: Have the host CLI read the dedicated snapshot branch with a repository-scoped read token. Import the resulting metadata through the workspace owner's authenticated session. Record the user as the reporter.
 Consequences: The control plane can show commit provenance without requesting the installation token. It trusts the workspace owner's submission and attributes the receipt to that user.
+
+### D-035: Model proposals use explicit, channel-scoped extraction
+Status: Accepted
+Date: 2026-11-25
+Context: The graph needs hypotheses from chat while preserving host ownership over provider access and channel restrictions over message content.
+Decision: Export one message excerpt and a bounded list of task titles from its channel. Run model extraction on demand in the host sandbox, then import only proposed task IDs and scores for human review.
+Consequences: Model outputs cannot create tasks or invoke agents. High-scoring proposals follow the same review requirement as low-scoring proposals. The shared graph excludes pending proposals and their source metadata.

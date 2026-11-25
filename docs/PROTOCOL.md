@@ -115,6 +115,11 @@ Claims and bid approvals both reject assignments when the channel already has an
 `POST /api/servers/:serverId/knowledge/commit-receipts` accepts `{serverId, repositoryId, branch, commitSha, committedAt}`. The workspace owner submits metadata read by the host-side GitHub CLI. The branch must match the workspace's dedicated snapshot branch. The server records the authenticated reporter and deduplicates by workspace, repository, and commit. It returns `{sourceId, inserted}` with 201 for a new receipt, 200 for an identical retry, or 409 when the existing source metadata differs.
 
 
+`GET /api/channels/:channelId/knowledge/extraction-input?messageId=<uuid>` downloads `{serverId, channelId, messageId, excerpt, tasks}`. A workspace role manager with channel read permission may export one message excerpt up to 1,800 characters and up to eight recent task IDs and titles from the same task channel.
+
+`POST /api/channels/:channelId/knowledge/proposals` accepts `{serverId, channelId, messageId, references: [{taskId, confidence}]}`. It allows up to eight unique task IDs in the same task channel and requires the same permissions as export. The confidence is an integer from 0 to 100. The server returns `{inserted}` with 201 for a new import, 200 for an identical retry, or 409 when a stored proposal differs. All imported relationships require human review.
+
+
 ## Host-owned adapter sessions
 
 | Frame | Fields |

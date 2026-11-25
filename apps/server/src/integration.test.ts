@@ -1100,6 +1100,83 @@ integration("Postgres-backed server routes", () => {
       .toEqual(["in_repository", "in_server", "reported_commit"]);
   });
 
+  it("keeps model task hypotheses private until a human approves them", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Inference workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    async function makeTaskChannel(name: string) {
+      const created = await inject({
+        method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name, kind: "task" },
+      });
+      const { id: channelId } = created.json<{ id: string }>();
+      const task = await inject({
+        method: "POST", url: `/api/channels/${channelId}/tasks`, headers, payload: { title: "Release checklist" },
+      });
+      const [message] = await db.insert(messages).values({
+        channelId, authorKind: "user", authorId: userId, body: "The release checklist needs an update.",
+      }).returning();
+      return { channelId, taskId: task.json<{ id: string }>().id, messageId: message!.id };
+    }
+    const { channelId, taskId, messageId } = await makeTaskChannel("release");
+    const other = await makeTaskChannel("other");
+    const path = `/api/channels/${channelId}/knowledge`;
+    const inputUrl = `${path}/extraction-input?messageId=${messageId}`;
+    const [outsider] = await db.insert(users).values({ githubId: randomUUID(), handle: "inference-reader" }).returning();
+    const outsiderSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: outsider!.id, secretHash: hashSecret(outsiderSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Inference reader", permissions: permissions.readMessages },
+    });
+    await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers,
+      payload: { roleId: role.json<{ id: string }>().id, userId: outsider!.id },
+    });
+    const reader = { cookie: `session=${outsiderSecret}` };
+    expect((await inject({ url: inputUrl, headers: reader })).statusCode).toBe(403);
+    expect((await inject({ url: `${path}/extraction-input?messageId=${other.messageId}`, headers })).statusCode).toBe(404);
+    const input = await inject({ url: inputUrl, headers });
+    expect(input.json()).toEqual({
+      serverId, channelId, messageId, excerpt: "The release checklist needs an update.",
+      tasks: [{ id: taskId, title: "Release checklist" }],
+    });
+    const proposal = { serverId, channelId, messageId, references: [{ taskId, confidence: 100 }] };
+    const importFile = (payload: object, importHeaders = headers) => inject({
+      method: "POST", url: `${path}/proposals`, headers: importHeaders, payload,
+    });
+    expect((await importFile(proposal, reader)).statusCode).toBe(403);
+    expect((await importFile({ ...proposal, references: [{ taskId: other.taskId, confidence: 100 }] })).statusCode).toBe(404);
+    expect((await importFile({ ...proposal, messageId: other.messageId })).statusCode).toBe(404);
+    const imported = await importFile(proposal);
+    expect(imported.statusCode, imported.body).toBe(201);
+    expect((await importFile(proposal)).json()).toEqual({ inserted: 0 });
+    expect((await importFile({ ...proposal, references: [{ taskId, confidence: 80 }] })).statusCode).toBe(409);
+    const graph = `/api/servers/${serverId}/knowledge`;
+    const overview = async () => (await inject({ url: graph, headers: reader })).json<{
+      sources: Array<{ type: string }>; edges: Array<{ relation: string }>;
+    }>();
+    const pendingView = await overview();
+    expect(pendingView.sources.map(({ type }) => type)).not.toContain("task.reference.proposed");
+    expect(pendingView.edges.map(({ relation }) => relation)).not.toContain("references_task");
+    const queue = await inject({ url: `${graph}/reviews`, headers });
+    expect(queue.statusCode, queue.body).toBe(200);
+    const [candidate] = queue.json<Array<{ id: string; method: string; confidence: number }>>();
+    expect(candidate).toMatchObject({ method: "inferred", confidence: 100 });
+    const approval = await inject({
+      method: "POST", url: `${graph}/reviews/${candidate!.id}`, headers, payload: { decision: "approved" },
+    });
+    expect(approval.statusCode, approval.body).toBe(201);
+    await rebuildKnowledgeGraph(serverId);
+    const approvedView = await overview();
+    expect(approvedView.edges.map(({ relation }) => relation)).toContain("references_task");
+    expect(approvedView.sources.map(({ type }) => type)).toContain("task.reference.proposed");
+    expect(JSON.stringify(approvedView)).not.toContain("Release checklist");
+  });
+
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
     const workspace = await inject({
