@@ -7,8 +7,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { app, expireStaleHosts, flushHostStatusUpdates } from "./index.js";
 import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
-import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
+import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, taskPosts, users } from "./db/schema.js";
 import { knowledgeEdges, knowledgeEdgeSources, knowledgeSources } from "./db/knowledge-schema.js";
+import { backfillKnowledgeGraph } from "./knowledge/backfill.js";
 import { rebuildKnowledgeGraph } from "./knowledge/rebuild.js";
 import { storeKnowledgeEvent } from "./knowledge/storage.js";
 import { permissions } from "./permissions.js";
@@ -1008,6 +1009,54 @@ integration("Postgres-backed server routes", () => {
     await db.delete(channels).where(eq(channels.id, channelId));
     expect(await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, serverId))).toHaveLength(0);
     expect(await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, edges[0]!.id))).toHaveLength(0);
+  }, 30_000);
+
+  it("backfills historical sources in batches without reading content or crossing workspaces", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Historical workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "history", kind: "task" },
+    });
+    const { id: channelId } = channel.json<{ id: string }>();
+    const [agent] = await db.insert(agents).values({
+      serverId, ownerId: userId, name: "Renamed agent", role: "Review",
+    }).returning();
+    const [historicalTask] = await db.insert(taskPosts).values({
+      channelId, createdBy: userId, title: "Sensitive title", intent: "sensitive intent",
+      claimedByAgentId: agent!.id, claimedAt: new Date(), resolution: "done",
+      resolvedAt: new Date(), resolvedBy: userId, result: "Sensitive result",
+    }).returning();
+    await inject({
+      method: "POST", url: `/api/channels/${channelId}/tasks`, headers, payload: { title: "Live task" },
+    });
+    const [legacy] = await db.insert(messages).values({
+      channelId, authorKind: "agent", authorId: "Old agent name", body: "Sensitive message",
+    }).returning();
+    await db.insert(messages).values(Array.from({ length: 250 }, () => ({
+      channelId, authorKind: "user", authorId: userId, body: "Sensitive message",
+    })));
+
+    const other = await inject({ method: "POST", url: "/api/servers", headers, payload: { name: "Other workspace" } });
+    const otherId = other.json<{ id: string }>().id;
+    const otherChannel = await inject({
+      method: "POST", url: `/api/servers/${otherId}/channels`, headers, payload: { name: "other" },
+    });
+    await db.insert(messages).values({
+      channelId: otherChannel.json<{ id: string }>().id, authorKind: "user", authorId: userId, body: "Other content",
+    });
+
+    await expect(backfillKnowledgeGraph(serverId.toUpperCase())).resolves.toEqual({ messagesImported: 251, taskEventsImported: 3 });
+    await expect(backfillKnowledgeGraph(serverId)).resolves.toEqual({ messagesImported: 0, taskEventsImported: 0 });
+    const sources = await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, serverId));
+    expect(sources).toHaveLength(255);
+    expect(sources.filter(({ sourceId }) => sourceId === historicalTask!.id).map(({ type }) => type).sort())
+      .toEqual(["task.assigned", "task.completed", "task.posted"]);
+    expect(sources.find(({ sourceId }) => sourceId === legacy!.id)?.event).not.toHaveProperty("author");
+    expect(JSON.stringify(sources)).not.toContain("Sensitive");
+    expect(await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, otherId))).toHaveLength(0);
   }, 30_000);
 
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {

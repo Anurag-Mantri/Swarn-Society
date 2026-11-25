@@ -59,7 +59,8 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Define deterministic node and edge extractors.
 - [x] Add node, edge, source and review tables.
 - [x] Import new message, task, and workspace file events.
-- [ ] Import GitHub commit receipts and backfill historical sources.
+- [x] Backfill historical message and task sources.
+- [ ] Import GitHub commit receipts.
 - [x] Store extraction method, confidence and provenance.
 - [x] Add a 90% automatic acceptance threshold and a permission-scoped knowledge view.
 - [x] Add human approval for low-confidence and conflicting edges.

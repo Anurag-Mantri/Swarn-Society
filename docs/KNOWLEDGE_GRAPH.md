@@ -74,3 +74,13 @@ pnpm --filter @swarmroom/server knowledge:rebuild <workspace-uuid>
 ```
 
 The operator command replays one workspace's stored structured events in a single transaction. It repairs missing facts and deterministic provenance links, removes unsupported derived facts when no review refers to them, and leaves inferred relationships and review records in place. The rebuild serializes with live graph writes for that workspace. On a large workspace, schedule it when write traffic is low.
+
+## Backfill historical messages and tasks
+
+With the control plane's database configuration and a compiled server, run:
+
+```sh
+pnpm --filter @swarmroom/server knowledge:backfill <workspace-uuid>
+```
+
+The operator command adds sources for existing messages, task posts, assignments, and completions in one workspace. It reads metadata in batches and reports the number of new sources. Repeating the command preserves existing sources. Legacy message records carry agent display names, so the backfill omits agent authorship when no immutable agent ID was recorded. Historical files have no per-change actor or timestamp, so the backfill leaves their history empty. New changes continue to be recorded as they occur.
