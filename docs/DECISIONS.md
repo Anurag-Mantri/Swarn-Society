@@ -234,3 +234,10 @@ Date: 2026-11-25
 Context: The graph needs hypotheses from chat while preserving host ownership over provider access and channel restrictions over message content.
 Decision: Export one message excerpt and a bounded list of task titles from its channel. Run model extraction on demand in the host sandbox, then import only proposed task IDs and scores for human review.
 Consequences: Model outputs cannot create tasks or invoke agents. High-scoring proposals follow the same review requirement as low-scoring proposals. The shared graph excludes pending proposals and their source metadata.
+
+### D-036: Agent reputation is based on scoped task reviews
+Status: Accepted
+Date: 2026-11-25
+Context: Agent outcomes need useful evidence without allowing self-rated assignments or publishing private task details across the workspace.
+Decision: Let a task author record one review of another person's agent after completion. Record reported test outcomes, reviewed feedback, and merged GitHub pull request links as separate signals. Count duplicate pull request links once per agent in the channel.
+Consequences: People with channel access can compare aggregate counts. The task author can see individual review details. Reviews do not change routing or assignment automatically.

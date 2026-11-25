@@ -1,4 +1,4 @@
-import type { ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { AgentReputation, ChannelKind, GitHubCommitReceipt, KnowledgeExtractionInput, KnowledgeOverview, KnowledgeProposalFile, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskReputationInput, TaskReputationReview, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -71,6 +71,14 @@ export const api = {
   taskMetrics: (channelId: string, days: string) => request<TaskCoordinationMetrics>(
     `/api/channels/${encodeURIComponent(channelId)}/tasks/metrics?days=${encodeURIComponent(days)}`
   ),
+  agentReputation: (channelId: string) =>
+    request<AgentReputation[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/reputation`),
+  taskReputation: (channelId: string, taskId: string) =>
+    request<{ canReview: boolean; review: TaskReputationReview | null }>(
+      `/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/reputation`
+    ),
+  reviewTask: (channelId: string, taskId: string, review: TaskReputationInput) =>
+    post<TaskReputationReview>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/reputation`, review),
   knowledge: (serverId: string, channelId?: string) => request<KnowledgeOverview>(
     `/api/servers/${encodeURIComponent(serverId)}/knowledge${channelId ? `?channelId=${encodeURIComponent(channelId)}` : ''}`
   ),

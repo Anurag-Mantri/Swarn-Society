@@ -1177,6 +1177,79 @@ integration("Postgres-backed server routes", () => {
     expect(JSON.stringify(approvedView)).not.toContain("Release checklist");
   });
 
+  it("records independent task reviews and aggregates outcome evidence within its channel", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Reputation workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "quality", kind: "task" },
+    });
+    const { id: channelId } = channel.json<{ id: string }>();
+    const [teammate] = await db.insert(users).values({ githubId: randomUUID(), handle: "reputation-agent-owner" }).returning();
+    const teammateSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: teammate!.id, secretHash: hashSecret(teammateSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const teammateHeaders = { cookie: `session=${teammateSecret}` };
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Collaborator", permissions: permissions.readMessages | permissions.sendMessages },
+    });
+    const { id: roleId } = role.json<{ id: string }>();
+    await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers,
+      payload: { userId: teammate!.id, roleId },
+    });
+    const [agent, ownAgent] = await db.insert(agents).values([
+      { serverId, ownerId: teammate!.id, name: "Implementer", role: "Engineering" },
+      { serverId, ownerId: userId, name: "Owned agent", role: "Engineering" },
+    ]).returning();
+    const now = new Date();
+    const task = {
+      channelId, createdBy: userId, title: "Completed task", intent: "completed task",
+      claimedByAgentId: agent!.id, claimedAt: now,
+      resolution: "done" as const, resolvedAt: now, resolvedBy: userId, result: "Done",
+    };
+    const [first, second, open, own] = await db.insert(taskPosts).values([
+      task, task, { channelId, createdBy: userId, title: "Open", intent: "open" },
+      { ...task, claimedByAgentId: ownAgent!.id },
+    ]).returning();
+
+    const reviewUrl = (id: string) => `/api/channels/${channelId}/tasks/${id}/reputation`;
+    const submit = (id: string, payload: object, reviewHeaders = headers) => inject({
+      method: "POST", url: reviewUrl(id), headers: reviewHeaders, payload,
+    });
+    expect((await submit(open!.id, { feedback: "helpful" })).statusCode).toBe(409);
+    expect((await submit(own!.id, { feedback: "helpful" })).statusCode).toBe(403);
+    expect((await submit(first!.id, { feedback: "helpful" }, teammateHeaders)).statusCode).toBe(403);
+    expect((await submit(first!.id, { mergedPullRequest: "https://github.com.evil.invalid/a/b/pull/8" })).statusCode).toBe(400);
+
+    const outcome = { feedback: "helpful", tests: "passed", mergedPullRequest: "https://github.com/Acme/Example/pull/8/" };
+    const review = await submit(first!.id, outcome);
+    expect(review.statusCode, review.body).toBe(201);
+    expect((await submit(first!.id, outcome)).statusCode).toBe(200);
+    expect((await submit(first!.id, { feedback: "needs_work" })).statusCode).toBe(409);
+    expect((await inject({ url: reviewUrl(first!.id), headers: teammateHeaders })).statusCode).toBe(403);
+    expect((await inject({ url: reviewUrl(first!.id), headers })).json()).toMatchObject({
+      canReview: true, review: { mergedPullRequest: "https://github.com/acme/example/pull/8" },
+    });
+    expect((await submit(second!.id, {
+      feedback: "needs_work", tests: "failed", mergedPullRequest: "https://github.com/acme/example/pull/8",
+    })).statusCode).toBe(201);
+    const statsUrl = `/api/channels/${channelId}/tasks/reputation`;
+    expect((await inject({ url: statsUrl, headers: teammateHeaders })).json()).toEqual([{
+      agentId: agent!.id, name: "Implementer", reviewedTasks: 2, helpful: 1, needsWork: 1,
+      testsPassed: 1, testsFailed: 1, mergedPullRequests: 1,
+    }]);
+    await inject({
+      method: "PUT", url: `/api/channels/${channelId}/role-restrictions/${roleId}`, headers,
+      payload: { denied: permissions.readMessages },
+    });
+    expect((await inject({ url: statsUrl, headers: teammateHeaders })).statusCode).toBe(403);
+  });
+
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
     const headers = { cookie: `session=${sessionSecret}` };
     const workspace = await inject({

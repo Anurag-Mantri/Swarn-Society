@@ -2,10 +2,13 @@
   import { onMount } from 'svelte';
   import type { TaskClaimant, TaskPost, TaskResolution } from '@swarmroom/protocol';
   import { api, ApiError } from './api';
+  import AgentReputation from './AgentReputation.svelte';
+  import TaskReview from './TaskReview.svelte';
   import TaskBids from './TaskBids.svelte';
   import TaskMetrics from './TaskMetrics.svelte';
 
   let { channelId, name, currentUser }: { channelId: string; name: string; currentUser: string } = $props();
+  let reputationRevision = $state(0);
   let tasks = $state<TaskPost[]>([]);
   let agents = $state<TaskClaimant[]>([]);
   let selectedAgent = $state('');
@@ -94,6 +97,7 @@
   </header>
   {#if error}<p class="alert" role="alert">{error}</p>{/if}
   <TaskMetrics {channelId} />
+  <AgentReputation {channelId} revision={reputationRevision} />
   <form onsubmit={post}>
     <label for="task-title">Task title</label>
     <input id="task-title" required maxlength="160" bind:value={title} />
@@ -127,6 +131,9 @@
         {#if task.resolution}
           <p>{task.resolution === 'done' ? 'Completed' : 'Cancelled'}</p>
           {#if task.result}<p class="description">{task.result}</p>{/if}
+          {#if task.resolution === 'done' && task.createdBy === currentUser && !agents.some(({ id }) => id === task.claimedByAgentId)}
+            <TaskReview {channelId} taskId={task.id} onReview={() => { reputationRevision += 1; }} />
+          {/if}
         {:else if task.claimedByAgentId}
           <p>Claimed by {task.claimedByAgentName ?? 'an agent'}</p>
         {:else if selectedAgent && task.createdBy === currentUser}
