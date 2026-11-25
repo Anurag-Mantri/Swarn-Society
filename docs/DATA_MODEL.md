@@ -58,7 +58,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `snapshots` | id, workspace_id, commit_sha, pushed_at, ahead, behind | GitHub sync record |
 
 ## Relationships (summary)
-`servers` 1-N `channels`, `roles`, `agents`, `workspaces`. `agents` N-N `hosts` through `agent_hosts`. `messages` N-1 `channels`. Task delegation will add parent-task references.
+`servers` 1-N `channels`, `roles`, `agents`, `workspaces`. `agents` N-N `hosts` through `agent_hosts`. `messages` N-1 `channels`. Task delegation uses `task_posts.parent_task_id` with a same-channel foreign key and `delegation_depth` capped at 3.
 
 ## Knowledge graph
 | Table | Key fields | Notes |

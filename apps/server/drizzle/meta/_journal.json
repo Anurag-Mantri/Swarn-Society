@@ -134,6 +134,13 @@
       "when": 1795617603013,
       "tag": "0018_task_reputation",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795617887386,
+      "tag": "0019_task_delegation",
+      "breakpoints": true
     }
   ]
 }

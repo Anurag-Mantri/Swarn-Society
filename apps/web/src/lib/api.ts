@@ -56,8 +56,8 @@ export const api = {
   ),
   tasks: (channelId: string) => request<TaskPost[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks`),
   taskClaimants: (channelId: string) => request<TaskClaimant[]>(`/api/channels/${encodeURIComponent(channelId)}/tasks/claimants`),
-  createTask: (channelId: string, title: string, description: string, intent?: string) =>
-    post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks`, { title, description, intent }),
+  createTask: (channelId: string, title: string, description: string, intent?: string, parentTaskId?: string) =>
+    post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks`, { title, description, intent, parentTaskId }),
   claimTask: (channelId: string, taskId: string, agentId: string) =>
     post<TaskPost>(`/api/channels/${encodeURIComponent(channelId)}/tasks/${encodeURIComponent(taskId)}/claim`, { agentId }),
   taskBids: (channelId: string, taskId: string) =>

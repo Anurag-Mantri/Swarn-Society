@@ -1,4 +1,4 @@
-import { claimTaskPostSchema, createTaskPostSchema } from "@swarmroom/protocol";
+import { claimTaskPostSchema, createTaskPostSchema, maximumTaskDelegationDepth } from "@swarmroom/protocol";
 import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { hasChannelPermission } from "../channel-access.js";
@@ -10,6 +10,7 @@ import { assignTask } from "../task-assignment.js";
 import { taskChannel, taskPostParams } from "../task-channel-access.js";
 
 const basePath = "/api/channels/:channelId/tasks";
+type CreateTaskResult = { task: typeof taskPosts.$inferSelect } | { status: 403 | 404 | 409; error: string };
 
 export const taskPostRoutes: FastifyPluginAsync = async (app) => {
   app.get(basePath, async (request, reply) => {
@@ -27,20 +28,41 @@ export const taskPostRoutes: FastifyPluginAsync = async (app) => {
     if (!access) return;
     const body = createTaskPostSchema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({ error: "Provide a task title and a description of up to 4,000 characters." });
-    const task = await db.transaction(async (transaction) => {
+    const result = await db.transaction<CreateTaskResult>(async (transaction) => {
+      let parentTaskId: string | null = null;
+      let delegationDepth = 0;
+      if (body.data.parentTaskId) {
+        const [parent] = await transaction.select({
+          id: taskPosts.id, authorId: taskPosts.createdBy, resolution: taskPosts.resolution,
+          depth: taskPosts.delegationDepth, agentOwner: agents.ownerId,
+        }).from(taskPosts).leftJoin(agents, eq(agents.id, taskPosts.claimedByAgentId))
+          .where(and(eq(taskPosts.channelId, access.channel.id), eq(taskPosts.id, body.data.parentTaskId)))
+          .for("update", { of: taskPosts });
+        if (!parent) return { status: 404, error: "Parent task not found in this channel." };
+        if (parent.authorId !== access.user.id && parent.agentOwner !== access.user.id) {
+          return { status: 403, error: "Only the parent task author or assigned agent owner can delegate a subtask." };
+        }
+        if (parent.resolution) return { status: 409, error: "Delegate from an open task." };
+        if (parent.depth >= maximumTaskDelegationDepth) {
+          return { status: 409, error: "This task has reached the delegation depth limit." };
+        }
+        parentTaskId = parent.id;
+        delegationDepth = parent.depth + 1;
+      }
       const [created] = await transaction.insert(taskPosts).values({
         title: body.data.title, description: body.data.description,
         intent: sql`lower(regexp_replace(btrim(${body.data.intent ?? body.data.title}), '[[:space:]]+', ' ', 'g'))`,
-        channelId: access.channel.id, createdBy: access.user.id,
+        channelId: access.channel.id, createdBy: access.user.id, parentTaskId, delegationDepth,
       }).returning();
       if (!created) throw new Error("Task insert did not return an ID");
       await recordKnowledgeEvent(transaction, {
         type: "task.posted", sourceId: created.id, occurredAt: created.createdAt.toISOString(),
         serverId: access.channel.serverId, channelId: access.channel.id, taskId: created.id, authorId: access.user.id,
       });
-      return created;
+      return { task: created };
     });
-    return reply.code(201).send({ ...task, claimedByAgentName: null });
+    if ("error" in result) return reply.code(result.status).send({ error: result.error });
+    return reply.code(201).send({ ...result.task, claimedByAgentName: null });
   });
 
   app.get(`${basePath}/claimants`, async (request, reply) => {
