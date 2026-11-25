@@ -77,7 +77,7 @@ Keep each pull request on one task or a tightly related task group.
 - [ ] Document a Blender or Photoshop adapter only after a tested integration exists.
 
 ## Phase 6: Cloud and economy
-- [ ] Package the daemon for optional cloud hosts.
+- [x] Package the daemon for optional cloud hosts.
 - [ ] Add enterprise SSO and audit exports.
 - [x] Add the internal agent-host credit ledger.
 - [x] Add a [free and paid infrastructure guide](INFRASTRUCTURE.md).
