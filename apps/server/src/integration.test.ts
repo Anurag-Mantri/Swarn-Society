@@ -9,6 +9,7 @@ import { config } from "./config.js";
 import { db, pool } from "./db/index.js";
 import { agentHosts, agentUsage, agents, channels, hosts, members, messages, sessions, users } from "./db/schema.js";
 import { knowledgeEdges, knowledgeEdgeSources, knowledgeSources } from "./db/knowledge-schema.js";
+import { rebuildKnowledgeGraph } from "./knowledge/rebuild.js";
 import { storeKnowledgeEvent } from "./knowledge/storage.js";
 import { permissions } from "./permissions.js";
 import { hashSecret } from "./security.js";
@@ -925,6 +926,18 @@ integration("Postgres-backed server routes", () => {
     expect(await visibleEdges()).not.toContain(edgeId);
     await db.update(knowledgeEdges).set({ hasConflict: false, method: "inferred" }).where(eq(knowledgeEdges.id, edgeId));
     expect(await visibleEdges()).not.toContain(edgeId);
+
+    const [removed] = await db.delete(knowledgeEdges).where(and(
+      eq(knowledgeEdges.serverId, serverId), eq(knowledgeEdges.relation, "assigned_by"),
+    )).returning({ id: knowledgeEdges.id });
+    expect(removed).toBeDefined();
+    await expect(rebuildKnowledgeGraph(serverId)).resolves.toEqual({ sourcesReplayed: 2 });
+    expect(await visibleEdges()).toContain(removed!.id);
+    expect(await visibleEdges()).not.toContain(edgeId);
+    const rebuiltEvidence = await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, removed!.id));
+    expect(rebuiltEvidence).toHaveLength(2);
+    await expect(rebuildKnowledgeGraph(serverId)).resolves.toEqual({ sourcesReplayed: 2 });
+    expect(await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, removed!.id))).toHaveLength(2);
 
     const other = await inject({
       method: "POST", url: "/api/servers", headers, payload: { name: "Separate knowledge workspace" },

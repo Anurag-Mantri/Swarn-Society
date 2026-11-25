@@ -16,8 +16,10 @@ export async function recordKnowledgeEvent(
   input: unknown,
 ): Promise<{ sourceId: string; inserted: boolean }> {
   const event = knowledgeEventSchema.parse(input);
-  const { source, nodes, edges } = extractKnowledge(event);
+  const facts = extractKnowledge(event);
+  const { source } = facts;
   const { serverId, id: sourceId } = source;
+  await lockKnowledgeWorkspace(transaction, serverId, "shared");
   const [inserted] = await transaction.insert(knowledgeSources).values({
     ...source, occurredAt: new Date(source.occurredAt), event,
   }).onConflictDoNothing({ target: knowledgeSources.id }).returning({ id: knowledgeSources.id });
@@ -28,10 +30,25 @@ export async function recordKnowledgeEvent(
     return { sourceId, inserted: false };
   }
 
+  await writeKnowledgeFacts(transaction, facts);
+  return { sourceId, inserted: true };
+}
+
+export async function lockKnowledgeWorkspace(transaction: KnowledgeTransaction, serverId: string, mode: "shared" | "exclusive") {
+  if (mode === "shared") {
+    await transaction.execute(sql`select pg_advisory_xact_lock_shared(hashtextextended(${serverId}::text, 5381901))`);
+  } else {
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${serverId}::text, 5381901))`);
+  }
+}
+
+export async function writeKnowledgeFacts(
+  transaction: KnowledgeTransaction, { source, nodes, edges }: ReturnType<typeof extractKnowledge>,
+) {
+  const { serverId, id: sourceId } = source;
   await transaction.insert(knowledgeNodes).values(nodes).onConflictDoNothing({ target: knowledgeNodes.id });
   await transaction.insert(knowledgeEdges).values(edges.map((edge) => ({ ...edge, method: "deterministic" as const })))
     .onConflictDoNothing({ target: knowledgeEdges.id });
-  await transaction.insert(knowledgeNodeSources).values(nodes.map(({ id: nodeId }) => ({ serverId, nodeId, sourceId })));
-  await transaction.insert(knowledgeEdgeSources).values(edges.map(({ id: edgeId }) => ({ serverId, edgeId, sourceId })));
-  return { sourceId, inserted: true };
+  await transaction.insert(knowledgeNodeSources).values(nodes.map(({ id: nodeId }) => ({ serverId, nodeId, sourceId }))).onConflictDoNothing();
+  await transaction.insert(knowledgeEdgeSources).values(edges.map(({ id: edgeId }) => ({ serverId, edgeId, sourceId }))).onConflictDoNothing();
 }

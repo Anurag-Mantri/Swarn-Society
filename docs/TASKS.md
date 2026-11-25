@@ -63,7 +63,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Store extraction method, confidence and provenance.
 - [x] Add a 90% automatic acceptance threshold and a permission-scoped knowledge view.
 - [ ] Add human approval for low-confidence and conflicting edges.
-- [ ] Rebuild graph state from source events.
+- [x] Rebuild graph state from source events.
 - [ ] Add AI-assisted extraction behind explicit review.
 - [ ] Evaluate graph precision and recall before broad release.
 
