@@ -32,6 +32,7 @@ import { creditRoutes } from "./routes/credits.js";
 import { memoryRoutes } from "./routes/memory.js";
 import { auditExportRoutes } from "./routes/audit-export.js";
 import { extensionManifestRoutes } from "./routes/extension-manifests.js";
+import { knowledgeReviewRoutes } from "./routes/knowledge-review.js";
 import { knowledgeOverviewRoutes } from "./routes/knowledge-overview.js";
 import { messageHistoryRoutes } from "./routes/message-history.js";
 import { channelRestrictionRoutes } from "./routes/channel-restrictions.js";
@@ -61,6 +62,7 @@ await app.register(websocket, {
 await app.register(channelRestrictionRoutes);
 await app.register(messageHistoryRoutes);
 await app.register(knowledgeOverviewRoutes);
+await app.register(knowledgeReviewRoutes);
 await app.register(extensionManifestRoutes);
 await app.register(creditRoutes);
 await app.register(auditExportRoutes);

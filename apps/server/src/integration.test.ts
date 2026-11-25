@@ -328,6 +328,7 @@ integration("Postgres-backed server routes", () => {
     expect(ownerGraph.json()).toMatchObject({
       sources: expect.arrayContaining([expect.objectContaining({ id: hiddenGraphSource.sourceId })]),
     });
+    expect((await inject({ url: `${knowledgeUrl}/reviews`, headers: outsiderHeaders })).statusCode).toBe(403);
     const restrictedGraph = await inject({ url: knowledgeUrl, headers: outsiderHeaders });
     expect(restrictedGraph.statusCode).toBe(200);
     expect(restrictedGraph.json()).toMatchObject({
@@ -938,6 +939,64 @@ integration("Postgres-backed server routes", () => {
     expect(rebuiltEvidence).toHaveLength(2);
     await expect(rebuildKnowledgeGraph(serverId)).resolves.toEqual({ sourcesReplayed: 2 });
     expect(await db.select().from(knowledgeEdgeSources).where(eq(knowledgeEdgeSources.edgeId, removed!.id))).toHaveLength(2);
+
+    const reviews = `/api/servers/${serverId}/knowledge/reviews`;
+    const queue = await inject({ url: reviews, headers });
+    expect(queue.statusCode, queue.body).toBe(200);
+    expect(queue.json()).toEqual([expect.objectContaining({
+      id: edgeId, method: "inferred",
+      sources: expect.arrayContaining([expect.objectContaining({ id: first.sourceId })]),
+    })]);
+    const decide = (id: string, decision: "approved" | "rejected", reviewHeaders = headers) => inject({
+      method: "POST", url: `${reviews}/${encodeURIComponent(id)}`, headers: reviewHeaders, payload: { decision },
+    });
+    expect((await decide(removed!.id, "approved")).statusCode).toBe(409);
+
+    const [reviewer] = await db.insert(users).values({ githubId: randomUUID(), handle: "limited-reviewer" }).returning();
+    const reviewerSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: reviewer!.id, secretHash: hashSecret(reviewerSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const reviewerHeaders = { cookie: `session=${reviewerSecret}` };
+    const createdRole = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Reviewer", permissions: permissions.manageRoles | permissions.readMessages },
+    });
+    expect(createdRole.statusCode).toBe(201);
+    const { id: roleId } = createdRole.json<{ id: string }>();
+    expect((await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: reviewer!.id, roleId },
+    })).statusCode).toBe(201);
+    const privateChannel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "private-knowledge" },
+    });
+    const { id: privateId } = privateChannel.json<{ id: string }>();
+    expect((await inject({
+      method: "PUT", url: `/api/channels/${privateId}/role-restrictions/${roleId}`, headers,
+      payload: { denied: permissions.readMessages },
+    })).statusCode).toBe(200);
+    await storeKnowledgeEvent({ ...event, channelId: privateId, sourceId: "assignment:3" });
+    const limitedQueue = await inject({ url: reviews, headers: reviewerHeaders });
+    expect(limitedQueue.statusCode).toBe(200);
+    expect(limitedQueue.json()).toEqual([]);
+    expect((await decide(edgeId, "approved", reviewerHeaders)).statusCode).toBe(404);
+
+    const approvals = await Promise.all([decide(edgeId, "approved"), decide(edgeId, "approved")]);
+    expect(approvals.map(({ statusCode }) => statusCode).sort()).toEqual([200, 201]);
+    expect(approvals[0]!.json()).toEqual(approvals[1]!.json());
+    expect((await decide(edgeId, "rejected")).statusCode).toBe(409);
+    expect(await visibleEdges()).toContain(edgeId);
+    const limitedGraph = await inject({ url: `/api/servers/${serverId}/knowledge`, headers: reviewerHeaders });
+    expect(limitedGraph.json<{ edges: { id: string }[] }>().edges.map(({ id }) => id)).not.toContain(edgeId);
+
+    await db.update(knowledgeEdges).set({ hasConflict: true }).where(eq(knowledgeEdges.id, removed!.id));
+    expect((await decide(removed!.id, "rejected")).statusCode).toBe(201);
+    await expect(rebuildKnowledgeGraph(serverId)).resolves.toEqual({ sourcesReplayed: 3 });
+    expect(await visibleEdges()).toContain(edgeId);
+    expect(await visibleEdges()).not.toContain(removed!.id);
+    expect((await inject({ url: reviews, headers })).json()).toEqual([]);
+    await db.delete(channels).where(eq(channels.id, privateId));
+
 
     const other = await inject({
       method: "POST", url: "/api/servers", headers, payload: { name: "Separate knowledge workspace" },

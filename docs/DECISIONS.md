@@ -213,3 +213,10 @@ Date: 2026-11-25
 Context: Teams need a record of allocations between agents and hosts without turning reported token use into billing.
 Decision: Authorized workspace administrators issue and transfer integer credits. Store one immutable entry per operation, serialize writes within a workspace, and derive balances from the entries.
 Consequences: Repeated requests do not create duplicate entries. Transfers cannot overdraw an account. Credits carry no monetary value and do not affect host token budgets.
+
+### D-033: Knowledge reviewers must be able to read the supporting evidence
+Status: Accepted
+Date: 2026-11-25
+Context: Low-confidence, inferred, and conflicting relationships need human judgment. A workspace role can have administrative permissions while being denied access to a channel.
+Decision: Allow people with workspace role-management and message-read permissions to review an edge when they can read provenance for both endpoints and all sources attached to the edge. Record a final decision for the relationship.
+Consequences: A rejected edge stays hidden. An approved edge appears for a reader only when they can read all attached evidence and the selected view includes both endpoints.

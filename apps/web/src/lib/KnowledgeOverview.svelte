@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { KnowledgeOverview } from '@swarmroom/protocol';
+  import KnowledgeReviews from './KnowledgeReviews.svelte';
   import { api, type Channel, type Profile, type Workspace } from './api';
 
   let { workspace, channels, profile }: { workspace: Workspace; channels: Channel[]; profile: Profile } = $props();
@@ -28,8 +29,7 @@
     }
   }
 
-  function label(nodeId: string): string {
-    const node = nodes.get(nodeId);
+  function label(node: { kind: string; key: string } | undefined): string {
     if (!node) return 'Unknown record';
     if (node.kind === 'server') return workspace.name;
     if (node.kind === 'channel') return channels.find((channel) => channel.id === node.key)?.name ?? 'Channel';
@@ -65,9 +65,9 @@
         <li>
           <details>
             <summary>
-              <strong>{label(edge.fromId)}</strong>
+              <strong>{label(nodes.get(edge.fromId))}</strong>
               <span>{edge.relation.replaceAll('_', ' ')}</span>
-              <strong>{label(edge.toId)}</strong>
+              <strong>{label(nodes.get(edge.toId))}</strong>
             </summary>
             <p>Confidence {edge.confidence}%</p>
             <ul class="evidence">
@@ -87,6 +87,7 @@
       {/each}
     </ul>
   {/if}
+  <KnowledgeReviews workspaceId={workspace.id} {label} onReview={load} />
 </section>
 
 <style>
