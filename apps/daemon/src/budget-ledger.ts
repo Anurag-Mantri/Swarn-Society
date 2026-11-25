@@ -1,10 +1,10 @@
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { appendFile, chmod, mkdir, open, rename, unlink } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { z } from "zod";
 import type { Task } from "@swarmroom/protocol";
+import { daemonStatePath } from "./state-paths.js";
 
 const MAX_LEDGER_BYTES = 16 * 1024 * 1024;
 const MAX_EVENTS = 250_000;
@@ -34,21 +34,9 @@ export interface ProviderBudgetSession {
 }
 
 export class BudgetExceededError extends Error {
-  constructor() {
-    super("Requester token budget exceeded.");
+  constructor(message = "Requester token budget exceeded.") {
+    super(message);
   }
-}
-
-function defaultBudgetPath(): string {
-  if (process.platform === "win32") {
-    return join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "Swarmroom", "budget-usage.jsonl");
-  }
-  if (process.platform === "darwin") {
-    return join(homedir(), "Library", "Application Support", "Swarmroom", "budget-usage.jsonl");
-  }
-  const stateHome = process.env.XDG_STATE_HOME;
-  const stateRoot = stateHome && stateHome.startsWith("/") ? stateHome : join(homedir(), ".local", "state");
-  return join(stateRoot, "swarmroom", "budget-usage.jsonl");
 }
 
 function emptySession(): ProviderBudgetSession {
@@ -60,7 +48,7 @@ export class LocalBudgetLedger {
 
   constructor(
     private readonly policies: ReadonlyMap<string, AgentBudgetPolicy>,
-    private readonly path = defaultBudgetPath(),
+    private readonly path = daemonStatePath("budget-usage.jsonl"),
     private readonly now: () => number = Date.now,
   ) {}
 
@@ -109,13 +97,19 @@ export class LocalBudgetLedger {
       try {
         result = await action();
       } catch (error) {
-        // If the provider call failed after sending, keep the full reservation charged.
+        if (error instanceof BudgetExceededError) {
+          await this.appendEvent({
+            eventId, taskId, kind: "settle", at: new Date(now).toISOString(),
+            agent: task.agent, requesterId: task.from, tokens: -reservedTokens,
+          });
+        }
+        // Upstream failures retain their reservation because the request may have been billed.
         throw error;
       }
       const actualTokens = result.actualTokens;
       if (actualTokens !== undefined && Number.isSafeInteger(actualTokens) && actualTokens >= 0 && actualTokens !== reservedTokens) {
         await this.appendEvent({
-          eventId, taskId, kind: "settle", at: new Date(this.now()).toISOString(),
+          eventId, taskId, kind: "settle", at: new Date(now).toISOString(),
           agent: task.agent, requesterId: task.from, tokens: actualTokens - reservedTokens,
         });
       }
@@ -156,9 +150,12 @@ export class LocalBudgetLedger {
       const lines = text.split("\n").filter(Boolean);
       if (lines.length > MAX_EVENTS) throw new Error("Local token budget ledger has too many records.");
       const events = lines.map((line) => usageEventSchema.parse(JSON.parse(line) as unknown));
-      validateEventPairs(events);
+      const reservations = validateEventPairs(events);
       const cutoff = this.now() - 24 * 60 * 60 * 1000;
-      const active = events.filter((event) => Date.parse(event.at) > cutoff);
+      const active = events.flatMap((event) => {
+        const reservation = reservations.get(event.eventId);
+        return reservation && Date.parse(reservation.at) > cutoff ? [{ ...event, at: reservation.at }] : [];
+      });
       if (active.length !== events.length) await this.replaceEvents(active);
       return active;
     } catch {
@@ -213,7 +210,7 @@ function isMissingFile(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-function validateEventPairs(events: Array<z.infer<typeof usageEventSchema>>): void {
+function validateEventPairs(events: Array<z.infer<typeof usageEventSchema>>) {
   const reservations = new Map<string, z.infer<typeof usageEventSchema>>();
   const settled = new Set<string>();
   for (const event of events) {
@@ -230,4 +227,5 @@ function validateEventPairs(events: Array<z.infer<typeof usageEventSchema>>): vo
     }
     settled.add(event.eventId);
   }
+  return reservations;
 }

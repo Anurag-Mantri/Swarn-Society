@@ -1,10 +1,10 @@
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { chmod, mkdir, open } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { z } from "zod";
 import type { Task } from "@swarmroom/protocol";
+import { daemonStatePath } from "./state-paths.js";
 
 const auditEventSchema = z.object({
   taskId: z.string().uuid(),
@@ -22,23 +22,11 @@ export interface AuditLogger {
   recordTask(task: Task, state: TaskAuditState): Promise<void>;
 }
 
-function defaultAuditPath(): string {
-  if (process.platform === "win32") {
-    return join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "Swarmroom", "audit.jsonl");
-  }
-  if (process.platform === "darwin") {
-    return join(homedir(), "Library", "Application Support", "Swarmroom", "audit.jsonl");
-  }
-  const stateHome = process.env.XDG_STATE_HOME;
-  const stateRoot = stateHome && stateHome.startsWith("/") ? stateHome : join(homedir(), ".local", "state");
-  return join(stateRoot, "swarmroom", "audit.jsonl");
-}
-
 export class LocalAuditLog implements AuditLogger {
   private pending: Promise<void> = Promise.resolve();
   private readonly taskIds = new WeakMap<Task, string>();
 
-  constructor(private readonly path = defaultAuditPath()) {}
+  constructor(private readonly path = daemonStatePath("audit.jsonl")) {}
 
   recordTask(task: Task, state: TaskAuditState): Promise<void> {
     const taskId = state === "task.started" ? randomUUID() : this.taskIds.get(task) ?? randomUUID();

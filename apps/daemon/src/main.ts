@@ -1,5 +1,6 @@
+import { HostTokenCaps } from "./budgets/host-token-caps.js";
 import { createSystemHostTokenKeychain } from "./keychain.js";
-import { loadAgentBudgetPolicies, loadDaemonConfig, loadSandboxConfig } from "./config.js";
+import { loadAgentBudgetPolicies, loadDaemonConfig, loadHostTokenPolicies, loadSandboxConfig } from "./config.js";
 import { HostClient } from "./host-client.js";
 import { SandboxRunner } from "./sandbox/runner.js";
 import { createPodmanSandboxBackend } from "./sandbox/podman.js";
@@ -17,10 +18,11 @@ async function main(): Promise<void> {
 
   const sandboxConfig = loadSandboxConfig(process.env, config.agents);
   const budgets = new LocalBudgetLedger(loadAgentBudgetPolicies(process.env, config.agents));
+  const hostCaps = new HostTokenCaps(loadHostTokenPolicies(process.env, config.agents));
   const secrets = sandboxConfig
     ? await createSystemAgentSecretKeychain(config.controlPlaneUrl.host)
     : undefined;
-  const broker = secrets ? new LocalProviderEgressBroker(secrets, globalThis.fetch, budgets) : undefined;
+  const broker = secrets ? new LocalProviderEgressBroker(secrets, globalThis.fetch, budgets, hostCaps) : undefined;
   const sandbox = sandboxConfig && broker
     ? await createPodmanSandboxBackend(sandboxConfig, broker)
     : undefined;

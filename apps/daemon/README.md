@@ -87,3 +87,15 @@ bash apps/daemon/scripts/package-linux.sh /absolute/path/to/new-release-director
 Build on the same CPU architecture and libc family as the target so the package includes the matching native keychain binding. Copy the resulting directory as a unit, preserving symlinks. The target needs Node.js 22, a running Secret Service for the daemon account, and local rootless Podman for sandbox execution. It does not need the monorepo or pnpm.
 
 As the unprivileged daemon account, configure the control-plane WebSocket URL, host name, agent names, and optional sandbox settings. Store the host token by running `node dist/token-cli.js set` inside the release directory, then start the daemon with `node dist/main.js`. Use the ordinary daemon configuration and audit log paths. Keep provider credentials in the target account's keychain and supply a digest-pinned image and explicit workspace mounts before running agents.
+
+## Hard host token caps
+
+Set `SWARMROOM_HOST_TOKEN_CAPS` to configure limits for every local agent. These caps apply to every requester, including the owner and local knowledge extraction. Each policy has a limit for one runtime task and a rolling 24-hour limit shared by that agent's tasks on this host.
+
+```text
+SWARMROOM_HOST_TOKEN_CAPS={"scout":{"taskTokens":10000,"dayTokens":100000}}
+```
+
+The broker permits text-only requests under a host cap. It reserves the serialized input size, provider framing allowance, and maximum output tokens before contacting the provider. Keep the full reservation when accounting against the caps. This bounds the token budget available to the runtime without relying on the provider to report usage. The owner configures the model and its provider pricing separately.
+
+Reservations persist in the private `host-token-caps.sqlite` file in the daemon state directory. Use the same cap configuration and daemon state directory for the daemon and local extraction CLI. If the file cannot be opened or is invalid, capped calls fail before contacting the provider. Use Node 22.13 or newer for this opt-in feature.

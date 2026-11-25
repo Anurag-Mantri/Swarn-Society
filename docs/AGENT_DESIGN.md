@@ -20,6 +20,8 @@ The first TypeScript runtime accepts one validated task on stdin and reads its p
 ## Budgets
 Per-requester token limits (rolling hour/day/task) are enforced by the daemon when a host policy is configured. The owner is exempt. The host reserves a conservative upper bound before provider calls and settles with provider usage. If a task would exceed its budget, the daemon tells the requester to ask the agent owner to raise the limit or shorten the task. Successful provider usage is reported to the server for display only; the host is the authority.
 
+An optional hard host cap applies to all requesters, including the owner. It limits reserved tokens per runtime task and across one agent's tasks in a rolling day on that host. Capped requests use the text-only routes and reserve their full bound before provider dispatch.
+
 ## Multi-host agents
 Another user can register as a host for an agent if they hold valid provider keys. Priority order decides routing; failover happens on missed heartbeats. Agent memory is stored encrypted on the control plane so it follows the agent between hosts. Provider keys never move.
 

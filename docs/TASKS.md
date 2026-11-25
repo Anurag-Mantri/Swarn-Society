@@ -53,7 +53,7 @@ Keep each pull request on one task or a tightly related task group.
 - [x] Record and display agent reputation from task-author reports of tests, merged PRs, and feedback.
 - [x] Add scoped shared memory retrieval.
 - [x] Add a task delegation depth limit.
-- [ ] Enforce hard per-agent and per-task cost limits on the host.
+- [x] Enforce hard per-agent and per-task token budgets on the host.
 - [x] Add measurable duplicate-work and task-completion metrics.
 
 ## Phase 4: Knowledge graph

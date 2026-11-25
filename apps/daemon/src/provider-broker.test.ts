@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it, vi } from "vitest";
 import { AgentSecretKeychain, type PasswordEntry } from "./keychain.js";
+import { HostTokenCaps } from "./budgets/host-token-caps.js";
 import { LocalBudgetLedger } from "./budget-ledger.js";
 import type { Task } from "@swarmroom/protocol";
 import { requestProvider } from "./provider-broker-client.js";
@@ -170,6 +171,48 @@ describe("local provider egress broker", () => {
         await second.close();
       }
       expect(fetcher).toHaveBeenCalledOnce();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("enforces owner-inclusive host caps before dispatch and rejects unsupported capped features", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "swarmroom-provider-host-caps-test-"));
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({ usage: { input_tokens: 2, output_tokens: 1 } }));
+    const path = join(directory, "host-caps.sqlite");
+    const policies = new Map([["scout", { taskTokens: 550, dayTokens: 550 }]]);
+    const ledger = new LocalBudgetLedger(new Map([[
+      "scout", { ownerId: "owner", taskTokens: 2_000, hourTokens: 2_000, dayTokens: 2_000 },
+    ]]), join(directory, "requester.jsonl"));
+    const broker = () => new LocalProviderEgressBroker(
+      secretStore("host-only-api-key"), fetcher, ledger, new HostTokenCaps(policies, path),
+    );
+    const body = { model: "test", input: "prompt", max_output_tokens: 50 };
+    try {
+      const first = await broker().openForTask({ ...testTask, from: "owner" });
+      try {
+        for (const feature of [{ previous_response_id: "test" }, { tools: [{ type: "web_search" }] }]) {
+          await expect(requestBroker(first, "/openai/responses", { body: { ...body, ...feature } }))
+            .resolves.toMatchObject({ status: 400 });
+        }
+        expect(fetcher).not.toHaveBeenCalled();
+        await expect(requestBroker(first, "/openai/responses", { body })).resolves.toMatchObject({ status: 200 });
+      } finally {
+        await first.close();
+      }
+
+      const afterRestart = await broker().openForTask(testTask);
+      try {
+        await expect(requestBroker(afterRestart, "/openai/responses", { body }))
+          .resolves.toMatchObject({ status: 429, body: JSON.stringify({ error: "Host token cap exceeded." }) });
+        expect(afterRestart.budgetExceeded()).toBe(true);
+      } finally {
+        await afterRestart.close();
+      }
+      expect(fetcher).toHaveBeenCalledOnce();
+      const reservations = (await readFile(join(directory, "requester.jsonl"), "utf8")).trim().split("\n")
+        .map((line) => JSON.parse(line) as { tokens: number });
+      expect(reservations.reduce((sum, event) => sum + event.tokens, 0)).toBe(0);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

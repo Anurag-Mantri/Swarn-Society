@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { z } from "zod";
 import type { Task } from "@swarmroom/protocol";
 import { BudgetExceededError, LocalBudgetLedger, type ProviderBudgetSession } from "./budget-ledger.js";
+import { HostTokenCaps, type HostTokenReservation } from "./budgets/host-token-caps.js";
+import { isCappedProviderInput } from "./budgets/capped-provider-input.js";
 import type { AgentSecretKeychain } from "./keychain.js";
 
 const MAX_REQUEST_BYTES = 512 * 1024;
@@ -163,10 +165,12 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     private readonly secrets: AgentSecretKeychain,
     private readonly fetcher: FetchFunction = globalThis.fetch,
     private readonly budgets = new LocalBudgetLedger(new Map()),
+    private readonly hostCaps = new HostTokenCaps(new Map()),
   ) {}
 
   async openForTask(task: Task): Promise<ProviderBrokerLease> {
     const budget = this.budgets.forTask(task);
+    const reserveHostTokens = this.hostCaps.forTask(task.agent);
     const directory = await mkdtemp(join(tmpdir(), "swarmroom-egress-"));
     const socketPath = join(directory, "provider.sock");
     let requestCount = 0;
@@ -175,7 +179,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     let inputTokens = 0;
     let outputTokens = 0;
     const server = createServer((request, response) => {
-      void this.handleRequest(task.agent, budget, request, response, () => { budgetExceeded = true; }, (usage) => {
+      void this.handleRequest(task.agent, budget, reserveHostTokens, request, response, () => { budgetExceeded = true; }, (usage) => {
         inputTokens += usage.inputTokens;
         outputTokens += usage.outputTokens;
       }, () => {
@@ -231,6 +235,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
   private async handleRequest(
     agent: string,
     budget: ProviderBudgetSession,
+    reserveHostTokens: HostTokenReservation | undefined,
     request: IncomingMessage,
     response: ServerResponse,
     markBudgetExceeded: () => void,
@@ -271,6 +276,9 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
       if (!key) throw new BrokerError(503, "No provider credential is stored for this agent.");
       const body = prepareProviderBody(route, parsed.data.body);
       const prepared = JSON.parse(body) as Record<string, unknown>;
+      if (reserveHostTokens && !isCappedProviderInput(request.url, prepared)) {
+        throw new BrokerError(400, "Use a text-only request with no additional provider features when host caps are configured.");
+      }
       const outputCap = prepared[route.tokenField];
       if (typeof outputCap !== "number") throw new BrokerError(400, "Provider output token limit is invalid.");
       const headers = new Headers({
@@ -279,7 +287,9 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
         ...route.fixedHeaders,
         [route.authHeader]: `${route.authPrefix}${key}`,
       });
-      const result = await budget.runRequest(Buffer.byteLength(body) + outputCap + PROVIDER_FRAMING_RESERVE_TOKENS, async () => {
+      const reservation = Buffer.byteLength(body) + outputCap + PROVIDER_FRAMING_RESERVE_TOKENS;
+      const result = await budget.runRequest(reservation, async () => {
+        await reserveHostTokens?.(reservation);
         const upstream = await this.fetcher(route.endpoint, {
           method: "POST",
           headers,
@@ -304,7 +314,7 @@ export class LocalProviderEgressBroker implements ProviderEgressBroker {
     } catch (error) {
       if (error instanceof BudgetExceededError) {
         markBudgetExceeded();
-        sendJson(response, 429, { error: "Requester token budget exceeded." });
+        sendJson(response, 429, { error: error.message });
       } else if (error instanceof BrokerError) {
         sendJson(response, error.status, { error: error.message });
       } else {
