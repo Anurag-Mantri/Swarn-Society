@@ -61,6 +61,13 @@ export const knowledgeEventSchema = z.discriminatedUnion("type", [
   }).strict(),
   z.object({
     ...common,
+    type: z.literal("commit.receipt.imported"),
+    repositoryId: z.string().regex(/^[1-9]\d{0,19}$/),
+    commitSha: z.string().regex(/^[a-f0-9]{40}$/i).transform((value) => value.toLowerCase()),
+    reportedBy: uuid,
+  }).strict(),
+  z.object({
+    ...common,
     type: z.literal("agent.hosted"),
     agentId: uuid,
     hostId: uuid,

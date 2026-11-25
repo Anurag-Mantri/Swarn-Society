@@ -1,3 +1,4 @@
+import { workspaceSnapshotBranch } from "@swarmroom/protocol";
 import type { InjectOptions } from "fastify";
 import { randomBytes, randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
@@ -1058,6 +1059,46 @@ integration("Postgres-backed server routes", () => {
     expect(JSON.stringify(sources)).not.toContain("Sensitive");
     expect(await db.select().from(knowledgeSources).where(eq(knowledgeSources.serverId, otherId))).toHaveLength(0);
   }, 30_000);
+
+  it("accepts scoped GitHub receipts from the workspace owner and records the reporter", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const workspace = await inject({
+      method: "POST", url: "/api/servers", headers, payload: { name: "Receipt workspace" },
+    });
+    const { id: serverId } = workspace.json<{ id: string }>();
+    const url = `/api/servers/${serverId}/knowledge/commit-receipts`;
+    const receipt = {
+      serverId, branch: workspaceSnapshotBranch(serverId), repositoryId: "42",
+      commitSha: "a".repeat(40), committedAt: "2026-11-25T10:00:00Z",
+    };
+    const [outsider] = await db.insert(users).values({ githubId: randomUUID(), handle: "receipt-outsider" }).returning();
+    const outsiderSecret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: outsider!.id, secretHash: hashSecret(outsiderSecret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    await db.insert(members).values({ serverId, userId: outsider!.id });
+    expect((await inject({
+      method: "POST", url, headers: { cookie: `session=${outsiderSecret}` }, payload: receipt,
+    })).statusCode).toBe(403);
+
+    const send = (payload: object) => inject({ method: "POST", url, headers, payload });
+    expect((await send({ ...receipt, branch: "main" })).statusCode).toBe(400);
+    expect((await send({ ...receipt, files: [] })).statusCode).toBe(400);
+    const otherId = randomUUID();
+    expect((await send({ ...receipt, serverId: otherId, branch: workspaceSnapshotBranch(otherId) })).statusCode).toBe(400);
+    const created = await send(receipt);
+    expect(created.statusCode, created.body).toBe(201);
+    const replayed = await send({ ...receipt, commitSha: receipt.commitSha.toUpperCase(), committedAt: "2026-11-25T09:00:00-01:00" });
+    expect(replayed.statusCode).toBe(200);
+    const { sourceId } = created.json<{ sourceId: string }>();
+    expect(replayed.json()).toEqual({ sourceId, inserted: false });
+    expect((await send({ ...receipt, committedAt: "2026-11-25T11:00:00Z" })).statusCode).toBe(409);
+    const [source] = await db.select().from(knowledgeSources).where(eq(knowledgeSources.id, sourceId));
+    expect(source?.event).toMatchObject({ type: "commit.receipt.imported", reportedBy: userId });
+    const graph = await inject({ url: `/api/servers/${serverId}/knowledge`, headers });
+    expect(graph.json<{ edges: { relation: string }[] }>().edges.map(({ relation }) => relation).sort())
+      .toEqual(["in_repository", "in_server", "reported_commit"]);
+  });
 
   it("registers immutable manifests and limits approval to the host owner's declared capabilities", async () => {
     const headers = { cookie: `session=${sessionSecret}` };

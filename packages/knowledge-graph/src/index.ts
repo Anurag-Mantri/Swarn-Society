@@ -9,7 +9,7 @@ export type NodeKind = "server" | "channel" | "person" | "agent" | "host" | "tas
 
 export type Relation = "in_server" | "in_channel" | "authored" | "mentioned_in" | "assigned_to" |
   "assigned_by" | "completed_by" | "recorded_completion" | "decided_in" | "changed" |
-  "in_repository" | "hosted_by";
+  "in_repository" | "reported_commit" | "hosted_by";
 
 export type KnowledgeSource = {
   id: string;
@@ -115,11 +115,16 @@ export function extractKnowledge(input: unknown) {
       edge(node(event.actor.kind, event.actor.id), file, "changed");
       break;
     }
+    case "commit.receipt.imported":
     case "commit.recorded": {
       const commit = node("event", `commit:${event.repositoryId}:${event.commitSha}`);
       const repository = node("repository", event.repositoryId);
       edge(repository, server, "in_server");
       edge(commit, repository, "in_repository");
+      if (event.type === "commit.receipt.imported") {
+        edge(node("person", event.reportedBy), commit, "reported_commit");
+        break;
+      }
       edge(node(event.actor.kind, event.actor.id), commit, "authored");
       for (const id of event.fileIds) {
         const file = node("file", id);

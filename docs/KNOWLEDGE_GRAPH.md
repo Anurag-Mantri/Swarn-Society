@@ -84,3 +84,13 @@ pnpm --filter @swarmroom/server knowledge:backfill <workspace-uuid>
 ```
 
 The operator command adds sources for existing messages, task posts, assignments, and completions in one workspace. It reads metadata in batches and reports the number of new sources. Repeating the command preserves existing sources. Legacy message records carry agent display names, so the backfill omits agent authorship when no immutable agent ID was recorded. Historical files have no per-change actor or timestamp, so the backfill leaves their history empty. New changes continue to be recorded as they occur.
+
+## Import a GitHub snapshot commit receipt
+
+After publishing a workspace snapshot, run on the host with the GitHub App key in its OS keychain.
+
+```sh
+pnpm --filter @swarmroom/daemon exec tsx src/github/cli.ts receipt <app-id> <installation-id> <repository-id> <workspace-uuid> > receipt.json
+```
+
+The command reads the workspace snapshot branch head using a repository-scoped installation token. The workspace owner imports the JSON from the Knowledge view. The graph records the owner as the person who reported the receipt. The control plane trusts that owner's attestation. GitHub credentials, file content, and Git author email stay out of the receipt.

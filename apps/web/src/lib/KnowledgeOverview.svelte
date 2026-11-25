@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { KnowledgeOverview } from '@swarmroom/protocol';
+  import CommitReceiptImport from './CommitReceiptImport.svelte';
   import KnowledgeReviews from './KnowledgeReviews.svelte';
   import { api, type Channel, type Profile, type Workspace } from './api';
 
@@ -75,7 +76,7 @@
                 {@const source = sources.get(sourceId)}
                 {#if source}
                   <li>
-                    <span>{source.type.replace('.', ' ')}</span>
+                    <span>{source.type.replaceAll('.', ' ')}</span>
                     <time datetime={source.occurredAt}>{date.format(new Date(source.occurredAt))}</time>
                     <code>{source.sourceId}</code>
                   </li>
@@ -86,6 +87,9 @@
         </li>
       {/each}
     </ul>
+  {/if}
+  {#if workspace.ownerId === profile.id}
+    <CommitReceiptImport workspaceId={workspace.id} onImport={load} />
   {/if}
   <KnowledgeReviews workspaceId={workspace.id} {label} onReview={load} />
 </section>

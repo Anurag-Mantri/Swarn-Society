@@ -1,4 +1,4 @@
-import type { ChannelKind, KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { ChannelKind, GitHubCommitReceipt, KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -74,6 +74,8 @@ export const api = {
   knowledge: (serverId: string, channelId?: string) => request<KnowledgeOverview>(
     `/api/servers/${encodeURIComponent(serverId)}/knowledge${channelId ? `?channelId=${encodeURIComponent(channelId)}` : ''}`
   ),
+  importCommitReceipt: (serverId: string, receipt: GitHubCommitReceipt) =>
+    post<{ sourceId: string; inserted: boolean }>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/commit-receipts`, receipt),
   knowledgeReviews: (serverId: string) =>
     request<KnowledgeReviewCandidate[]>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/reviews`),
   decideKnowledgeReview: (serverId: string, edgeId: string, review: KnowledgeReview) =>
