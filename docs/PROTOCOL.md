@@ -106,7 +106,12 @@ Claims and bid approvals both reject assignments when the channel already has an
 
 ## Knowledge overview
 
-`GET /api/servers/:serverId/knowledge` returns `{sources, nodes, edges}` for the latest 20 visible sources. An optional `channelId` limits the view to one readable channel. Edges expose the IDs of their visible supporting sources. The automatic view includes only deterministic edges with confidence of at least 90 and no recorded conflict. The route does not return original message text, task results, or file contents.
+`GET /api/servers/:serverId/knowledge` returns `{sources, nodes, edges}` for the latest 20 visible sources. An optional `channelId` limits the view to one readable channel. Edges expose the IDs of their visible supporting sources. The automatic view includes only deterministic edges with confidence of at least 90 and no recorded conflict. Human-approved edges are visible when the reader can access all supporting sources. Rejected edges are suppressed. The route does not return original message text, task results, or file contents.
+
+`GET /api/servers/:serverId/knowledge/reviews` lists up to 25 pending relationships with up to 20 recent evidence records each. Inferred, conflicting, and below-threshold edges require review. A reviewer needs workspace message-read and role-management permissions, readable provenance for both endpoints, and access to every source attached to the edge.
+
+`POST /api/servers/:serverId/knowledge/reviews/:edgeId` records `{decision, reason?}`. The decision is `approved` or `rejected`. The workspace stores the reviewer and timestamp. A decision is final. The same reviewer retrying an identical request receives the existing decision. A different decision or a review of an automatically accepted edge returns 409.
+
 
 ## Host-owned adapter sessions
 

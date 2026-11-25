@@ -1,18 +1,17 @@
-import { and, desc, eq, gte, inArray, isNull, or } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, notExists, or } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../auth.js";
-import { hasChannelPermission, hasServerPermission } from "../channel-access.js";
+import { hasServerPermission } from "../channel-access.js";
 import { db } from "../db/index.js";
 import {
   knowledgeEdgeSources, knowledgeEdges, knowledgeNodeSources, knowledgeNodes, knowledgeSources,
 } from "../db/knowledge-schema.js";
-import { channels } from "../db/schema.js";
+import { automaticEdge, edgeReview, minimumConfidence, readableEdgeEvidence, readableKnowledgeChannels, readableSource } from "../knowledge/visibility.js";
 import { permissions } from "../permissions.js";
 
 const paramsSchema = z.object({ serverId: z.string().uuid() });
 const querySchema = z.object({ channelId: z.string().uuid().optional() });
-const minimumConfidence = 90;
 
 function groupSources<T extends { id: string; sourceId: string }>(rows: T[]) {
   const grouped = new Map<string, Omit<T, "sourceId"> & { sourceIds: string[] }>();
@@ -37,17 +36,11 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(403).send({ error: "You cannot view knowledge in this workspace." });
     }
 
-    const candidates = await db.select({ id: channels.id, serverId: channels.serverId }).from(channels)
-      .where(and(eq(channels.serverId, serverId), channelId ? eq(channels.id, channelId) : undefined));
-    const allowed: string[] = [];
-    for (const channel of candidates) {
-      if (await hasChannelPermission(channel, user.id, permissions.readMessages)) allowed.push(channel.id);
+    const allowed = await readableKnowledgeChannels(serverId, user.id);
+    if (channelId && !allowed.includes(channelId)) {
+      return reply.code(403).send({ error: "You cannot view knowledge in this channel." });
     }
-    if (channelId && !allowed.length) return reply.code(403).send({ error: "You cannot view knowledge in this channel." });
-    const scope = channelId
-      ? eq(knowledgeSources.channelId, channelId)
-      : allowed.length ? or(isNull(knowledgeSources.channelId), inArray(knowledgeSources.channelId, allowed))
-        : isNull(knowledgeSources.channelId);
+    const scope = channelId ? eq(knowledgeSources.channelId, channelId) : readableSource(allowed);
 
     const sources = await db.select({
       id: knowledgeSources.id,
@@ -72,7 +65,7 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
       }).from(knowledgeNodes).innerJoin(knowledgeNodeSources, and(
         eq(knowledgeNodeSources.serverId, knowledgeNodes.serverId), eq(knowledgeNodeSources.nodeId, knowledgeNodes.id),
       )).where(and(
-        eq(knowledgeNodes.serverId, serverId), gte(knowledgeNodes.confidence, minimumConfidence),
+        eq(knowledgeNodes.serverId, serverId),
         inArray(knowledgeNodeSources.sourceId, sourceIds),
       )).orderBy(knowledgeNodes.kind, knowledgeNodes.id, knowledgeNodeSources.sourceId),
       db.select({
@@ -85,14 +78,23 @@ export const knowledgeOverviewRoutes: FastifyPluginAsync = async (app) => {
       }).from(knowledgeEdges).innerJoin(knowledgeEdgeSources, and(
         eq(knowledgeEdgeSources.serverId, knowledgeEdges.serverId), eq(knowledgeEdgeSources.edgeId, knowledgeEdges.id),
       )).where(and(
-        eq(knowledgeEdges.serverId, serverId), eq(knowledgeEdges.method, "deterministic"),
-        eq(knowledgeEdges.hasConflict, false), gte(knowledgeEdges.confidence, minimumConfidence),
+        eq(knowledgeEdges.serverId, serverId),
+        notExists(edgeReview("rejected")),
+        or(
+          and(automaticEdge, notExists(edgeReview())),
+          and(exists(edgeReview("approved")), readableEdgeEvidence(allowed)),
+        ),
         inArray(knowledgeEdgeSources.sourceId, sourceIds),
       )).orderBy(knowledgeEdges.relation, knowledgeEdges.id, knowledgeEdgeSources.sourceId),
     ]);
     const nodes = groupSources(linkedNodes);
     const availableNodes = new Set(nodes.map(({ id }) => id));
     const edges = groupSources(linkedEdges).filter(({ fromId, toId }) => availableNodes.has(fromId) && availableNodes.has(toId));
-    return reply.send({ sources, nodes, edges });
+    const connected = new Set(edges.flatMap(({ fromId, toId }) => [fromId, toId]));
+    return reply.send({
+      sources,
+      nodes: nodes.filter(({ confidence, id }) => confidence >= minimumConfidence || connected.has(id)),
+      edges,
+    });
   });
 };

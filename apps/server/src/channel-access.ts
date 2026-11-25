@@ -3,16 +3,18 @@ import { db } from "./db/index.js";
 import { channelRoleRestrictions, memberRoles, members, roles, servers } from "./db/schema.js";
 import { includesPermission, permissions } from "./permissions.js";
 
+type PermissionQuery = Pick<typeof db, "select">;
+
 async function hasPermission(
-  serverId: string, userId: string, permission: number, channelId?: string,
+  serverId: string, userId: string, permission: number, channelId?: string, database: PermissionQuery = db,
 ): Promise<boolean> {
-  const serverRows = await db.select({ ownerId: servers.ownerId }).from(servers)
+  const serverRows = await database.select({ ownerId: servers.ownerId }).from(servers)
     .where(eq(servers.id, serverId)).limit(1);
   const server = serverRows[0];
   if (!server) return false;
   if (server.ownerId === userId) return true;
 
-  const assignments = await db.select({ granted: roles.permissions, denied: channelRoleRestrictions.denied })
+  const assignments = await database.select({ granted: roles.permissions, denied: channelRoleRestrictions.denied })
     .from(memberRoles)
     .innerJoin(members, and(
       eq(members.serverId, memberRoles.serverId),
@@ -32,12 +34,14 @@ async function hasPermission(
   return includesPermission(grants & ~denials, permission);
 }
 
-export function hasServerPermission(serverId: string, userId: string, permission: number): Promise<boolean> {
-  return hasPermission(serverId, userId, permission);
+export function hasServerPermission(
+  serverId: string, userId: string, permission: number, database?: PermissionQuery,
+): Promise<boolean> {
+  return hasPermission(serverId, userId, permission, undefined, database);
 }
 
 export function hasChannelPermission(
-  channel: { id: string; serverId: string }, userId: string, permission: number,
+  channel: { id: string; serverId: string }, userId: string, permission: number, database?: PermissionQuery,
 ): Promise<boolean> {
-  return hasPermission(channel.serverId, userId, permissions.readMessages | permission, channel.id);
+  return hasPermission(channel.serverId, userId, permissions.readMessages | permission, channel.id, database);
 }

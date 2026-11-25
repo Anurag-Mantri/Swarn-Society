@@ -1,4 +1,4 @@
-import type { ChannelKind, KnowledgeOverview, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
+import type { ChannelKind, KnowledgeOverview, KnowledgeReview, KnowledgeReviewCandidate, MemoryNote, MemoryScope, TaskBid, TaskBidInput, TaskClaimant, TaskCoordinationMetrics, TaskPost, TaskResolution } from '@swarmroom/protocol';
 
 export type Profile = { id: string; handle: string; avatarUrl: string | null };
 export type Workspace = { id: string; name: string; ownerId: string };
@@ -74,6 +74,10 @@ export const api = {
   knowledge: (serverId: string, channelId?: string) => request<KnowledgeOverview>(
     `/api/servers/${encodeURIComponent(serverId)}/knowledge${channelId ? `?channelId=${encodeURIComponent(channelId)}` : ''}`
   ),
+  knowledgeReviews: (serverId: string) =>
+    request<KnowledgeReviewCandidate[]>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/reviews`),
+  decideKnowledgeReview: (serverId: string, edgeId: string, review: KnowledgeReview) =>
+    post<{ id: string }>(`/api/servers/${encodeURIComponent(serverId)}/knowledge/reviews/${encodeURIComponent(edgeId)}`, review),
   memory: (id: string, scope: MemoryScope, q: string, targetId?: string) => {
     const query = new URLSearchParams({ scope, q });
     if (targetId) query.set('targetId', targetId);
