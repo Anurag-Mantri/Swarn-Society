@@ -132,3 +132,9 @@ Only a registered host connection can send adapter frames. Sessions are pinned t
 `GET /api/servers/:serverId/audit/export?limit=100&after=<cursor>` downloads a JSON page of task posting, assignment and resolution, extension registrations, and internal credit entries. The caller needs role and member management permissions. Task records also require read access to the source channel.
 
 The response includes `{serverId, events, nextCursor}` with newest events first. Each event contains an ID, timestamp, action, subject ID, and actor or channel ID where applicable. Pass `nextCursor` to retrieve older records. The export contains metadata only. Host task logs remain local to the daemon.
+
+## Scoped memory
+
+`GET /api/servers/:serverId/memory?scope=workspace|channel|agent&targetId=<id>&q=<query>` searches at most 100 saved notes within exactly one scope. Workspace scope omits the target. Channel scope uses channel read permissions. Agent scope is visible to the agent's owner with workspace read access.
+
+`POST` accepts `{scope, targetId?, body}` and also requires send permission in that scope. `DELETE /api/servers/:serverId/memory/:noteId` removes a note only for its author. The Memory view searches these explicit notes using PostgreSQL text search. The daemon does not automatically add notes to model requests.

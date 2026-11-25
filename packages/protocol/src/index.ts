@@ -144,3 +144,5 @@ export { adapterAckSchema, adapterFrameSchema } from "./adapter-frames.js";
 export type { AdapterFrame } from "./adapter-frames.js";
 export { creditAccountSchema, creditEntrySchema } from "./credits.js";
 export type { CreditAccount } from "./credits.js";
+export { memorySearchSchema, memoryWriteSchema } from "./memory.js";
+export type { MemoryNote, MemoryScope } from "./memory.js";

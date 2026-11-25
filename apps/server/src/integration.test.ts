@@ -1096,6 +1096,57 @@ integration("Postgres-backed server routes", () => {
 
   }, 30_000);
 
+  it("searches memory within the selected scope without exposing private channel or agent notes", async () => {
+    const headers = { cookie: `session=${sessionSecret}` };
+    const created = await inject({ method: "POST", url: "/api/servers", headers, payload: { name: "Memory fixture" } });
+    expect(created.statusCode).toBe(201);
+    const { id: serverId } = created.json<{ id: string }>();
+    const channel = await inject({
+      method: "POST", url: `/api/servers/${serverId}/channels`, headers, payload: { name: "private" },
+    });
+    const agent = await inject({
+      method: "POST", url: `/api/servers/${serverId}/agents`, headers, payload: { name: "memory-agent" },
+    });
+    const channelId = channel.json<{ id: string }>().id;
+    const agentId = agent.json<{ id: string }>().id;
+    const url = `/api/servers/${serverId}/memory`;
+    const [teammate] = await db.insert(users).values({ githubId: "memory-reader", handle: "memory-reader" }).returning();
+    if (!teammate) throw new Error("Could not create memory reader");
+    const secret = randomBytes(32).toString("base64url");
+    await db.insert(sessions).values({
+      userId: teammate.id, secretHash: hashSecret(secret), expiresAt: new Date(Date.now() + 60_000),
+    });
+    const teammateHeaders = { cookie: `session=${secret}` };
+    const role = await inject({
+      method: "POST", url: `/api/servers/${serverId}/roles`, headers,
+      payload: { name: "Memory reader", permissions: permissions.readMessages },
+    });
+    const { id: roleId } = role.json<{ id: string }>();
+    expect((await inject({
+      method: "POST", url: `/api/servers/${serverId}/members`, headers, payload: { userId: teammate.id, roleId },
+    })).statusCode).toBe(201);
+    expect((await inject({
+      method: "PUT", url: `/api/channels/${channelId}/role-restrictions/${roleId}`,
+      headers, payload: { denied: permissions.readMessages },
+    })).statusCode).toBe(200);
+    const note = await inject({ method: "POST", url, headers, payload: { scope: "workspace", body: "Release checklist" } });
+    expect(note.statusCode).toBe(201);
+    for (const [scope, targetId] of [["channel", channelId], ["agent", agentId]]) {
+      expect((await inject({
+        method: "POST", url, headers, payload: { scope, targetId, body: "Release private note" },
+      })).statusCode).toBe(201);
+      expect((await inject({ url: `${url}?scope=${scope}&targetId=${targetId}&q=release`, headers })).json()).toHaveLength(1);
+      expect((await inject({ url: `${url}?scope=${scope}&targetId=${targetId}`, headers: teammateHeaders })).statusCode).toBe(403);
+    }
+    expect((await inject({ url: `${url}?scope=workspace&q=release`, headers: teammateHeaders })).json())
+      .toEqual([expect.objectContaining({ body: "Release checklist" })]);
+    expect((await inject({ url: `${url}?scope=workspace&q=unmatched`, headers })).json()).toEqual([]);
+    const notePath = `${url}/${note.json<{ id: string }>().id}`;
+    expect((await inject({ method: "DELETE", url: notePath, headers: teammateHeaders })).statusCode).toBe(404);
+    expect((await inject({ method: "DELETE", url: notePath, headers })).statusCode).toBe(204);
+    expect((await inject({ url: `${url}?scope=workspace`, headers })).json()).toEqual([]);
+  }, 30_000);
+
   it("rotates host tokens and expires hosts that miss heartbeats", async () => {
     const cookie = `session=${sessionSecret}`;
     const hostResponse = await inject({

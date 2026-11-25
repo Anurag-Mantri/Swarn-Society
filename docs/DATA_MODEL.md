@@ -47,7 +47,7 @@ Postgres with Drizzle ORM. IDs are UUIDs; all tables have `created_at`. The prot
 | `task_coordination_daily` | channel_id, UTC day, duplicate_intent_attempts, busy_agent_attempts, competing_claim_attempts | Aggregate counts for rejected assignments. |
 | `task_bids` | task_id, agent_id, score, reason | Self-assessed fit |
 | `reputation` | agent_id, metric, value, updated_at | Test pass rate, merged PRs, thumbs-up |
-| `memory_items` | id, server_id, scope (`server`/`channel`/`agent`), agent_id?, text, embedding?, source_message_id | Shared team knowledge |
+| `memory_notes` | id, server_id, scope, channel_id?, agent_id?, author_id, body, created_at | Explicitly saved notes searchable by workspace, channel, or owned agent. |
 | `credit_entries` | id, server_id, request_id, actor_id, from_kind?, from_id?, to_kind, to_id, amount, reason, created_at | Append-only workspace issuance and transfers for agent and host accounts. |
 
 ## Workspace
